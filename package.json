@@ -1,0 +1,55 @@
+{
+  "name": "@heron-list/api",
+  "version": "1.4.0-beta.49",
+  "description": "",
+  "main": "src/server.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsnd --exit-child src/server.ts --port=3333",
+    "start": "node build/server.js  --port=3000",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "format": "prettier --write \"src/**/*.{ts,js}\"",
+    "lint": "eslint \"src/**/*.{ts,js}\" --quiet",
+    "commit": "git add . && git-cz",
+    "release": "standard-version"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^4.3.1",
+    "@types/bcryptjs": "^2.4.2",
+    "@types/http-errors": "^1.8.2",
+    "@types/jsonwebtoken": "^8.5.9",
+    "@types/request": "^2.48.8",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "express": "^4.18.1",
+    "http-errors": "^2.0.0",
+    "jsonwebtoken": "^8.5.1",
+    "moment": "^2.29.4",
+    "pg": "^8.8.0"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^17.1.2",
+    "@commitlint/config-conventional": "^17.1.0",
+    "@types/cors": "^2.8.12",
+    "@types/express": "^4.17.14",
+    "@types/node": "^18.8.0",
+    "@typescript-eslint/eslint-plugin": "^5.38.0",
+    "@typescript-eslint/parser": "^5.38.0",
+    "commitizen": "^4.2.5",
+    "cz-conventional-changelog": "3.3.0",
+    "eslint": "^8.23.1",
+    "eslint-config-prettier": "^8.5.0",
+    "prettier": "^2.7.1",
+    "prisma": "^4.3.1",
+    "standard-version": "^9.5.0",
+    "ts-node-dev": "^2.0.0"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  }
+}

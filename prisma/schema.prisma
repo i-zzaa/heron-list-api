@@ -1,0 +1,115 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["referentialIntegrity", "referentialActions"]
+}
+
+datasource db {
+  //   provider             = "sqlite"
+  // provider             = "postgresql"
+  provider             = "mysql"
+  url                  = env("VITE_DATABASE_URL")
+  referentialIntegrity = "prisma"
+}
+
+model Convenio {
+  id       Int        @id @default(autoincrement())
+  nome     String
+  Paciente Paciente[]
+}
+
+model Paciente {
+  id             Int      @id @default(autoincrement())
+  nome           String
+  telefone       String
+  responsavel    String
+  dataNascimento String
+  convenioId     Int
+  disabled       Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  convenio Convenio? @relation(fields: [convenioId], references: [id])
+  vaga     Vaga?
+}
+
+model Vaga {
+  id             Int     @id @default(autoincrement())
+  pacienteId     Int     @unique
+  dataContato    String
+  periodoId      Int
+  tipoSessaoId   Int
+  // especialidadeId Int
+  statusId       Int
+  observacao     String
+  naFila         Boolean @default(true)
+  dataSaiuFila   String?
+  devolutiva     Boolean @default(false)
+  dataDevolutiva String?
+  diff           String?
+  dataRetorno    String?
+
+  createdAt DateTime @default(now())
+
+  // especialidade Especialidade @relation(fields: [especialidadeId], references: [id])
+  status         Status                @relation(fields: [statusId], references: [id])
+  periodo        Periodo?              @relation(fields: [periodoId], references: [id])
+  tipoSessao     TipoSessao?           @relation(fields: [tipoSessaoId], references: [id])
+  paciente       Paciente?             @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+  especialidades VagaOnEspecialidade[]
+}
+
+model VagaOnEspecialidade {
+  agendado     Boolean @default(false)
+  dataAgendado String?
+  vaga         Vaga    @relation(fields: [vagaId], references: [id], onDelete: Cascade)
+  vagaId       Int // relation scalar field (used in the `@relation` attribute above)
+
+  especialidade   Especialidade @relation(fields: [especialidadeId], references: [id])
+  especialidadeId Int // relation scalar field (used in the `@relation` attribute above)
+
+  @@id([vagaId, especialidadeId])
+}
+
+model Periodo {
+  id   Int    @id @default(autoincrement())
+  nome String
+  vaga Vaga[]
+}
+
+model Especialidade {
+  id    Int                   @id @default(autoincrement())
+  nome  String
+  vagas VagaOnEspecialidade[]
+}
+
+model Status {
+  id   Int    @id @default(autoincrement())
+  nome String
+  vaga Vaga[]
+}
+
+model TipoSessao {
+  id   Int    @id @default(autoincrement())
+  nome String
+  vaga Vaga[]
+}
+
+model Usuario {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  login     String   @unique
+  senha     String
+  ativo     Boolean  @default(true)
+  perfilId  Int
+  createdAt DateTime @default(now())
+
+  perfil Perfil @relation(fields: [perfilId], references: [id])
+}
+
+model Perfil {
+  id      Int       @id @default(autoincrement())
+  nome    String
+  Usuario Usuario[]
+}
