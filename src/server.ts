@@ -13,6 +13,8 @@ import { periodoController } from './controllers/periodo.controller';
 import { filterController } from './controllers/filter.controller';
 import { vagaController } from './controllers/vaga.controller';
 import { agendaController } from './controllers/agenda.controller';
+import { funcaoController } from './controllers/funcao.controller';
+import { localidadeController } from './controllers/localidade.controller';
 
 const app = express();
 
@@ -108,5 +110,19 @@ app.get('/especialidade', auth, especialidadeController.get);
 app.post('/especialidade', auth, especialidadeController.create);
 app.put('/especialidade/:id', auth, especialidadeController.update);
 
-// const port = process.env.PORT || 3333;
-app.listen(3333);
+// Funcao
+app.get('/funcao', auth, funcaoController.get);
+app.post('/funcao', auth, funcaoController.create);
+app.get('/funcao/:search', auth, funcaoController.search);
+app.put('/funcao', auth, funcaoController.update);
+app.delete('/funcao/:id', auth, funcaoController.delete);
+
+// Especialidade
+app.get('/localidade', auth, localidadeController.get);
+app.post('/localidade', auth, localidadeController.create);
+app.get('/localidade/:search', auth, localidadeController.search);
+app.put('/localidade', auth, localidadeController.update);
+app.delete('/localidade/:id', auth, localidadeController.delete);
+
+const port = process.env.PORT || 3333;
+app.listen(port);

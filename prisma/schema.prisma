@@ -3,7 +3,7 @@
 
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["referentialIntegrity", "referentialActions"]
+  previewFeatures = ["referentialIntegrity"]
 }
 
 datasource db {
@@ -79,9 +79,10 @@ model Periodo {
 }
 
 model Especialidade {
-  id    Int                   @id @default(autoincrement())
-  nome  String
-  vagas VagaOnEspecialidade[]
+  id     Int                   @id @default(autoincrement())
+  nome   String
+  vagas  VagaOnEspecialidade[]
+  Funcao Funcao[]
 }
 
 model Status {
@@ -112,4 +113,24 @@ model Perfil {
   id      Int       @id @default(autoincrement())
   nome    String
   Usuario Usuario[]
+}
+
+model Funcao {
+  id              Int      @id @default(autoincrement())
+  nome            String
+  especialidadeId Int
+  ativo           Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now())
+
+  especialidade Especialidade @relation(fields: [especialidadeId], references: [id])
+}
+
+model Localidade {
+  id        Int      @id @default(autoincrement())
+  casa      String
+  sala      String
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 }
