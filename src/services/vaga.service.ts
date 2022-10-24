@@ -146,20 +146,8 @@ export const tipoSessoesVaga = async () => {
       {
         label: 'Tipo de sessão por Demanda',
         data: datasets,
-        backgroundColor: [
-          'rgba(0, 0, 0, 0.2)',
-          'rgba(255, 206, 86, 0.2)',
-          'rgba(75, 192, 192, 0.2)',
-          'rgba(153, 102, 255, 0.2)',
-          'rgba(255, 159, 64, 0.2)',
-        ],
-        borderColor: [
-          'rgba(0, 0, 0, 1)',
-          'rgba(255, 206, 86, 1)',
-          'rgba(75, 192, 192, 1)',
-          'rgba(153, 102, 255, 1)',
-          'rgba(255, 159, 64, 1)',
-        ],
+        backgroundColor: ['#36531480', '#701a7580', '#1e3a8a80'],
+        borderColor: ['#365314', '#701a75', '#1e3a8a'],
         borderWidth: 1,
       },
     ],
@@ -181,26 +169,15 @@ export const statusVaga = async () => {
 
   const labels = responseCount.map((item: any) => item.nome);
   const datasets = responseCount.map((item: any) => item._count.vaga);
+
   const data = {
     labels: labels,
     datasets: [
       {
         label: '',
         data: datasets,
-        backgroundColor: [
-          'rgba(0, 0, 0, 0.2)',
-          'rgba(255, 206, 86, 0.2)',
-          'rgba(75, 192, 192, 0.2)',
-          'rgba(153, 102, 255, 0.2)',
-          'rgba(255, 159, 64, 0.2)',
-        ],
-        borderColor: [
-          'rgba(0, 0, 0, 1)',
-          'rgba(255, 206, 86, 1)',
-          'rgba(75, 192, 192, 1)',
-          'rgba(153, 102, 255, 1)',
-          'rgba(255, 159, 64, 1)',
-        ],
+        backgroundColor: ['#38bdf880', '#7f1d1d80', '#312e8180'],
+        borderColor: ['#38bdf8', '#7f1d1d', '#312e81'],
         borderWidth: 1,
       },
     ],
@@ -218,30 +195,22 @@ export const especialidadesVaga = async () => {
         },
       },
     },
+    orderBy: {
+      nome: 'asc',
+    },
   });
 
   const labels = responseCount.map((item: any) => item.nome);
   const datasets = responseCount.map((item: any) => item._count.vagas);
+
   const data = {
     labels: labels,
     datasets: [
       {
         label: 'Especialidades por Demanda',
         data: datasets,
-        backgroundColor: [
-          'rgba(0, 0, 0, 0.2)',
-          'rgba(255, 206, 86, 0.2)',
-          'rgba(75, 192, 192, 0.2)',
-          'rgba(153, 102, 255, 0.2)',
-          'rgba(255, 159, 64, 0.2)',
-        ],
-        borderColor: [
-          'rgba(0, 0, 0, 1)',
-          'rgba(255, 206, 86, 1)',
-          'rgba(75, 192, 192, 1)',
-          'rgba(153, 102, 255, 1)',
-          'rgba(255, 159, 64, 1)',
-        ],
+        backgroundColor: ['#f6bf2680', '#8e24aa80', '#00000080', '#ef6c0080'],
+        borderColor: ['#f6bf2680', '#8e24aa80', '#00000080', '#ef6c0080'],
         borderWidth: 1,
       },
     ],

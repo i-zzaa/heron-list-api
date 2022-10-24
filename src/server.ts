@@ -32,7 +32,7 @@ app.use(cors());
 app.get('/', async (request, response) => {
   response.status(200).json({
     status: true,
-    data: 'versão: 0.4.0-beta.49',
+    data: 'versão: 0.4.0-beta.50',
   });
 });
 
@@ -109,4 +109,4 @@ app.post('/especialidade', auth, especialidadeController.create);
 app.put('/especialidade/:id', auth, especialidadeController.update);
 
 // const port = process.env.PORT || 3333;
-app.listen(3000);
+app.listen(3333);
