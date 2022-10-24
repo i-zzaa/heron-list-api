@@ -108,5 +108,5 @@ app.get('/especialidade', auth, especialidadeController.get);
 app.post('/especialidade', auth, especialidadeController.create);
 app.put('/especialidade/:id', auth, especialidadeController.update);
 
-// const port = process.env.PORT || 3333;
-app.listen(3333);
+const PORT = process.env.PORT || 3333;
+app.listen(PORT);
