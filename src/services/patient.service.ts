@@ -324,6 +324,7 @@ export const filterSinglePatients = async (body: any) => {
     },
     where: {
       disabled: body.disabled,
+      convenioId: body.convenios,
       vaga: {
         pacienteId: body.pacientes,
         statusId: body.status,

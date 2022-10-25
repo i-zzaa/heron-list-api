@@ -30,8 +30,9 @@ model Paciente {
   disabled       Boolean  @default(false)
   createdAt      DateTime @default(now())
 
-  convenio Convenio? @relation(fields: [convenioId], references: [id])
-  vaga     Vaga?
+  convenio   Convenio?    @relation(fields: [convenioId], references: [id])
+  vaga       Vaga?
+  Calendario Calendario[]
 }
 
 model Vaga {
@@ -79,10 +80,12 @@ model Periodo {
 }
 
 model Especialidade {
-  id     Int                   @id @default(autoincrement())
-  nome   String
-  vagas  VagaOnEspecialidade[]
-  Funcao Funcao[]
+  id         Int                   @id @default(autoincrement())
+  nome       String
+  vagas      VagaOnEspecialidade[]
+  Funcao     Funcao[]
+  Calendario Calendario[]
+  Terapeuta  Terapeuta[]
 }
 
 model Status {
@@ -106,7 +109,9 @@ model Usuario {
   perfilId  Int
   createdAt DateTime @default(now())
 
-  perfil Perfil @relation(fields: [perfilId], references: [id])
+  perfil     Perfil       @relation(fields: [perfilId], references: [id])
+  Calendario Calendario[]
+  Terapeuta  Terapeuta[]
 }
 
 model Perfil {
@@ -124,13 +129,89 @@ model Funcao {
   updatedAt       DateTime @default(now())
 
   especialidade Especialidade @relation(fields: [especialidadeId], references: [id])
+  Calendario    Calendario[]
+  Terapeuta     Terapeuta[]
 }
 
 model Localidade {
-  id        Int      @id @default(autoincrement())
-  casa      String
-  sala      String
-  ativo     Boolean  @default(true)
+  id         Int          @id @default(autoincrement())
+  casa       String
+  sala       String
+  ativo      Boolean      @default(true)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @default(now())
+  Calendario Calendario[]
+}
+
+model StatusEventos {
+  id         Int          @id @default(autoincrement())
+  nome       String
+  ativo      Boolean      @default(true)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @default(now())
+  Calendario Calendario[]
+}
+
+model Frequencia {
+  id         Int          @id @default(autoincrement())
+  nome       String
+  ativo      Boolean      @default(true)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @default(now())
+  Calendario Calendario[]
+}
+
+model Modalidade {
+  id         Int          @id @default(autoincrement())
+  nome       String
+  ativo      Boolean      @default(true)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @default(now())
+  Calendario Calendario[]
+}
+
+model Terapeuta {
+  id              Int     @id @default(autoincrement())
+  usuarioId       Int
+  especialidadeId Int
+  funcaoId        Int
+  fazDevolutiva   Boolean @default(true)
+
+  usuario       Usuario       @relation(fields: [usuarioId], references: [id])
+  especialidade Especialidade @relation(fields: [especialidadeId], references: [id])
+  funcao        Funcao        @relation(fields: [funcaoId], references: [id])
+  Calendario    Calendario[]
+}
+
+model Calendario {
+  id Int @id @default(autoincrement())
+
+  diasFrequencia Json
+  data           String
+  start          String
+  end            String
+
+  ciclo           String
+  pacienteId      Int
+  modalidadeId    Int
+  especialidadeId Int
+  terapeutaId     Int
+  funcaoId        Int
+  localidadeId    Int
+  statusEventosId Int
+  frequenciaId    Int
+
+  usuarioId Int
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
+
+  terapeuta     Terapeuta     @relation(fields: [terapeutaId], references: [id])
+  paciente      Paciente      @relation(fields: [pacienteId], references: [id])
+  modalidade    Modalidade    @relation(fields: [modalidadeId], references: [id])
+  especialidade Especialidade @relation(fields: [especialidadeId], references: [id])
+  funcao        Funcao        @relation(fields: [funcaoId], references: [id])
+  localidade    Localidade    @relation(fields: [localidadeId], references: [id])
+  statusEventos StatusEventos @relation(fields: [statusEventosId], references: [id])
+  frequencia    Frequencia    @relation(fields: [frequenciaId], references: [id])
+  usuario       Usuario       @relation(fields: [usuarioId], references: [id])
 }

@@ -15,6 +15,10 @@ import { vagaController } from './controllers/vaga.controller';
 import { agendaController } from './controllers/agenda.controller';
 import { funcaoController } from './controllers/funcao.controller';
 import { localidadeController } from './controllers/localidade.controller';
+import { statusEventosController } from './controllers/statusEventos.controller';
+import { frequenciaController } from './controllers/frequencia.controller';
+import { modalidadeController } from './controllers/modalidade.controller';
+import { calendarioController } from './controllers/calendario.controller';
 
 const app = express();
 
@@ -123,6 +127,36 @@ app.post('/localidade', auth, localidadeController.create);
 app.get('/localidade/:search', auth, localidadeController.search);
 app.put('/localidade', auth, localidadeController.update);
 app.delete('/localidade/:id', auth, localidadeController.delete);
+
+//StatusEventos
+app.get('/statusEventos', auth, statusEventosController.get);
+app.post('/statusEventos', auth, statusEventosController.create);
+app.get('/statusEventos/:search', auth, statusEventosController.search);
+app.put('/statusEventos', auth, statusEventosController.update);
+app.delete('/statusEventos/:id', auth, statusEventosController.delete);
+
+//Frequencia
+app.get('/frequencia', auth, frequenciaController.get);
+app.post('/frequencia', auth, frequenciaController.create);
+app.get('/frequencia/:search', auth, frequenciaController.search);
+app.put('/frequencia', auth, frequenciaController.update);
+app.delete('/frequencia/:id', auth, frequenciaController.delete);
+
+//Modalidade
+app.get('/modalidade', auth, modalidadeController.get);
+app.post('/modalidade', auth, modalidadeController.create);
+app.get('/modalidade/:search', auth, modalidadeController.search);
+app.put('/modalidade', auth, modalidadeController.update);
+app.delete('/modalidade/:id', auth, modalidadeController.delete);
+
+//Calendario
+app.get('/evento/mes/:mes/:ano', auth, calendarioController.getMonth);
+app.get('/evento/dia/:data', auth, calendarioController.getDay);
+app.get('/evento/:start/:end', auth, calendarioController.getWeek);
+
+app.post('/evento', auth, calendarioController.create);
+app.put('/evento', auth, calendarioController.update);
+app.delete('/evento/:id', auth, calendarioController.delete);
 
 const port = process.env.PORT || 3333;
 app.listen(port);
