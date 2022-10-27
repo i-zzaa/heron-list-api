@@ -26,7 +26,7 @@ export interface CalendarioCreateParam {
   dataFim: string;
   start: string;
   end: string;
-  diasFrequencia: string;
+  diasFrequencia: number[];
   especialidade: ObjProps;
   frequencia: ObjProps;
   funcao: ObjProps;
@@ -101,7 +101,6 @@ export const getMonth = async (params: any) => {
           backgroundColor: evento.especialidade.cor,
         };
 
-        // const formated = fomatEventos(evento, params.ano, params.mes);
         eventosFormat.push(formated);
         break;
 
@@ -127,13 +126,15 @@ export const createCalendario = async (
 ) => {
   const user = await getUser(login);
 
+  console.log(body);
+
   const evento = await prisma.calendario.create({
     data: {
       dataInicio: body.dataInicio,
       dataFim: body.dataFim,
       start: body.start,
       end: body.end,
-      diasFrequencia: body.diasFrequencia,
+      diasFrequencia: body.diasFrequencia.join(','),
 
       ciclo: 'ativo',
       observacao: body.observacao,

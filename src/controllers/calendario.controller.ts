@@ -18,7 +18,8 @@ export class calendarioController {
         data,
       });
     } catch (error: any) {
-      next(createError(error.statusCode, error.message));
+      res.status(401).json(error);
+      next();
     }
   };
   static update = async (req: any, res: any, next: any) => {
@@ -30,7 +31,8 @@ export class calendarioController {
         data,
       });
     } catch (error: any) {
-      next(createError(error.statusCode, error.message));
+      res.status(401).json(error);
+      next();
     }
   };
   static delete = async (req: any, res: any, next: any) => {
@@ -42,7 +44,8 @@ export class calendarioController {
         data,
       });
     } catch (error: any) {
-      next(createError(error.statusCode, error.message));
+      res.status(401).json(error);
+      next();
     }
   };
 
@@ -51,7 +54,8 @@ export class calendarioController {
       const data = await getMonth(req.params);
       res.status(200).json(data);
     } catch (error: any) {
-      next(createError(error.statusCode, error.message));
+      res.status(401).json(error);
+      next();
     }
   };
   static getDay = async (req: any, res: any, next: any) => {
@@ -59,7 +63,8 @@ export class calendarioController {
       const data = await getDay(req.params);
       res.status(200).json(data);
     } catch (error: any) {
-      next(createError(error.statusCode, error.message));
+      res.status(401).json(error);
+      next();
     }
   };
   static getWeek = async (req: any, res: any, next: any) => {
@@ -67,7 +72,8 @@ export class calendarioController {
       const data = await getWeek(req.params);
       res.status(200).json(data);
     } catch (error: any) {
-      next(createError(error.statusCode, error.message));
+      res.status(401).json(error);
+      next();
     }
   };
 }
