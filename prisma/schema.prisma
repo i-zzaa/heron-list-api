@@ -82,6 +82,7 @@ model Periodo {
 model Especialidade {
   id         Int                   @id @default(autoincrement())
   nome       String
+  cor        String                @default("#000000")
   vagas      VagaOnEspecialidade[]
   Funcao     Funcao[]
   Calendario Calendario[]
@@ -170,6 +171,15 @@ model Modalidade {
   Calendario Calendario[]
 }
 
+model Intervalo {
+  id         Int          @id @default(autoincrement())
+  nome       String
+  ativo      Boolean      @default(true)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @default(now())
+  Calendario Calendario[]
+}
+
 model Terapeuta {
   id              Int     @id @default(autoincrement())
   usuarioId       Int
@@ -202,6 +212,7 @@ model Calendario {
   localidadeId    Int
   statusEventosId Int
   frequenciaId    Int
+  intervaloId     Int?
 
   usuarioId Int
   createdAt DateTime @default(now())
@@ -215,5 +226,6 @@ model Calendario {
   localidade    Localidade    @relation(fields: [localidadeId], references: [id])
   statusEventos StatusEventos @relation(fields: [statusEventosId], references: [id])
   frequencia    Frequencia    @relation(fields: [frequenciaId], references: [id])
+  intervalo     Intervalo?    @relation(fields: [intervaloId], references: [id])
   usuario       Usuario       @relation(fields: [usuarioId], references: [id])
 }

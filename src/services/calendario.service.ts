@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import moment from 'moment';
 import {
-  fomatEventos,
+  formatDateTime,
   getDiasDoMes,
   getPrimeiroDoMes,
   getUltimoDoMes,
@@ -65,6 +65,7 @@ export const getMonth = async (params: any) => {
       localidade: true,
       statusEventos: true,
       frequencia: true,
+      intervalo: true,
     },
     where: {
       dataInicio: {
@@ -87,18 +88,21 @@ export const getMonth = async (params: any) => {
 
   const eventosFormat: any = [];
   eventos.map((evento: any) => {
-    const intervalo = 1; //evento.intervalo
     switch (evento.frequencia.nome) {
       case 'Semanal':
-        evento.diasFrequencia = evento.diasFrequencia.split(',');
+        const formated = {
+          ...evento,
+          title: evento.paciente.nome,
+          groupId: evento.id, // recurrent events in this group move together
+          daysOfWeek: evento.diasFrequencia,
+          startTime: evento.start,
+          endTime: evento.end,
+          borderColor: evento.especialidade.cor,
+          backgroundColor: evento.especialidade.cor,
+        };
 
-        const formated = fomatEventos(
-          evento,
-          params.ano,
-          params.mes,
-          intervalo
-        );
-        eventosFormat.push(...formated);
+        // const formated = fomatEventos(evento, params.ano, params.mes);
+        eventosFormat.push(formated);
         break;
 
       default:
@@ -156,3 +160,59 @@ export const updateCalendario = async (body: CalendarioProps) => {
 export const deleteCalendario = async (id: number) => {
   return [];
 };
+
+// const fomatEventos = (evento: any, ano: number, mes: number) => {
+//   const date = evento.dataInicio;
+//   const ultimoDiaDoMesFomat = getUltimoDoMes(ano, mes);
+//   const diasUteisDoMes = getDiasDoMes(ano, mes - 1);
+//   const diasFrequencia: number[] = evento.diasFrequencia;
+
+//   const intervaloCalc = 7 * evento.intervalo.id;
+//   const arrDatasEventos: any = [];
+//   let newDate = date;
+
+//   while (newDate !== ultimoDiaDoMesFomat) {
+//     if (diasFrequencia.length > 1) {
+//       let dataDiasFrequencia = newDate;
+//       for (let index = 0; index < diasFrequencia.length; index++) {
+//         let indice = index;
+//         const diff =
+//           index === 0 ? 0 : diasFrequencia[index] - diasFrequencia[--indice];
+
+//         const dataFrequencia = moment(dataDiasFrequencia)
+//           .add(diff, 'd')
+//           .format('YYYY-MM-DD');
+
+//         if (diasUteisDoMes.includes(dataFrequencia)) {
+//           arrDatasEventos.push({
+//             ...evento,
+//             title: evento.paciente.nome,
+//             start: formatDateTime(evento.start, dataFrequencia),
+//             end: formatDateTime(evento.end, dataFrequencia),
+//             borderColor: evento.especialidade.cor,
+//             backgroundColor: evento.especialidade.cor,
+//             daysOfWeek: evento.diasFrequencia,
+//           });
+//         }
+
+//         dataDiasFrequencia = dataFrequencia;
+//       }
+//     } else {
+//       const newDateFomat = newDate.format('YYYY-MM-DD');
+//       if (diasUteisDoMes.includes(newDateFomat)) {
+//         arrDatasEventos.push({
+//           ...evento,
+//           title: evento.paciente.nome,
+//           start: formatDateTime(evento.start, newDate),
+//           end: formatDateTime(evento.end, newDate),
+//           borderColor: evento.especialidade.cor,
+//           backgroundColor: evento.especialidade.cor,
+//           daysOfWeek: evento.diasFrequencia,
+//         });
+//       }
+//     }
+//     newDate = moment(newDate).add(intervaloCalc, 'd').format('YYYY-MM-DD');
+//   }
+
+//   return arrDatasEventos;
+// };

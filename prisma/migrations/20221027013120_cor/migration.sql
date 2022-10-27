@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `especialidade` ADD COLUMN `cor` VARCHAR(191) NOT NULL DEFAULT '#000000';
