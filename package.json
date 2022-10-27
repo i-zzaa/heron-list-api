@@ -28,6 +28,7 @@
     "http-errors": "^2.0.0",
     "jsonwebtoken": "^8.5.1",
     "moment": "^2.29.4",
+    "moment-business-days": "^1.2.0",
     "pg": "^8.8.0"
   },
   "devDependencies": {

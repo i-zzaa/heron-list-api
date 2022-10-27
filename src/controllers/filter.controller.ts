@@ -28,6 +28,7 @@ export class filterController {
   static dropdown = async (req: any, res: any, next: any) => {
     try {
       const type = req.params.type;
+      let help: any;
       let dropdrown: ListProps[] = [];
       switch (type) {
         case 'perfil':
@@ -109,9 +110,55 @@ export class filterController {
               nome: true,
             },
           });
+        case 'modalidade':
+          dropdrown = [];
+          dropdrown = await prisma.modalidade.findMany({
+            select: {
+              id: true,
+              nome: true,
+            },
+          });
+        case 'statusEventos':
+          dropdrown = await prisma.statusEventos.findMany({
+            select: {
+              id: true,
+              nome: true,
+            },
+          });
+          break;
+        case 'frequencia':
+          dropdrown = await prisma.frequencia.findMany({
+            select: {
+              id: true,
+              nome: true,
+            },
+          });
+          break;
+        case 'funcao':
+          dropdrown = await prisma.funcao.findMany({
+            select: {
+              id: true,
+              nome: true,
+            },
+          });
+          break;
+        case 'localidade':
+          help = await prisma.localidade.findMany({
+            select: {
+              id: true,
+              casa: true,
+              sala: true,
+            },
+          });
+
+          dropdrown = help.map((item: any) => {
+            return {
+              id: item.id,
+              nome: `${item.casa} - ${item.sala}`,
+            };
+          });
           break;
       }
-
 
       res.status(200).json(dropdrown);
     } catch (error) {

@@ -11,7 +11,7 @@ import {
 export class calendarioController {
   static create = async (req: any, res: any, next: any) => {
     try {
-      const data = await createCalendario(req.body);
+      const data = await createCalendario(req.body, req.headers.login);
       res.status(200).json({
         status: true,
         message: 'Criado com sucesso!',

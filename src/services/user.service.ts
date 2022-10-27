@@ -48,6 +48,21 @@ export const getUsers = async () => {
   });
 };
 
+export const getUser = async (login: string) => {
+  return await prisma.usuario.findUniqueOrThrow({
+    select: {
+      id: true,
+      nome: true,
+      login: true,
+      perfil: true,
+      ativo: true,
+    },
+    where: {
+      login: login,
+    },
+  });
+};
+
 export const getTerapeuta = async () => {
   const user = await prisma.usuario.findMany({
     select: {

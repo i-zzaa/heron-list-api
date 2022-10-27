@@ -1,9 +1,126 @@
 import moment from 'moment';
+import momentBusinessDays from 'moment-business-days';
+
 moment.locale('pt-BR');
+
+const FERIADOS = [
+  '01-01-2022',
+  '21-04-2022',
+  '01-05-2022',
+  '16-06-2022',
+  '07-09-2022',
+  '12-10-2022',
+  '02-11-2022',
+  '15-11-2022',
+  '25-12-2022',
+];
+momentBusinessDays.updateLocale('pt', {
+  holidays: FERIADOS,
+  holidayFormat: 'YYYY-MM-DD',
+  workingWeekdays: [1, 2, 3, 4, 5, 6],
+});
+
+const SEMANA = [
+  'segunda-feira',
+  'terça-feira',
+  'quarta-feira',
+  'quinta-feira',
+  'sexta-feira',
+  'sábado',
+];
+
+export const fomatEventos = (
+  evento: any,
+  ano: number,
+  mes: number,
+  intervalo: number
+) => {
+  const date = evento.dataInicio;
+  const ultimoDiaDoMesFomat = getUltimoDoMes(ano, mes);
+  const diasUteisDoMes = getDiasDoMes(ano, mes - 1);
+  const diasFrequencia: number[] = evento.diasFrequencia;
+
+  const intervaloCalc = 7 * intervalo;
+  const arrDatasEventos: any = [];
+  let newDate = date;
+
+  while (newDate !== ultimoDiaDoMesFomat) {
+    if (diasFrequencia.length > 1) {
+      let dataDiasFrequencia = newDate;
+      for (let index = 0; index < diasFrequencia.length; index++) {
+        let indice = index;
+        const diff =
+          index === 0 ? 0 : diasFrequencia[index] - diasFrequencia[--indice];
+
+        const dataFrequencia = moment(dataDiasFrequencia)
+          .add(diff, 'd')
+          .format('YYYY-MM-DD');
+
+        if (diasUteisDoMes.includes(dataFrequencia)) {
+          arrDatasEventos.push({
+            ...evento,
+            start: formatDateTime(evento.start, dataFrequencia),
+            end: formatDateTime(evento.end, dataFrequencia),
+          });
+        }
+
+        dataDiasFrequencia = dataFrequencia;
+      }
+    } else {
+      const newDateFomat = newDate.format('YYYY-MM-DD');
+      if (diasUteisDoMes.includes(newDateFomat)) {
+        arrDatasEventos.push({
+          ...evento,
+          start: formatDateTime(evento.start, newDate),
+          end: formatDateTime(evento.end, newDate),
+        });
+      }
+    }
+
+    newDate = moment(newDate).add(intervaloCalc, 'd').format('YYYY-MM-DD');
+  }
+
+  return arrDatasEventos;
+};
+
+export const formatDateTime = (hours: any, date: any) => {
+  const arrTime = hours.split(':');
+  return moment(date).add(arrTime[0], 'hours').add(arrTime[1], 'minutes');
+};
+
+export const getPrimeiroDoMes = (ano: number, mes: number) => {
+  return moment(new Date(ano, mes - 1, 1)).format('YYYY-MM-DD');
+};
+
+export const getUltimoDoMes = (ano: number, mes: number) => {
+  return moment(new Date(ano, mes, 0)).format('YYYY-MM-DD');
+};
+
+export const getDiasDoMes = (ano: number, mes: number) => {
+  const ultimoDia = moment(new Date(ano, mes, 0)).format('DD');
+
+  const arrDatas = [];
+  for (let index = 1; index <= parseInt(ultimoDia); index++) {
+    const datCompleta = new Date(ano, mes, index);
+    const isBusinessDay = moment(datCompleta, 'YYYY-MM-DD').isBusinessDay();
+
+    if (isBusinessDay) {
+      const format = moment(datCompleta).format('YYYY-MM-DD');
+      arrDatas.push(format);
+    }
+  }
+
+  return arrDatas;
+};
 
 export const formatadataPadraoBD = (date: any) => {
   const _date = new Date(date);
   return moment(_date).format('YYYY-MM-DD');
+};
+
+export const formatadataHora = (date: string, hora: string) => {
+  const format = new Date(`${date}T${hora}`);
+  return format;
 };
 
 export const formatdate = (date: any) => {

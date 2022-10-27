@@ -45,11 +45,6 @@ app.get('/', async (request, response) => {
 app.post('/filtro/:type', auth, filterController.filter);
 
 app.get('/dropdrown/:type', auth, filterController.dropdown);
-app.get('/dropdrown/:type', auth, filterController.dropdown);
-app.get('/dropdrown/:type', auth, filterController.dropdown);
-app.get('/dropdrown/:type', auth, filterController.dropdown);
-app.get('/dropdrown/:type', auth, filterController.dropdown);
-app.get('/dropdrown/:type', auth, filterController.dropdown);
 
 app.post('/login', authController.login);
 
@@ -66,10 +61,10 @@ app.get('/vagas/wait', auth, vagaController.wait);
 app.get('/vagas/return', auth, vagaController.returnTrend);
 app.put('/vagas/devolutiva', auth, vagaController.updateReturn);
 
-// Agenda
-app.get('/agenda/mes/:current', auth, agendaController.getMes);
-app.get('/agenda/dia/:current', auth, agendaController.getDia);
-app.post('/agenda', auth, agendaController.create);
+// // Agenda
+// app.get('/agenda/mes/:current', auth, agendaController.getMes);
+// app.get('/agenda/dia/:current', auth, agendaController.getDia);
+// app.post('/agenda', auth, agendaController.create);
 
 // Usuarios
 app.get('/usuarios', auth, userController.get);

@@ -186,12 +186,14 @@ model Terapeuta {
 model Calendario {
   id Int @id @default(autoincrement())
 
-  diasFrequencia Json
-  data           String
+  dataInicio     String
+  dataFim        String
   start          String
-  end            String
+  end            String?
+  diasFrequencia String
 
   ciclo           String
+  observacao      String
   pacienteId      Int
   modalidadeId    Int
   especialidadeId Int
