@@ -31,7 +31,10 @@ const SEMANA = [
 
 export const formatDateTime = (hours: any, date: any) => {
   const arrTime = hours.split(':');
-  return moment(date).add(arrTime[0], 'hours').add(arrTime[1], 'minutes');
+  return moment(date)
+    .add(arrTime[0], 'hours')
+    .add(arrTime[1], 'minutes')
+    .format('YYYY-MM-DD HH:mm');
 };
 
 export const getPrimeiroDoMes = (ano: number, mes: number) => {

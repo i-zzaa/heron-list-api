@@ -88,9 +88,10 @@ export const getMonth = async (params: any) => {
 
   const eventosFormat: any = [];
   eventos.map((evento: any) => {
-    switch (evento.frequencia.nome) {
-      case 'Semanal':
-        const formated = {
+    let formated: any = {};
+    switch (true) {
+      case !!evento.diasFrequencia && !evento.intervalo:
+        formated = {
           ...evento,
           title: evento.paciente.nome,
           groupId: evento.id, // recurrent events in this group move together
@@ -100,13 +101,42 @@ export const getMonth = async (params: any) => {
           borderColor: evento.especialidade.cor,
           backgroundColor: evento.especialidade.cor,
         };
+        break;
+      case evento.intervalo && evento.intervalo.id !== 1:
+        const frequencia = evento.diasFrequencia
+          .split(',')
+          .map((item: string) => parseInt(item) - 1);
 
-        eventosFormat.push(formated);
+        formated = {
+          ...evento,
+          title: evento.paciente.nome,
+          groupId: evento.id, // recurrent events in this group move together
+          borderColor: evento.especialidade.cor,
+          backgroundColor: evento.especialidade.cor,
+
+          rrule: {
+            freq: 'weekly',
+            interval: 2,
+            byweekday: frequencia,
+            dtstart: formatDateTime(evento.start, evento.dataInicio), // will also accept '20120201T103000'
+            // until: '2012-06-01' // will also accept '20120201'
+          },
+        };
         break;
 
       default:
+        formated = {
+          ...evento,
+          title: evento.paciente.nome,
+          date: evento.dataInicio,
+          start: formatDateTime(evento.start, evento.dataInicio),
+          end: formatDateTime(evento.end, evento.dataInicio),
+          borderColor: evento.especialidade.cor,
+          backgroundColor: evento.especialidade.cor,
+        };
         break;
     }
+    eventosFormat.push(formated);
   });
 
   return eventosFormat;
@@ -126,14 +156,17 @@ export const createCalendario = async (
 ) => {
   const user = await getUser(login);
 
-  console.log(body);
+  if (body.frequencia.nome === 'Unico') {
+    body.dataFim = body.dataInicio;
+    body.diasFrequencia = [];
+  }
 
   const evento = await prisma.calendario.create({
     data: {
       dataInicio: body.dataInicio,
       dataFim: body.dataFim,
-      start: body.start,
-      end: body.end,
+      start: formatDateTime(body.start, body.dataInicio),
+      end: formatDateTime(body.end, body.dataInicio),
       diasFrequencia: body.diasFrequencia.join(','),
 
       ciclo: 'ativo',
