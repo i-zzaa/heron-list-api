@@ -8,8 +8,8 @@ generator client {
 
 datasource db {
   //   provider             = "sqlite"
-  // provider             = "postgresql"
-  provider             = "mysql"
+  provider             = "postgresql"
+  // provider             = "mysql"
   url                  = env("VITE_DATABASE_URL")
   referentialIntegrity = "prisma"
 }
@@ -32,7 +32,7 @@ model Paciente {
 
   convenio   Convenio?    @relation(fields: [convenioId], references: [id])
   vaga       Vaga?
-  Calendario Calendario[]
+  calendario Calendario[]
 }
 
 model Vaga {
@@ -85,7 +85,7 @@ model Especialidade {
   cor        String                @default("#000000")
   vagas      VagaOnEspecialidade[]
   Funcao     Funcao[]
-  Calendario Calendario[]
+  calendario Calendario[]
   Terapeuta  Terapeuta[]
 }
 
@@ -111,14 +111,60 @@ model Usuario {
   createdAt DateTime @default(now())
 
   perfil     Perfil       @relation(fields: [perfilId], references: [id])
-  Calendario Calendario[]
-  Terapeuta  Terapeuta[]
+  calendario Calendario[]
+  terapeuta  Terapeuta?
 }
 
 model Perfil {
   id      Int       @id @default(autoincrement())
   nome    String
   Usuario Usuario[]
+}
+
+model Localidade {
+  id         Int          @id @default(autoincrement())
+  casa       String
+  sala       String
+  ativo      Boolean      @default(true)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @default(now())
+  calendario Calendario[]
+}
+
+model StatusEventos {
+  id         Int          @id @default(autoincrement())
+  nome       String
+  ativo      Boolean      @default(true)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @default(now())
+  calendario Calendario[]
+}
+
+model Frequencia {
+  id         Int          @id @default(autoincrement())
+  nome       String
+  ativo      Boolean      @default(true)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @default(now())
+  calendario Calendario[]
+}
+
+model Modalidade {
+  id         Int          @id @default(autoincrement())
+  nome       String
+  ativo      Boolean      @default(true)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @default(now())
+  calendario Calendario[]
+}
+
+model Intervalo {
+  id         Int          @id @default(autoincrement())
+  nome       String
+  ativo      Boolean      @default(true)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @default(now())
+  calendario Calendario[]
 }
 
 model Funcao {
@@ -130,67 +176,32 @@ model Funcao {
   updatedAt       DateTime @default(now())
 
   especialidade Especialidade @relation(fields: [especialidadeId], references: [id])
-  Calendario    Calendario[]
-  Terapeuta     Terapeuta[]
-}
+  calendario    Calendario[]
 
-model Localidade {
-  id         Int          @id @default(autoincrement())
-  casa       String
-  sala       String
-  ativo      Boolean      @default(true)
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @default(now())
-  Calendario Calendario[]
-}
-
-model StatusEventos {
-  id         Int          @id @default(autoincrement())
-  nome       String
-  ativo      Boolean      @default(true)
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @default(now())
-  Calendario Calendario[]
-}
-
-model Frequencia {
-  id         Int          @id @default(autoincrement())
-  nome       String
-  ativo      Boolean      @default(true)
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @default(now())
-  Calendario Calendario[]
-}
-
-model Modalidade {
-  id         Int          @id @default(autoincrement())
-  nome       String
-  ativo      Boolean      @default(true)
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @default(now())
-  Calendario Calendario[]
-}
-
-model Intervalo {
-  id         Int          @id @default(autoincrement())
-  nome       String
-  ativo      Boolean      @default(true)
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @default(now())
-  Calendario Calendario[]
+  terapeutas terapeutaOnFuncao[]
 }
 
 model Terapeuta {
   id              Int     @id @default(autoincrement())
-  usuarioId       Int
+  usuarioId       Int     @unique
   especialidadeId Int
-  funcaoId        Int
   fazDevolutiva   Boolean @default(true)
 
-  usuario       Usuario       @relation(fields: [usuarioId], references: [id])
+  usuario       Usuario?      @relation(fields: [usuarioId], references: [id])
   especialidade Especialidade @relation(fields: [especialidadeId], references: [id])
-  funcao        Funcao        @relation(fields: [funcaoId], references: [id])
-  Calendario    Calendario[]
+  calendario    Calendario[]
+
+  funcoes terapeutaOnFuncao[]
+}
+
+model terapeutaOnFuncao {
+  terapeutaId Int
+  funcaoId    Int
+
+  terapeuta Terapeuta @relation(fields: [terapeutaId], references: [id], onDelete: Cascade)
+  funcao    Funcao    @relation(fields: [funcaoId], references: [id], onDelete: Cascade)
+
+  @@id([terapeutaId, funcaoId])
 }
 
 model Calendario {

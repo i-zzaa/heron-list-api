@@ -13,9 +13,14 @@ export interface UserRequestProps {
   senha: string;
   ativo: boolean;
   perfilId: number;
+
+  especialidadeId: number;
+  funcaoId: number;
+  fazDevolutiva: boolean;
 }
 
 export interface UserProps {
+  id?: number;
   nome: string;
   login: string;
   senha?: string;
@@ -24,13 +29,28 @@ export interface UserProps {
 }
 
 export const getUsers = async () => {
-  return await prisma.usuario.findMany({
+  const usuarios = await prisma.usuario.findMany({
     select: {
       id: true,
       nome: true,
       login: true,
       perfil: true,
       ativo: true,
+      terapeuta: {
+        include: {
+          especialidade: {
+            select: {
+              nome: true,
+              id: true,
+            },
+          },
+          funcoes: {
+            include: {
+              funcao: true,
+            },
+          },
+        },
+      },
     },
     orderBy: {
       nome: 'asc',
@@ -46,6 +66,23 @@ export const getUsers = async () => {
       },
     },
   });
+
+  const format = await usuarios.map((usuario: any) => {
+    const funcoes = usuario?.terapeuta?.funcoes.map((funcao: any) => {
+      return {
+        nome: funcao.funcao.nome,
+        id: funcao.funcao.id,
+      };
+    });
+
+    return {
+      ...usuario,
+      especialidadeId: usuario?.terapeuta?.especialidade,
+      funcoes: funcoes,
+    };
+  });
+
+  return format;
 };
 
 export const getUser = async (login: string) => {
@@ -121,22 +158,41 @@ export const searchUsers = async (word: string) => {
   });
 };
 
-export const createUser = async (body: UserRequestProps) => {
-  body.senha = bcrypt.hashSync(body.senha, 8);
+export const createUser = async (body: any) => {
+  body.senha = bcrypt.hashSync('12345678', 8);
   const user: UserProps = await prisma.usuario.create({
     select: {
-      id: true,
       nome: true,
       login: true,
+      id: true,
       perfil: true,
     },
     data: {
-      ...body,
       nome: body.nome.toUpperCase(),
       login: body.login.toLowerCase(),
-      perfilId: Number(body.perfilId),
+      perfilId: body.perfilId,
+      senha: body.senha,
     },
   });
+
+  if (user?.perfil?.nome === 'Terapeuta') {
+    await prisma.terapeuta.create({
+      data: {
+        usuarioId: Number(user.id),
+        especialidadeId: body.especialidadeId,
+        fazDevolutiva: body.fazDevolutiva,
+        funcoes: {
+          create: [
+            ...body.funcoes.map((funcao: number) => {
+              return {
+                funcaoId: funcao,
+              };
+            }),
+          ],
+        },
+      },
+    });
+  }
 
   if (!user) throw createError(500, ERROR_CREATE);
   delete user.senha;

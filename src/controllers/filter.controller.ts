@@ -28,6 +28,8 @@ export class filterController {
   static dropdown = async (req: any, res: any, next: any) => {
     try {
       const type = req.params.type;
+      const query = req.query;
+
       let help: any;
       let dropdrown: ListProps[] = [];
       switch (type) {
@@ -42,6 +44,19 @@ export class filterController {
                 nome: {
                   in: ['Developer', 'developer'],
                 },
+              },
+            },
+          });
+          break;
+        case 'terapeuta':
+          dropdrown = await prisma.usuario.findMany({
+            select: {
+              id: true,
+              nome: true,
+            },
+            where: {
+              perfil: {
+                nome: 'Terapeuta',
               },
             },
           });
@@ -87,6 +102,58 @@ export class filterController {
             },
           });
           break;
+        case 'especialidade-funcao':
+          dropdrown = await prisma.funcao.findMany({
+            select: {
+              id: true,
+              nome: true,
+            },
+            where: {
+              especialidade: {
+                nome: query.especialidade,
+              },
+            },
+          });
+          break;
+        case 'especialidade-terapeuta':
+          help = await prisma.terapeuta.findMany({
+            select: {
+              id: true,
+              usuario: true,
+            },
+            where: {
+              especialidade: {
+                nome: query.especialidade,
+              },
+            },
+          });
+
+          dropdrown = help.map((terapeuta: any) => {
+            return {
+              id: terapeuta.id,
+              nome: terapeuta.usuario.nome,
+            };
+          });
+
+          break;
+        case 'terapeuta-funcao':
+          help = await prisma.funcao.findMany({
+            select: {
+              id: true,
+              nome: true,
+              terapeutas: true,
+            },
+            where: {},
+          });
+
+          dropdrown = help.funcoes.map((funcao: any) => {
+            return {
+              id: funcao.id,
+              nome: funcao.nome,
+            };
+          });
+
+          break;
         case 'periodo':
           dropdrown = await prisma.periodo.findMany({
             select: {
@@ -110,6 +177,7 @@ export class filterController {
               nome: true,
             },
           });
+          break;
         case 'modalidade':
           dropdrown = [];
           dropdrown = await prisma.modalidade.findMany({
@@ -118,6 +186,7 @@ export class filterController {
               nome: true,
             },
           });
+          break;
         case 'statusEventos':
           dropdrown = await prisma.statusEventos.findMany({
             select: {
