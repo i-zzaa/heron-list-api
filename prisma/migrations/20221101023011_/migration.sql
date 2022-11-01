@@ -174,12 +174,9 @@ CREATE TABLE "Funcao" (
 
 -- CreateTable
 CREATE TABLE "Terapeuta" (
-    "id" SERIAL NOT NULL,
     "usuarioId" INTEGER NOT NULL,
     "especialidadeId" INTEGER NOT NULL,
-    "fazDevolutiva" BOOLEAN NOT NULL DEFAULT true,
-
-    CONSTRAINT "Terapeuta_pkey" PRIMARY KEY ("id")
+    "fazDevolutiva" BOOLEAN NOT NULL DEFAULT true
 );
 
 -- CreateTable
@@ -197,7 +194,7 @@ CREATE TABLE "Calendario" (
     "dataFim" TEXT NOT NULL,
     "start" TEXT NOT NULL,
     "end" TEXT,
-    "diasFrequencia" TEXT NOT NULL,
+    "diasFrequencia" INTEGER[],
     "ciclo" TEXT NOT NULL,
     "observacao" TEXT NOT NULL,
     "pacienteId" INTEGER NOT NULL,
@@ -208,7 +205,7 @@ CREATE TABLE "Calendario" (
     "localidadeId" INTEGER NOT NULL,
     "statusEventosId" INTEGER NOT NULL,
     "frequenciaId" INTEGER NOT NULL,
-    "intervaloId" INTEGER,
+    "intervaloId" INTEGER NOT NULL,
     "usuarioId" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
