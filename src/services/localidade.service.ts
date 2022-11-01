@@ -9,6 +9,9 @@ export interface LocalidadeProps {
   ativo: boolean;
 }
 
+export const formatLocalidade = (item: any) => {
+  return `${item.casa} - ${item.sala}`;
+};
 export const getLocalidade = async () => {
   return await prisma.localidade.findMany({
     select: {

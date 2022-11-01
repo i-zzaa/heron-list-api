@@ -187,8 +187,8 @@ model Terapeuta {
   especialidadeId Int
   fazDevolutiva   Boolean @default(true)
 
-  usuario       Usuario?      @relation(fields: [usuarioId], references: [id])
-  especialidade Especialidade @relation(fields: [especialidadeId], references: [id])
+  usuario       Usuario?       @relation(fields: [usuarioId], references: [id])
+  especialidade Especialidade? @relation(fields: [especialidadeId], references: [id])
   calendario    Calendario[]
 
   funcoes terapeutaOnFuncao[]
@@ -198,8 +198,8 @@ model terapeutaOnFuncao {
   terapeutaId Int
   funcaoId    Int
 
-  terapeuta Terapeuta @relation(fields: [terapeutaId], references: [id], onDelete: Cascade)
-  funcao    Funcao    @relation(fields: [funcaoId], references: [id], onDelete: Cascade)
+  terapeuta Terapeuta? @relation(fields: [terapeutaId], references: [id], onDelete: Cascade)
+  funcao    Funcao?    @relation(fields: [funcaoId], references: [id], onDelete: Cascade)
 
   @@id([terapeutaId, funcaoId])
 }
@@ -211,7 +211,7 @@ model Calendario {
   dataFim        String
   start          String
   end            String?
-  diasFrequencia String
+  diasFrequencia Int[]
 
   ciclo           String
   observacao      String
@@ -223,7 +223,7 @@ model Calendario {
   localidadeId    Int
   statusEventosId Int
   frequenciaId    Int
-  intervaloId     Int?
+  intervaloId     Int
 
   usuarioId Int
   createdAt DateTime @default(now())
@@ -237,6 +237,6 @@ model Calendario {
   localidade    Localidade    @relation(fields: [localidadeId], references: [id])
   statusEventos StatusEventos @relation(fields: [statusEventosId], references: [id])
   frequencia    Frequencia    @relation(fields: [frequenciaId], references: [id])
-  intervalo     Intervalo?    @relation(fields: [intervaloId], references: [id])
+  intervalo     Intervalo     @relation(fields: [intervaloId], references: [id])
   usuario       Usuario       @relation(fields: [usuarioId], references: [id])
 }

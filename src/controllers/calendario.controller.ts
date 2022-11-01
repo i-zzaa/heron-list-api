@@ -2,9 +2,7 @@ import createError from 'http-errors';
 import {
   createCalendario,
   deleteCalendario,
-  getDay,
   getMonth,
-  getWeek,
   updateCalendario,
 } from '../services/calendario.service';
 
@@ -52,24 +50,6 @@ export class calendarioController {
   static getMonth = async (req: any, res: any, next: any) => {
     try {
       const data = await getMonth(req.params);
-      res.status(200).json(data);
-    } catch (error: any) {
-      res.status(401).json(error);
-      next();
-    }
-  };
-  static getDay = async (req: any, res: any, next: any) => {
-    try {
-      const data = await getDay(req.params);
-      res.status(200).json(data);
-    } catch (error: any) {
-      res.status(401).json(error);
-      next();
-    }
-  };
-  static getWeek = async (req: any, res: any, next: any) => {
-    try {
-      const data = await getWeek(req.params);
       res.status(200).json(data);
     } catch (error: any) {
       res.status(401).json(error);

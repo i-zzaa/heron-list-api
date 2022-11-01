@@ -13,6 +13,9 @@
     "commit": "git add . && git-cz",
     "release": "standard-version"
   },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",

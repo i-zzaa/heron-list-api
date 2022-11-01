@@ -1,5 +1,6 @@
 import { filterSinglePatients } from '../services/patient.service';
 import { PrismaClient } from '@prisma/client';
+import { formatLocalidade } from '../services/localidade.service';
 
 const prisma = new PrismaClient();
 
@@ -137,16 +138,16 @@ export class filterController {
 
           break;
         case 'terapeuta-funcao':
-          help = await prisma.funcao.findMany({
+          help = await prisma.terapeutaOnFuncao.findMany({
             select: {
-              id: true,
-              nome: true,
-              terapeutas: true,
+              funcao: true,
             },
-            where: {},
+            where: {
+              terapeutaId: Number(query.terapeutaId),
+            },
           });
 
-          dropdrown = help.funcoes.map((funcao: any) => {
+          dropdrown = help.map(({ funcao }: any) => {
             return {
               id: funcao.id,
               nome: funcao.nome,
@@ -211,6 +212,14 @@ export class filterController {
             },
           });
           break;
+        case 'intervalo':
+          dropdrown = await prisma.intervalo.findMany({
+            select: {
+              id: true,
+              nome: true,
+            },
+          });
+          break;
         case 'localidade':
           help = await prisma.localidade.findMany({
             select: {
@@ -223,7 +232,7 @@ export class filterController {
           dropdrown = help.map((item: any) => {
             return {
               id: item.id,
-              nome: `${item.casa} - ${item.sala}`,
+              nome: formatLocalidade(item),
             };
           });
           break;

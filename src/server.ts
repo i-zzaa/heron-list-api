@@ -146,8 +146,8 @@ app.delete('/modalidade/:id', auth, modalidadeController.delete);
 
 //Calendario
 app.get('/evento/mes/:mes/:ano', auth, calendarioController.getMonth);
-app.get('/evento/dia/:data', auth, calendarioController.getDay);
-app.get('/evento/:start/:end', auth, calendarioController.getWeek);
+// app.get('/evento/dia/:data', auth, calendarioController.getDay);
+// app.get('/evento/:start/:end', auth, calendarioController.getWeek);
 
 app.post('/evento', auth, calendarioController.create);
 app.put('/evento', auth, calendarioController.update);

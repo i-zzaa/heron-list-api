@@ -13,13 +13,13 @@ export const getPerfil = async () => {
       id: true,
       nome: true,
     },
-    orderBy: {
-      nome: 'asc',
-    },
     where: {
       NOT: {
         nome: 'Developer',
       },
+    },
+    orderBy: {
+      nome: 'asc',
     },
   });
 };

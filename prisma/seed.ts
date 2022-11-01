@@ -6,17 +6,21 @@ const prisma = new PrismaClient();
 async function main() {
   const senha = bcrypt.hashSync('12345678', 8);
 
-  await ['Developer', 'Administrador', 'Recepcionista', 'Coordenador'].map(
-    async (perfil: string, index: number) => {
-      await prisma.perfil.upsert({
-        where: { id: index },
-        update: {},
-        create: {
-          nome: perfil,
-        },
-      });
-    }
-  );
+  await [
+    'Developer',
+    'Administrador',
+    'Recepcionista',
+    'Coordenador',
+    'Terapeuta',
+  ].map(async (perfil: string, index: number) => {
+    await prisma.perfil.upsert({
+      where: { id: index },
+      update: {},
+      create: {
+        nome: perfil,
+      },
+    });
+  });
 
   await [
     {
@@ -53,17 +57,18 @@ async function main() {
     }
   );
 
-  await ['Psico', 'Fono', 'TO', 'PsicoPEDAG'].map(
-    async (especialidade: string, id: number) => {
-      await prisma.especialidade.upsert({
-        where: { id: id },
-        update: {},
-        create: {
-          nome: especialidade,
-        },
-      });
-    }
-  );
+  await [
+    { nome: 'Psico', cor: '#8e24aa' },
+    { nome: 'TO', cor: '#ef6c00' },
+    { nome: 'PsicoPEDAG', cor: '#000000' },
+    { nome: 'Fono', cor: '#f6bf26' },
+  ].map(async (especialidade: any, id: number) => {
+    await prisma.especialidade.upsert({
+      where: { id: id },
+      update: {},
+      create: { ...especialidade },
+    });
+  });
 
   await ['Integral', 'Manhã', 'Tarde'].map(
     async (periodo: string, id: number) => {
@@ -100,6 +105,28 @@ async function main() {
       });
     }
   );
+
+  await ['Todas Semanas', '2 Semanas', '3 Semanas'].map(
+    async (intervalo: string, id: number) => {
+      await prisma.intervalo.upsert({
+        where: { id: id },
+        update: {},
+        create: {
+          nome: intervalo,
+        },
+      });
+    }
+  );
+
+  await ['Único', 'Recorrente'].map(async (frequencia: string, id: number) => {
+    await prisma.frequencia.upsert({
+      where: { id: id },
+      update: {},
+      create: {
+        nome: frequencia,
+      },
+    });
+  });
 }
 
 main()

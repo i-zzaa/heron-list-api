@@ -67,7 +67,9 @@ export const getUsers = async () => {
     },
   });
 
-  const format = await usuarios.map((usuario: any) => {
+  // return usuarios;
+
+  const format = usuarios.map((usuario: any) => {
     const funcoes = usuario?.terapeuta?.funcoes.map((funcao: any) => {
       return {
         nome: funcao.funcao.nome,
@@ -82,7 +84,7 @@ export const getUsers = async () => {
     };
   });
 
-  return format;
+  return format || [];
 };
 
 export const getUser = async (login: string) => {
