@@ -38,7 +38,7 @@ app.use(cors());
 app.get('/', async (request, response) => {
   response.status(200).json({
     status: true,
-    data: 'versão: 0.4.0-beta.50',
+    data: 'versão: 0.5.0-beta.0',
   });
 });
 
