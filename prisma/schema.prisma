@@ -182,7 +182,6 @@ model Funcao {
 }
 
 model Terapeuta {
-  id              Int     @id @default(autoincrement())
   usuarioId       Int     @unique
   especialidadeId Int
   fazDevolutiva   Boolean @default(true)
@@ -198,7 +197,7 @@ model terapeutaOnFuncao {
   terapeutaId Int
   funcaoId    Int
 
-  terapeuta Terapeuta? @relation(fields: [terapeutaId], references: [id], onDelete: Cascade)
+  terapeuta Terapeuta? @relation(fields: [terapeutaId], references: [usuarioId], onDelete: Cascade)
   funcao    Funcao?    @relation(fields: [funcaoId], references: [id], onDelete: Cascade)
 
   @@id([terapeutaId, funcaoId])
@@ -229,7 +228,7 @@ model Calendario {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
 
-  terapeuta     Terapeuta     @relation(fields: [terapeutaId], references: [id])
+  terapeuta     Terapeuta     @relation(fields: [terapeutaId], references: [usuarioId])
   paciente      Paciente      @relation(fields: [pacienteId], references: [id])
   modalidade    Modalidade    @relation(fields: [modalidadeId], references: [id])
   especialidade Especialidade @relation(fields: [especialidadeId], references: [id])

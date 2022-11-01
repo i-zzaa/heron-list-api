@@ -119,7 +119,7 @@ export class filterController {
         case 'especialidade-terapeuta':
           help = await prisma.terapeuta.findMany({
             select: {
-              id: true,
+              usuarioId: true,
               usuario: true,
             },
             where: {
@@ -131,7 +131,7 @@ export class filterController {
 
           dropdrown = help.map((terapeuta: any) => {
             return {
-              id: terapeuta.id,
+              id: terapeuta.usuario,
               nome: terapeuta.usuario.nome,
             };
           });

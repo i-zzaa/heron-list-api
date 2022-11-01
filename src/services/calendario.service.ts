@@ -20,6 +20,7 @@ export interface CalendarioProps {
 interface ObjProps {
   nome: string;
   id: number;
+  usuarioId?: number;
 }
 
 export interface CalendarioCreateParam {
@@ -42,6 +43,99 @@ export interface CalendarioCreateParam {
 
 export const getCalendario = async () => {
   return [];
+};
+
+export const geFilter = async (params: any, query: any) => {
+  const inicioDoMes = getPrimeiroDoMes(params.ano, params.mes);
+  const ultimoDiaDoMes = getUltimoDoMes(params.ano, params.mes);
+
+  const filter: any = {};
+  Object.keys(query).map((key: string) => (filter[key] = Number(query[key])));
+
+  const eventos = await prisma.calendario.findMany({
+    select: {
+      id: true,
+      dataInicio: true,
+      dataFim: true,
+      start: true,
+      end: true,
+      diasFrequencia: true,
+
+      ciclo: true,
+      observacao: true,
+      paciente: {
+        select: {
+          nome: true,
+          id: true,
+        },
+      },
+      modalidade: {
+        select: {
+          nome: true,
+          id: true,
+        },
+      },
+      especialidade: true,
+      terapeuta: {
+        select: {
+          usuario: {
+            select: {
+              nome: true,
+              id: true,
+            },
+          },
+        },
+      },
+      funcao: {
+        select: {
+          nome: true,
+          id: true,
+        },
+      },
+      localidade: true,
+      statusEventos: {
+        select: {
+          nome: true,
+          id: true,
+        },
+      },
+      frequencia: {
+        select: {
+          nome: true,
+          id: true,
+        },
+      },
+      intervalo: {
+        select: {
+          nome: true,
+          id: true,
+        },
+      },
+    },
+    where: {
+      ...filter,
+
+      dataInicio: {
+        lte: ultimoDiaDoMes, // menor que o ultimo dia do mes
+      },
+      OR: [
+        {
+          dataFim: '',
+        },
+        {
+          dataFim: {
+            // lte: ultimoDiaDoMes, // menor que o ultimo dia do mes
+            gte: inicioDoMes, // maior que o primeiro dia do mes
+          },
+        },
+      ],
+      // pacienteId: Number(query?.pacientes),
+      // statusEventosId: Number(query?.statusEventos),
+    },
+  });
+
+  const eventosFormat = await formatEvents(eventos);
+  return eventosFormat;
 };
 
 export const getMonth = async (params: any) => {
@@ -80,7 +174,6 @@ export const getMonth = async (params: any) => {
               id: true,
             },
           },
-          id: true,
         },
       },
       funcao: {
@@ -128,6 +221,83 @@ export const getMonth = async (params: any) => {
     },
   });
 
+  const eventosFormat = await formatEvents(eventos);
+  return eventosFormat;
+};
+
+export const createCalendario = async (
+  body: CalendarioCreateParam,
+  login: string
+) => {
+  const user = await getUser(login);
+
+  if (body.frequencia.nome === 'Único') {
+    body.dataFim = body.dataInicio;
+    body.intervalo = {
+      id: 1,
+      nome: '1 Semana',
+    };
+  }
+
+  const evento = await prisma.calendario.create({
+    data: {
+      dataInicio: body.dataInicio,
+      dataFim: body.dataFim,
+      start: body.start,
+      end: body.end,
+      diasFrequencia: body.diasFrequencia,
+
+      ciclo: 'ativo',
+      observacao: body.observacao,
+      pacienteId: body.paciente.id,
+      modalidadeId: body.modalidade.id,
+      especialidadeId: body.especialidade.id,
+      terapeutaId: body.terapeuta.id,
+      funcaoId: body.funcao.id,
+      localidadeId: body.localidade.id,
+      statusEventosId: body.statusEventos.id,
+      frequenciaId: body.frequencia.id,
+      intervaloId: body.intervalo.id,
+
+      usuarioId: user.id,
+    },
+  });
+
+  return evento;
+};
+
+export const updateCalendario = async (body: any) => {
+  const evento = await prisma.calendario.updateMany({
+    data: {
+      dataInicio: body?.dataInicio,
+      dataFim: body?.dataFim,
+      start: body?.start,
+      end: body?.end,
+      ciclo: body?.ciclo,
+      observacao: body?.observacao,
+      pacienteId: body?.paciente?.id,
+      modalidadeId: body?.modalidade?.id,
+      especialidadeId: body?.especialidade?.id,
+      terapeutaId: body?.terapeuta?.id,
+      funcaoId: body?.funcao?.id,
+      localidadeId: body?.localidade?.id,
+      statusEventosId: body?.statusEventos?.id,
+      frequenciaId: body?.frequencia?.id,
+      intervaloId: body?.intervalo?.id,
+    },
+    where: {
+      id: body.id,
+    },
+  });
+
+  return evento;
+};
+
+export const deleteCalendario = async (id: number) => {
+  return [];
+};
+
+const formatEvents = async (eventos: any) => {
   const eventosFormat: any = [];
   eventos.map((evento: any) => {
     let formated: any = {};
@@ -207,76 +377,4 @@ export const getMonth = async (params: any) => {
   });
 
   return eventosFormat;
-};
-
-export const createCalendario = async (
-  body: CalendarioCreateParam,
-  login: string
-) => {
-  const user = await getUser(login);
-
-  if (body.frequencia.nome === 'Único') {
-    body.dataFim = body.dataInicio;
-    body.intervalo = {
-      id: 1,
-      nome: '1 Semana',
-    };
-  }
-
-  const evento = await prisma.calendario.create({
-    data: {
-      dataInicio: body.dataInicio,
-      dataFim: body.dataFim,
-      start: body.start,
-      end: body.end,
-      diasFrequencia: body.diasFrequencia,
-
-      ciclo: 'ativo',
-      observacao: body.observacao,
-      pacienteId: body.paciente.id,
-      modalidadeId: body.modalidade.id,
-      especialidadeId: body.especialidade.id,
-      terapeutaId: body.terapeuta.id,
-      funcaoId: body.funcao.id,
-      localidadeId: body.localidade.id,
-      statusEventosId: body.statusEventos.id,
-      frequenciaId: body.frequencia.id,
-      intervaloId: body.intervalo.id,
-
-      usuarioId: user.id,
-    },
-  });
-
-  return evento;
-};
-
-export const updateCalendario = async (body: any) => {
-  const evento = await prisma.calendario.updateMany({
-    data: {
-      dataInicio: body?.dataInicio,
-      dataFim: body?.dataFim,
-      start: body?.start,
-      end: body?.end,
-      ciclo: body?.ciclo,
-      observacao: body?.observacao,
-      pacienteId: body?.paciente?.id,
-      modalidadeId: body?.modalidade?.id,
-      especialidadeId: body?.especialidade?.id,
-      terapeutaId: body?.terapeuta?.id,
-      funcaoId: body?.funcao?.id,
-      localidadeId: body?.localidade?.id,
-      statusEventosId: body?.statusEventos?.id,
-      frequenciaId: body?.frequencia?.id,
-      intervaloId: body?.intervalo?.id,
-    },
-    where: {
-      id: body.id,
-    },
-  });
-
-  return evento;
-};
-
-export const deleteCalendario = async (id: number) => {
-  return [];
 };
