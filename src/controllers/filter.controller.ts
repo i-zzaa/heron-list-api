@@ -103,6 +103,35 @@ export class filterController {
             },
           });
           break;
+        case 'paciente-especialidade':
+          console.log('auqi');
+
+          help = await prisma.paciente.findUniqueOrThrow({
+            select: {
+              emAtendimento: true,
+              vaga: {
+                include: {
+                  especialidades: {
+                    include: {
+                      especialidade: true,
+                    },
+                  },
+                },
+              },
+            },
+            where: {
+              id: Number(query.pacienteId),
+            },
+          });
+
+          dropdrown = help.vaga?.especialidades.map((especialidade: any) => {
+            return {
+              id: especialidade.especialidade.id,
+              nome: especialidade.especialidade.nome,
+            };
+          });
+
+          break;
         case 'especialidade-funcao':
           dropdrown = await prisma.funcao.findMany({
             select: {
