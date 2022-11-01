@@ -26,6 +26,7 @@ interface Props extends PatientProps {
   observacao: string;
   naFila: boolean;
   disabled?: boolean;
+  emAtendimento?: boolean;
 }
 
 const formatPatients = (patients: any) => {
@@ -45,7 +46,8 @@ const formatPatients = (patients: any) => {
   return pacientes;
 };
 
-export const getPatients = async () => {
+export const getPatients = async (query: any) => {
+  const emAtendimento = query.emAtendimento === 'true';
   const patients = await prisma.paciente.findMany({
     select: {
       id: true,
@@ -55,6 +57,7 @@ export const getPatients = async () => {
       dataNascimento: true,
       convenio: true,
       disabled: true,
+      emAtendimento: true,
       vaga: {
         include: {
           periodo: true,
@@ -74,6 +77,7 @@ export const getPatients = async () => {
         naFila: true,
         devolutiva: false,
       },
+      emAtendimento: emAtendimento,
     },
     orderBy: {
       vaga: {
@@ -81,8 +85,6 @@ export const getPatients = async () => {
       },
     },
   });
-
-  // return patients;
 
   if (patients) {
     const pacientes: any = await formatPatients(patients);
@@ -136,16 +138,17 @@ export const createPatient = async (body: Props) => {
       telefone: body.telefone,
       responsavel: body.responsavel.toUpperCase(),
       disabled: false,
-      convenioId: Number(body.convenioId),
+      convenioId: body.convenioId,
       dataNascimento: formatadataPadraoBD(body.dataNascimento),
+      emAtendimento: body.emAtendimento,
       vaga: {
         create: {
           dataContato: formatadataPadraoBD(body.dataContato),
           observacao: body.observacao,
           naFila: body.naFila,
-          periodoId: Number(body.periodoId),
-          tipoSessaoId: Number(body.tipoSessaoId),
-          statusId: Number(body.statusId),
+          periodoId: body.periodoId,
+          tipoSessaoId: body.tipoSessaoId,
+          statusId: body.statusId,
           especialidades: {
             create: [
               ...body.especialidades.map((especialidade: string) => {
@@ -232,6 +235,7 @@ export const updatePatient = async (body: any) => {
 
 export const filterPatients = async (body: any) => {
   const filter: any = {};
+  const emAtendimento = Boolean(body.emAtendimento);
 
   if (body.pacientes && body.pacientes.length)
     filter['pacienteId'] = { in: body.pacientes };
@@ -250,6 +254,7 @@ export const filterPatients = async (body: any) => {
       telefone: true,
       responsavel: true,
       dataNascimento: true,
+      emAtendimento: true,
       convenio: true,
       vaga: {
         select: {
@@ -268,6 +273,7 @@ export const filterPatients = async (body: any) => {
       },
     },
     where: {
+      emAtendimento: emAtendimento,
       vaga: {
         ...filter,
         naFila: body.naFila,
@@ -309,6 +315,7 @@ export const filterSinglePatients = async (body: any) => {
       dataNascimento: true,
       convenio: true,
       disabled: true,
+      emAtendimento: true,
       vaga: {
         include: {
           periodo: true,
@@ -323,6 +330,7 @@ export const filterSinglePatients = async (body: any) => {
       },
     },
     where: {
+      emAtendimento: body.emAtendimento,
       disabled: body.disabled,
       convenioId: body.convenios,
       vaga: {

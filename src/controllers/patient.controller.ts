@@ -51,7 +51,7 @@ export class patientController {
   };
   static get = async (req: any, res: any, next: any) => {
     try {
-      const data = await getPatients();
+      const data = await getPatients(req.query);
       res.status(200).json(data);
     } catch (error: any) {
       res.status(401).json(error);

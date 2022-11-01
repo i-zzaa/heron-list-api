@@ -131,7 +131,7 @@ export class filterController {
 
           dropdrown = help.map((terapeuta: any) => {
             return {
-              id: terapeuta.usuario,
+              id: terapeuta.usuario.id,
               nome: terapeuta.usuario.nome,
             };
           });
@@ -176,6 +176,9 @@ export class filterController {
             select: {
               id: true,
               nome: true,
+            },
+            where: {
+              emAtendimento: Boolean(query.emAtendimento),
             },
           });
           break;

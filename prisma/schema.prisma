@@ -27,6 +27,7 @@ model Paciente {
   responsavel    String
   dataNascimento String
   convenioId     Int
+  emAtendimento  Boolean  @default(false)
   disabled       Boolean  @default(false)
   createdAt      DateTime @default(now())
 
@@ -39,10 +40,10 @@ model Vaga {
   id             Int     @id @default(autoincrement())
   pacienteId     Int     @unique
   dataContato    String
-  periodoId      Int
+  periodoId      Int?
   tipoSessaoId   Int
   // especialidadeId Int
-  statusId       Int
+  statusId       Int?
   observacao     String
   naFila         Boolean @default(true)
   dataSaiuFila   String?
@@ -54,7 +55,7 @@ model Vaga {
   createdAt DateTime @default(now())
 
   // especialidade Especialidade @relation(fields: [especialidadeId], references: [id])
-  status         Status                @relation(fields: [statusId], references: [id])
+  status         Status?               @relation(fields: [statusId], references: [id])
   periodo        Periodo?              @relation(fields: [periodoId], references: [id])
   tipoSessao     TipoSessao?           @relation(fields: [tipoSessaoId], references: [id])
   paciente       Paciente?             @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
