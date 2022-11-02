@@ -34,6 +34,11 @@ export interface VagaProps {
   observacao: string;
 }
 
+export interface FilaProps {
+  vagaId: number;
+  dataAgendado: string;
+}
+
 export const getVagas = async () => {
   return await prisma.vaga.findMany({
     orderBy: {
@@ -46,6 +51,45 @@ export const createVaga = async (body: any) => {
   return await prisma.vaga.create({
     data: body,
   });
+};
+
+const verifyInFila = async (vagaId: number, dataAgendado: string) => {
+  const vagaOnEspecialidade: any = await prisma.vagaOnEspecialidade.aggregate({
+    _count: {
+      especialidadeId: true,
+    },
+    where: {
+      vagaId: vagaId,
+      agendado: false,
+    },
+  });
+
+  const naFila: boolean = vagaOnEspecialidade._count.especialidadeId > 0;
+
+  if (!naFila) {
+    const { dataContato }: any = await prisma.vaga.findUniqueOrThrow({
+      select: {
+        dataContato: true,
+      },
+      where: {
+        id: vagaId,
+      },
+    });
+
+    const diff = calculaData(dataAgendado, dataContato);
+    await prisma.vaga.update({
+      data: {
+        naFila: naFila,
+        dataSaiuFila: dataAgendado,
+        diff: diff.toString(),
+      },
+      where: {
+        id: vagaId,
+      },
+    });
+  }
+
+  return naFila;
 };
 
 export const updateVaga = async (body: VagaEspecialidadeProps) => {
@@ -90,41 +134,8 @@ export const updateVaga = async (body: VagaEspecialidadeProps) => {
     });
   }
 
-  const vagaOnEspecialidade: any = await prisma.vagaOnEspecialidade.aggregate({
-    _count: {
-      especialidadeId: true,
-    },
-    where: {
-      vagaId: body.vagaId,
-      agendado: false,
-    },
-  });
-
-  const naFila: boolean = vagaOnEspecialidade._count.especialidadeId > 0;
-
-  if (!naFila) {
-    const { dataContato }: any = await prisma.vaga.findUniqueOrThrow({
-      select: {
-        dataContato: true,
-      },
-      where: {
-        id: body.vagaId,
-      },
-    });
-
-    const diff = calculaData(dataAgendado, dataContato);
-    await prisma.vaga.update({
-      data: {
-        naFila: naFila,
-        dataSaiuFila: dataAgendado,
-        diff: diff.toString(),
-      },
-      where: {
-        id: body.vagaId,
-      },
-    });
-  }
-  return naFila;
+  const isFila = verifyInFila(body.vagaId, dataAgendado);
+  return isFila;
 };
 
 export const tipoSessoesVaga = async () => {
@@ -266,4 +277,24 @@ export const updateReturn = async ({ id, devolutiva }: any) => {
       id: id,
     },
   });
+};
+
+export const updateEspecialidadeVaga = async (
+  vagaId: number,
+  especialidadeId: number
+) => {
+  const dataAgendado = formatadataPadraoBD(new Date());
+  await prisma.vagaOnEspecialidade.updateMany({
+    data: {
+      agendado: true,
+      dataAgendado,
+    },
+    where: {
+      especialidadeId: especialidadeId,
+      vagaId: vagaId,
+    },
+  });
+
+  const isFila = verifyInFila(vagaId, dataAgendado);
+  return isFila;
 };

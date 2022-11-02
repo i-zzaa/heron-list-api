@@ -7,6 +7,7 @@ import {
   getUltimoDoMes,
 } from '../utils/convert-hours';
 import { formatLocalidade } from './localidade.service';
+import { setPacienteEmAtendimento } from './patient.service';
 import { getUser } from './user.service';
 
 const prisma = new PrismaClient();
@@ -263,6 +264,8 @@ export const createCalendario = async (
     },
   });
 
+  // setPacienteEmAtendimento(true, body.paciente.id);
+
   return evento;
 };
 
@@ -284,6 +287,7 @@ export const updateCalendario = async (body: any) => {
       statusEventosId: body?.statusEventos?.id,
       frequenciaId: body?.frequencia?.id,
       intervaloId: body?.intervalo?.id,
+      diasFrequencia: body?.diasFrequencia,
     },
     where: {
       id: body.id,

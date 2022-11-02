@@ -305,6 +305,20 @@ export const filterPatients = async (body: any) => {
   return pacientes;
 };
 
+export const setPacienteEmAtendimento = async (
+  emAtendimento: boolean,
+  id: number
+) => {
+  await prisma.paciente.update({
+    data: {
+      emAtendimento,
+    },
+    where: {
+      id,
+    },
+  });
+};
+
 export const filterSinglePatients = async (body: any) => {
   const filter = await prisma.paciente.findMany({
     select: {

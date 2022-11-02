@@ -4,6 +4,7 @@ import {
   returnVaga,
   statusVaga,
   tipoSessoesVaga,
+  updateEspecialidadeVaga,
   updateReturn,
   updateVaga,
 } from '../services/vaga.service';
@@ -13,6 +14,23 @@ export class vagaController {
   static update = async (req: any, res: any, next: any) => {
     try {
       const data = await updateVaga(req.body);
+
+      const message = {
+        data: data ? 'Paciente ainda na fila' : 'Paciente saiu da fila',
+      };
+
+      res.status(200).json(messageUpdate(message));
+    } catch (error: any) {
+      res.status(401).json(error);
+      next();
+    }
+  };
+  static updateEspecialidadeVaga = async (req: any, res: any, next: any) => {
+    try {
+      const data = await updateEspecialidadeVaga(
+        req.body.vagaId,
+        req.body.especialidadeId
+      );
 
       const message = {
         data: data ? 'Paciente ainda na fila' : 'Paciente saiu da fila',

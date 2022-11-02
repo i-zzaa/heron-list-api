@@ -104,8 +104,6 @@ export class filterController {
           });
           break;
         case 'paciente-especialidade':
-          console.log('auqi');
-
           help = await prisma.paciente.findUniqueOrThrow({
             select: {
               emAtendimento: true,
@@ -207,7 +205,7 @@ export class filterController {
               nome: true,
             },
             where: {
-              emAtendimento: Boolean(query.emAtendimento),
+              emAtendimento: query.emAtendimento === 'true',
             },
           });
           break;

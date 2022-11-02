@@ -56,6 +56,11 @@ app.put('/paciente/desabilitar', auth, patientController.disabled);
 app.get('/pacientes/:search', auth, patientController.search);
 
 app.put('/vagas/agendar', auth, vagaController.update);
+app.put(
+  '/vagas/agendar/especialidade',
+  auth,
+  vagaController.updateEspecialidadeVaga
+);
 app.get('/vagas/dashboard/:type', auth, vagaController.dashboard);
 app.get('/vagas/wait', auth, vagaController.wait);
 app.get('/vagas/return', auth, vagaController.returnTrend);
