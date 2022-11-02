@@ -21,36 +21,48 @@ model Convenio {
 }
 
 model Paciente {
-  id             Int      @id @default(autoincrement())
-  nome           String
-  telefone       String
-  responsavel    String
-  dataNascimento String
-  convenioId     Int
-  emAtendimento  Boolean  @default(false)
-  disabled       Boolean  @default(false)
-  createdAt      DateTime @default(now())
+  id               Int      @id @default(autoincrement())
+  nome             String
+  telefone         String
+  responsavel      String
+  dataNascimento   String
+  convenioId       Int
+  statusPacienteId Int?
+  emAtendimento    Boolean  @default(false)
+  disabled         Boolean  @default(false)
+  createdAt        DateTime @default(now())
+
+  statusPaciente StatusPaciente? @relation(fields: [statusPacienteId], references: [id])
 
   convenio   Convenio?    @relation(fields: [convenioId], references: [id])
   vaga       Vaga?
   calendario Calendario[]
 }
 
+model StatusPaciente {
+  id       Int        @id @default(autoincrement())
+  nome     String
+  Paciente Paciente[]
+}
+
 model Vaga {
-  id             Int     @id @default(autoincrement())
-  pacienteId     Int     @unique
-  dataContato    String
-  periodoId      Int?
-  tipoSessaoId   Int
+  id           Int     @id @default(autoincrement())
+  pacienteId   Int     @unique
+  dataContato  String
+  periodoId    Int?
+  tipoSessaoId Int
   // especialidadeId Int
-  statusId       Int?
-  observacao     String
-  naFila         Boolean @default(true)
+  statusId     Int?
+  observacao   String
+  naFila       Boolean @default(true)
+
   dataSaiuFila   String?
   devolutiva     Boolean @default(false)
   dataDevolutiva String?
   diff           String?
   dataRetorno    String?
+
+  dataVoltouAba String?
 
   createdAt DateTime @default(now())
 

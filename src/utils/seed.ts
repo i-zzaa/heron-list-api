@@ -127,6 +127,18 @@ async function main() {
       },
     });
   });
+
+  await ['Fila', 'Avaliacao', 'Voltou Aba', 'Terapia'].map(
+    async (statusPaciente: string, id: number) => {
+      await prisma.statusPaciente.upsert({
+        where: { id: id },
+        update: {},
+        create: {
+          nome: statusPaciente,
+        },
+      });
+    }
+  );
 }
 
 main()

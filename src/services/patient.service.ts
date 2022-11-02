@@ -177,6 +177,7 @@ export const updatePatient = async (body: any) => {
         dataNascimento: formatadataPadraoBD(body.dataNascimento),
         vaga: {
           update: {
+            dataVoltouAba: body.dataVoltouAba,
             periodoId: body.periodoId,
             tipoSessaoId: body.tipoSessaoId,
             statusId: body.statusId,
@@ -259,6 +260,7 @@ export const filterPatients = async (body: any) => {
       vaga: {
         select: {
           naFila: true,
+          dataVoltouAba: true,
         },
         include: {
           periodo: true,
