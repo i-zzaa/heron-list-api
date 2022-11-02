@@ -56,3 +56,15 @@ export const updateTipoSessao = async (body: TipoSessaoProps, id: number) => {
     },
   });
 };
+
+export const getTipoSessaoUnique = async (id: number) => {
+  return await prisma.tipoSessao.findUniqueOrThrow({
+    select: {
+      nome: true,
+      id: true,
+    },
+    where: {
+      id: Number(id),
+    },
+  });
+};

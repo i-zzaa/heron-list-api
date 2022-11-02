@@ -72,3 +72,15 @@ export const deleteStatusEventos = async (id: number) => {
     },
   });
 };
+
+export const getStatusUnique = async (id: number) => {
+  return await prisma.statusEventos.findUniqueOrThrow({
+    select: {
+      nome: true,
+      id: true,
+    },
+    where: {
+      id: Number(id),
+    },
+  });
+};

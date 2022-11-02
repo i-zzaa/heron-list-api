@@ -4,6 +4,8 @@ import {
   formatadataPadraoBD,
   formatdate,
 } from '../utils/convert-hours';
+import { getStatusUnique } from './statusEventos.service';
+import { getTipoSessaoUnique } from './tipo-sessa.service';
 
 const prisma = new PrismaClient();
 export interface PatientProps {
@@ -27,6 +29,7 @@ interface Props extends PatientProps {
   naFila: boolean;
   disabled?: boolean;
   emAtendimento?: boolean;
+  dataVoltouAba?: string;
 }
 
 const formatPatients = (patients: any) => {
@@ -132,6 +135,13 @@ export const searchPatients = async (word: string) => {
 };
 
 export const createPatient = async (body: Props) => {
+  if (body.statusId && !body.dataVoltouAba) {
+    const prioridade: any = getStatusUnique(body.statusId);
+    if (prioridade?.nome === 'Voltou Aba') {
+      body.dataVoltouAba = formatadataPadraoBD(body.dataContato);
+    }
+  }
+
   const paciente: any = await prisma.paciente.create({
     data: {
       nome: body.nome.toUpperCase(),
@@ -144,6 +154,7 @@ export const createPatient = async (body: Props) => {
       vaga: {
         create: {
           dataContato: formatadataPadraoBD(body.dataContato),
+          dataVoltouAba: body.dataVoltouAba,
           observacao: body.observacao,
           naFila: body.naFila,
           periodoId: body.periodoId,
