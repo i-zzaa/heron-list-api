@@ -128,9 +128,9 @@ async function main() {
     });
   });
 
-  await prisma.statusPaciente.createMany({
-    date: ['Fila', 'Avaliacao', 'Voltou Aba', 'Terapia'],
-  });
+  // await prisma.statusPaciente.createMany({
+  //   date: ['Fila', 'Avaliacao', 'Voltou Aba', 'Terapia'],
+  // });
 }
 
 main()

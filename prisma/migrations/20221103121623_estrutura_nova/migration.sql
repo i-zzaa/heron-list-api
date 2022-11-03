@@ -14,10 +14,23 @@ CREATE TABLE "Paciente" (
     "responsavel" TEXT NOT NULL,
     "dataNascimento" TEXT NOT NULL,
     "convenioId" INTEGER NOT NULL,
+    "statusPacienteId" INTEGER NOT NULL,
+    "tipoSessaoId" INTEGER NOT NULL,
+    "statusId" INTEGER,
+    "emAtendimento" BOOLEAN NOT NULL DEFAULT false,
     "disabled" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updateAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Paciente_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "StatusPaciente" (
+    "id" SERIAL NOT NULL,
+    "nome" TEXT NOT NULL,
+
+    CONSTRAINT "StatusPaciente_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -26,9 +39,7 @@ CREATE TABLE "Vaga" (
     "pacienteId" INTEGER NOT NULL,
     "dataContato" TEXT NOT NULL,
     "periodoId" INTEGER NOT NULL,
-    "tipoSessaoId" INTEGER NOT NULL,
-    "statusId" INTEGER NOT NULL,
-    "observacao" TEXT NOT NULL,
+    "observacao" TEXT,
     "naFila" BOOLEAN NOT NULL DEFAULT true,
     "dataSaiuFila" TEXT,
     "devolutiva" BOOLEAN NOT NULL DEFAULT false,
@@ -48,6 +59,30 @@ CREATE TABLE "VagaOnEspecialidade" (
     "especialidadeId" INTEGER NOT NULL,
 
     CONSTRAINT "VagaOnEspecialidade_pkey" PRIMARY KEY ("vagaId","especialidadeId")
+);
+
+-- CreateTable
+CREATE TABLE "VagaTerapia" (
+    "id" SERIAL NOT NULL,
+    "pacienteId" INTEGER NOT NULL,
+    "periodoId" INTEGER NOT NULL,
+    "dataVoltouAba" TEXT NOT NULL,
+    "observacao" TEXT,
+    "naFila" BOOLEAN NOT NULL DEFAULT true,
+    "dataSaiuFila" TEXT,
+    "diff" TEXT,
+
+    CONSTRAINT "VagaTerapia_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "VagaTerapiaOnEspecialidade" (
+    "especialidadeId" INTEGER NOT NULL,
+    "vagaId" INTEGER NOT NULL,
+    "agendado" BOOLEAN NOT NULL DEFAULT false,
+    "dataAgendado" TEXT,
+
+    CONSTRAINT "VagaTerapiaOnEspecialidade_pkey" PRIMARY KEY ("vagaId","especialidadeId")
 );
 
 -- CreateTable
@@ -196,7 +231,7 @@ CREATE TABLE "Calendario" (
     "end" TEXT,
     "diasFrequencia" INTEGER[],
     "ciclo" TEXT NOT NULL,
-    "observacao" TEXT NOT NULL,
+    "observacao" TEXT,
     "pacienteId" INTEGER NOT NULL,
     "modalidadeId" INTEGER NOT NULL,
     "especialidadeId" INTEGER NOT NULL,
@@ -215,6 +250,9 @@ CREATE TABLE "Calendario" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Vaga_pacienteId_key" ON "Vaga"("pacienteId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "VagaTerapia_pacienteId_key" ON "VagaTerapia"("pacienteId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Usuario_login_key" ON "Usuario"("login");
