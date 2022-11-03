@@ -21,22 +21,29 @@ model Convenio {
 }
 
 model Paciente {
-  id               Int      @id @default(autoincrement())
+  id               Int    @id @default(autoincrement())
   nome             String
   telefone         String
   responsavel      String
   dataNascimento   String
   convenioId       Int
-  statusPacienteId Int?
-  emAtendimento    Boolean  @default(false)
-  disabled         Boolean  @default(false)
-  createdAt        DateTime @default(now())
+  statusPacienteId Int
+  tipoSessaoId     Int
+  statusId         Int?
 
-  statusPaciente StatusPaciente? @relation(fields: [statusPacienteId], references: [id])
+  emAtendimento Boolean @default(false)
+  disabled      Boolean @default(false)
 
-  convenio   Convenio?    @relation(fields: [convenioId], references: [id])
-  vaga       Vaga?
-  calendario Calendario[]
+  vaga           Vaga?
+  calendario     Calendario[]
+  statusPaciente StatusPaciente @relation(fields: [statusPacienteId], references: [id])
+  convenio       Convenio?      @relation(fields: [convenioId], references: [id])
+  tipoSessao     TipoSessao?    @relation(fields: [tipoSessaoId], references: [id])
+  status         Status?        @relation(fields: [statusId], references: [id])
+
+  createdAt   DateTime     @default(now())
+  updateAt    DateTime     @default(now())
+  vagaTerapia VagaTerapia?
 }
 
 model StatusPaciente {
@@ -46,15 +53,12 @@ model StatusPaciente {
 }
 
 model Vaga {
-  id           Int     @id @default(autoincrement())
-  pacienteId   Int     @unique
-  dataContato  String
-  periodoId    Int?
-  tipoSessaoId Int
-  // especialidadeId Int
-  statusId     Int?
-  observacao   String
-  naFila       Boolean @default(true)
+  id          Int     @id @default(autoincrement())
+  pacienteId  Int     @unique
+  dataContato String
+  periodoId   Int
+  observacao  String?
+  naFila      Boolean @default(true)
 
   dataSaiuFila   String?
   devolutiva     Boolean @default(false)
@@ -62,56 +66,81 @@ model Vaga {
   diff           String?
   dataRetorno    String?
 
-  dataVoltouAba String?
-
-  createdAt DateTime @default(now())
-
-  // especialidade Especialidade @relation(fields: [especialidadeId], references: [id])
-  status         Status?               @relation(fields: [statusId], references: [id])
   periodo        Periodo?              @relation(fields: [periodoId], references: [id])
-  tipoSessao     TipoSessao?           @relation(fields: [tipoSessaoId], references: [id])
   paciente       Paciente?             @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
   especialidades VagaOnEspecialidade[]
+
+  createdAt DateTime @default(now())
 }
 
 model VagaOnEspecialidade {
-  agendado     Boolean @default(false)
-  dataAgendado String?
-  vaga         Vaga    @relation(fields: [vagaId], references: [id], onDelete: Cascade)
-  vagaId       Int // relation scalar field (used in the `@relation` attribute above)
+  agendado        Boolean @default(false)
+  dataAgendado    String?
+  vagaId          Int
+  especialidadeId Int
 
-  especialidade   Especialidade @relation(fields: [especialidadeId], references: [id])
+  especialidade Especialidade @relation(fields: [especialidadeId], references: [id])
+  vaga          Vaga          @relation(fields: [vagaId], references: [id], onDelete: Cascade)
+
+  @@id([vagaId, especialidadeId])
+}
+
+model VagaTerapia {
+  id         Int @id @default(autoincrement())
+  pacienteId Int @unique
+  periodoId  Int
+
+  dataVoltouAba String
+  observacao    String?
+  naFila        Boolean @default(true)
+  dataSaiuFila  String?
+  diff          String?
+
+  periodo        Periodo                      @relation(fields: [periodoId], references: [id])
+  especialidades VagaTerapiaOnEspecialidade[]
+  paciente       Paciente?                    @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+}
+
+model VagaTerapiaOnEspecialidade {
   especialidadeId Int // relation scalar field (used in the `@relation` attribute above)
+  vagaId          Int // relation scalar field (used in the `@relation` attribute above)
+  agendado        Boolean @default(false)
+  dataAgendado    String?
+
+  vaga          VagaTerapia   @relation(fields: [vagaId], references: [id], onDelete: Cascade)
+  especialidade Especialidade @relation(fields: [especialidadeId], references: [id])
 
   @@id([vagaId, especialidadeId])
 }
 
 model Periodo {
-  id   Int    @id @default(autoincrement())
-  nome String
-  vaga Vaga[]
+  id          Int           @id @default(autoincrement())
+  nome        String
+  vaga        Vaga[]
+  vagaTerapia VagaTerapia[]
 }
 
 model Especialidade {
-  id         Int                   @id @default(autoincrement())
-  nome       String
-  cor        String                @default("#000000")
-  vagas      VagaOnEspecialidade[]
-  Funcao     Funcao[]
-  calendario Calendario[]
-  Terapeuta  Terapeuta[]
+  id                         Int                          @id @default(autoincrement())
+  nome                       String
+  cor                        String                       @default("#000000")
+  vagas                      VagaOnEspecialidade[]
+  Funcao                     Funcao[]
+  calendario                 Calendario[]
+  terapeuta                  Terapeuta[]
+  vagaTerapiaOnEspecialidade VagaTerapiaOnEspecialidade[]
 }
 
 model Status {
-  id   Int    @id @default(autoincrement())
-  nome String
-  vaga Vaga[]
+  id       Int        @id @default(autoincrement())
+  nome     String
+  paciente Paciente[]
 }
 
 model TipoSessao {
-  id   Int    @id @default(autoincrement())
-  nome String
-  vaga Vaga[]
+  id       Int        @id @default(autoincrement())
+  nome     String
+  paciente Paciente[]
 }
 
 model Usuario {
@@ -131,7 +160,7 @@ model Usuario {
 model Perfil {
   id      Int       @id @default(autoincrement())
   nome    String
-  Usuario Usuario[]
+  usuario Usuario[]
 }
 
 model Localidade {

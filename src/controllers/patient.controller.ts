@@ -2,7 +2,6 @@ import {
   createPatient,
   deletePatient,
   getPatients,
-  searchPatients,
   updateDisabled,
   updatePatient,
 } from '../services/patient.service';
@@ -52,15 +51,6 @@ export class patientController {
   static get = async (req: any, res: any, next: any) => {
     try {
       const data = await getPatients(req.query);
-      res.status(200).json(data);
-    } catch (error: any) {
-      res.status(401).json(error);
-      next();
-    }
-  };
-  static search = async (req: any, res: any, next: any) => {
-    try {
-      const data = await searchPatients(req.params.search);
       res.status(200).json(data);
     } catch (error: any) {
       res.status(401).json(error);

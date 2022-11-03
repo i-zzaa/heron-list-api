@@ -1,11 +1,6 @@
 import { PrismaClient } from '@prisma/client';
-import {
-  calculaIdade,
-  formatadataPadraoBD,
-  formatdate,
-} from '../utils/convert-hours';
+import { calculaIdade, formatadataPadraoBD } from '../utils/convert-hours';
 import { getStatusUnique } from './statusEventos.service';
-import { getTipoSessaoUnique } from './tipo-sessa.service';
 
 const prisma = new PrismaClient();
 export interface PatientProps {
@@ -15,6 +10,8 @@ export interface PatientProps {
   responsavel: string;
   dataNascimento: string;
   convenioId: number;
+  statusId: number;
+  statusPacienteId: number;
 }
 
 interface Props extends PatientProps {
@@ -31,17 +28,46 @@ interface Props extends PatientProps {
   emAtendimento?: boolean;
   dataVoltouAba?: string;
 }
+interface PatientQueueTherapyPropsProps extends PatientProps {
+  dataVoltouAba: string;
+  periodoId: number;
+  pacienteId: number;
+  especialidades: any;
+  observacao: string;
+  naFila: boolean;
+}
+interface PatientQueueAvaliationPropsProps extends PatientProps {
+  dataContato: string;
+  periodoId: number;
+  pacienteId: number;
+  tipoSessaoId: number;
+  especialidades: any;
+  statusId: number;
+  observacao: string;
+  naFila: boolean;
+}
 
 const formatPatients = (patients: any) => {
   const pacientes: any = [];
   patients.forEach(async (patient: any) => {
     const paciente = { ...patient };
-    if (patient.vaga) {
+    if (patient?.vaga) {
       pacientes.push({
         ...paciente,
         // dataContato: formatdate(patient.vaga.dataContato),
         idade: calculaIdade(patient.dataNascimento),
         // dataNascimento: formatdate(patient.dataNascimento),
+      });
+    } else if (patient?.vagaTerapia) {
+      const vaga = Object.assign({}, paciente?.vagaTerapia);
+      vaga.dataInicio = vaga.dataVoltouAba;
+      delete paciente.vagaTerapia;
+
+      pacientes.push({
+        ...paciente,
+        // dataContato: formatdate(patient.vaga.dataContato),
+        idade: calculaIdade(patient.dataNascimento),
+        vaga: vaga,
       });
     }
   });
@@ -49,8 +75,7 @@ const formatPatients = (patients: any) => {
   return pacientes;
 };
 
-export const getPatients = async (query: any) => {
-  const emAtendimento = query.emAtendimento === 'true';
+export const getPatientsQueueTherapy = async () => {
   const patients = await prisma.paciente.findMany({
     select: {
       id: true,
@@ -60,27 +85,72 @@ export const getPatients = async (query: any) => {
       dataNascimento: true,
       convenio: true,
       disabled: true,
-      emAtendimento: true,
-      vaga: {
+      tipoSessao: true,
+      status: true,
+      vagaTerapia: {
         include: {
           periodo: true,
-          tipoSessao: true,
           especialidades: {
             include: {
               especialidade: true,
             },
           },
-          status: true,
         },
       },
     },
     where: {
+      statusPacienteId: 2,
+      disabled: false,
+      vagaTerapia: {
+        naFila: true,
+      },
+    },
+    orderBy: {
+      vagaTerapia: {
+        dataVoltouAba: 'asc',
+      },
+    },
+  });
+
+  if (patients) {
+    const pacientes: any = await formatPatients(patients);
+    return pacientes;
+  }
+
+  return [];
+};
+
+export const getPatientsAvaliation = async () => {
+  const patients = await prisma.paciente.findMany({
+    select: {
+      id: true,
+      nome: true,
+      telefone: true,
+      responsavel: true,
+      dataNascimento: true,
+      convenio: true,
+      disabled: true,
+      statusPacienteId: true,
+      tipoSessao: true,
+      status: true,
+      vaga: {
+        include: {
+          periodo: true,
+          especialidades: {
+            include: {
+              especialidade: true,
+            },
+          },
+        },
+      },
+    },
+    where: {
+      statusPacienteId: 1,
       disabled: false,
       vaga: {
         naFila: true,
         devolutiva: false,
       },
-      emAtendimento: emAtendimento,
     },
     orderBy: {
       vaga: {
@@ -97,51 +167,31 @@ export const getPatients = async (query: any) => {
   return [];
 };
 
-export const searchPatients = async (word: string) => {
-  const patients = await prisma.paciente.findMany({
-    select: {
-      id: true,
-      nome: true,
-      telefone: true,
-      responsavel: true,
-      dataNascimento: true,
-      convenio: true,
-      disabled: true,
-      vaga: {
-        include: {
-          periodo: true,
-          tipoSessao: true,
-          especialidades: true,
-          status: true,
-        },
-      },
-    },
-    where: {
-      OR: [
-        {
-          nome: {
-            contains: word,
-          },
-        },
-        {
-          responsavel: { contains: word },
-        },
-      ],
-    },
-  });
-
-  const pacientes: any = patients.length ? formatPatients(patients) : patients;
-  return pacientes;
+export const getPatients = async (query: any) => {
+  switch (Number(query.statusPacienteId)) {
+    case 1:
+      return getPatientsAvaliation();
+    case 2:
+      return getPatientsQueueTherapy();
+    default:
+      break;
+  }
 };
 
-export const createPatient = async (body: Props) => {
-  if (body.statusId && !body.dataVoltouAba) {
-    const prioridade: any = getStatusUnique(body.statusId);
-    if (prioridade?.nome === 'Voltou Aba') {
-      body.dataVoltouAba = formatadataPadraoBD(body.dataContato);
-    }
+export const filterSinglePatients = async (body: any) => {
+  switch (Number(body.statusPacienteId)) {
+    case 1:
+      return filterPatientsAvaliaton(body);
+    case 2:
+      return filterPatientsQueueTherapy(body);
+    default:
+      break;
   }
+};
 
+export const createPatientAvaliation = async (
+  body: PatientQueueAvaliationPropsProps
+) => {
   const paciente: any = await prisma.paciente.create({
     data: {
       nome: body.nome.toUpperCase(),
@@ -150,16 +200,15 @@ export const createPatient = async (body: Props) => {
       disabled: false,
       convenioId: body.convenioId,
       dataNascimento: formatadataPadraoBD(body.dataNascimento),
-      emAtendimento: body.emAtendimento,
+      statusPacienteId: body.statusPacienteId,
+      statusId: body.statusId,
+      tipoSessaoId: body.tipoSessaoId,
       vaga: {
         create: {
           dataContato: formatadataPadraoBD(body.dataContato),
-          dataVoltouAba: body.dataVoltouAba,
           observacao: body.observacao,
           naFila: body.naFila,
           periodoId: body.periodoId,
-          tipoSessaoId: body.tipoSessaoId,
-          statusId: body.statusId,
           especialidades: {
             create: [
               ...body.especialidades.map((especialidade: string) => {
@@ -173,8 +222,54 @@ export const createPatient = async (body: Props) => {
       },
     },
   });
-
   return paciente;
+};
+
+export const createPatientQueueTherapy = async (
+  body: PatientQueueTherapyPropsProps
+) => {
+  const paciente: any = await prisma.paciente.create({
+    data: {
+      nome: body.nome.toUpperCase(),
+      telefone: body.telefone,
+      responsavel: body.responsavel.toUpperCase(),
+      disabled: false,
+      convenioId: body.convenioId,
+      dataNascimento: formatadataPadraoBD(body.dataNascimento),
+      statusPacienteId: body.statusPacienteId,
+      statusId: body.statusId,
+      tipoSessaoId: 2,
+      vagaTerapia: {
+        create: {
+          dataVoltouAba: formatadataPadraoBD(body.dataVoltouAba),
+          observacao: body.observacao,
+          naFila: true,
+          periodoId: body.periodoId,
+          especialidades: {
+            create: [
+              ...body.especialidades.map((especialidade: string) => {
+                return {
+                  especialidadeId: especialidade,
+                };
+              }),
+            ],
+          },
+        },
+      },
+    },
+  });
+  return paciente;
+};
+
+export const createPatient = async (body: any) => {
+  switch (body.statusPacienteId) {
+    case 1:
+      return createPatientAvaliation(body);
+    case 2:
+      return createPatientQueueTherapy(body);
+    default:
+      break;
+  }
 };
 
 export const updatePatient = async (body: any) => {
@@ -186,12 +281,11 @@ export const updatePatient = async (body: any) => {
         responsavel: body.responsavel.toUpperCase(),
         convenioId: body.convenioId,
         dataNascimento: formatadataPadraoBD(body.dataNascimento),
+        tipoSessaoId: body.tipoSessaoId,
+        statusId: body.statusId,
         vaga: {
           update: {
-            dataVoltouAba: body.dataVoltouAba,
             periodoId: body.periodoId,
-            tipoSessaoId: body.tipoSessaoId,
-            statusId: body.statusId,
             observacao: body.observacao,
           },
         },
@@ -245,79 +339,6 @@ export const updatePatient = async (body: any) => {
   return [];
 };
 
-export const filterPatients = async (body: any) => {
-  const filter: any = {};
-  const emAtendimento = Boolean(body.emAtendimento);
-
-  if (body.pacientes && body.pacientes.length)
-    filter['pacienteId'] = { in: body.pacientes };
-  if (body.tipoSessoes && body.tipoSessoes.length)
-    filter['tipoSessaoId'] = { in: body.tipoSessoes };
-  if (body.periodos && body.periodos.length)
-    filter['periodoId'] = { in: body.periodos };
-  if (body.status && body.status.length)
-    filter['statusId'] = { in: body.status };
-  // if (body.especialidades && body.especialidades.length) filter['especialidadeId'] = { in: body.especialidades };
-
-  const response = await prisma.paciente.findMany({
-    select: {
-      id: true,
-      nome: true,
-      telefone: true,
-      responsavel: true,
-      dataNascimento: true,
-      emAtendimento: true,
-      convenio: true,
-      vaga: {
-        select: {
-          naFila: true,
-          dataVoltouAba: true,
-        },
-        include: {
-          periodo: true,
-          tipoSessao: true,
-          especialidades: {
-            include: {
-              especialidade: true,
-            },
-          },
-          status: true,
-        },
-      },
-    },
-    where: {
-      emAtendimento: emAtendimento,
-      vaga: {
-        ...filter,
-        naFila: body.naFila,
-      },
-    },
-    orderBy: {
-      vaga: {
-        dataContato: 'asc',
-      },
-    },
-  });
-
-  const filtro: any = [];
-  if (body.especialidades && body.especialidades.length) {
-    response.map((list: any) => {
-      list.vaga.especialidades.filter((especialidade: any) => {
-        if (body.especialidades.includes(especialidade.especialidadeId)) {
-          filtro.push(list);
-        }
-      });
-    });
-  }
-
-  const reultadoFiltrado = filtro.length ? filtro : response;
-  const pacientes: any = reultadoFiltrado.length
-    ? formatPatients(reultadoFiltrado)
-    : reultadoFiltrado;
-
-  return pacientes;
-};
-
 export const setPacienteEmAtendimento = async (
   emAtendimento: boolean,
   id: number
@@ -332,7 +353,7 @@ export const setPacienteEmAtendimento = async (
   });
 };
 
-export const filterSinglePatients = async (body: any) => {
+export const filterPatientsQueueTherapy = async (body: any) => {
   const filter = await prisma.paciente.findMany({
     select: {
       id: true,
@@ -342,29 +363,80 @@ export const filterSinglePatients = async (body: any) => {
       dataNascimento: true,
       convenio: true,
       disabled: true,
-      emAtendimento: true,
-      vaga: {
+      tipoSessao: true,
+      statusPacienteId: true,
+      status: true,
+      vagaTerapia: {
         include: {
           periodo: true,
-          tipoSessao: true,
           especialidades: {
             include: {
               especialidade: true,
             },
           },
-          status: true,
         },
       },
     },
     where: {
-      emAtendimento: body.emAtendimento,
+      statusPacienteId: 2,
       disabled: body.disabled,
       convenioId: body.convenios,
+      tipoSessaoId: body.tipoSessoes,
+      statusId: body.status,
+      vagaTerapia: {
+        pacienteId: body.pacientes,
+        periodoId: body.periodos,
+        naFila: body.naFila,
+        especialidades: {
+          some: {
+            especialidadeId: body.especialidades,
+          },
+        },
+      },
+    },
+    orderBy: {
+      vaga: {
+        dataContato: 'asc',
+      },
+    },
+  });
+  const pacientes: any = filter.length ? formatPatients(filter) : filter;
+  return pacientes;
+};
+
+export const filterPatientsAvaliaton = async (body: any) => {
+  const filter = await prisma.paciente.findMany({
+    select: {
+      id: true,
+      nome: true,
+      telefone: true,
+      responsavel: true,
+      dataNascimento: true,
+      convenio: true,
+      disabled: true,
+      statusPacienteId: true,
+      tipoSessao: true,
+      status: true,
+      vaga: {
+        include: {
+          periodo: true,
+          especialidades: {
+            include: {
+              especialidade: true,
+            },
+          },
+        },
+      },
+    },
+    where: {
+      statusPacienteId: body.statusPacienteId,
+      disabled: body.disabled,
+      convenioId: body.convenios,
+      tipoSessaoId: body.tipoSessoes,
+      statusId: body.status,
       vaga: {
         pacienteId: body.pacientes,
-        statusId: body.status,
         periodoId: body.periodos,
-        tipoSessaoId: body.tipoSessoes,
         naFila: body.naFila,
         devolutiva: body.devolutiva,
         especialidades: {

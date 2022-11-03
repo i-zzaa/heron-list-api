@@ -143,7 +143,7 @@ export const tipoSessoesVaga = async () => {
     include: {
       _count: {
         select: {
-          vaga: true,
+          paciente: true,
         },
       },
     },
@@ -172,7 +172,7 @@ export const statusVaga = async () => {
     include: {
       _count: {
         select: {
-          vaga: true,
+          paciente: true,
         },
       },
     },

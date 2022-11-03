@@ -74,7 +74,7 @@ export const deleteStatusEventos = async (id: number) => {
 };
 
 export const getStatusUnique = async (id: number) => {
-  return await prisma.statusEventos.findUniqueOrThrow({
+  return await prisma.statusEventos.findFirst({
     select: {
       nome: true,
       id: true,

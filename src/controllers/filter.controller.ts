@@ -85,13 +85,25 @@ export class filterController {
               id: true,
               nome: true,
             },
+            where: {
+              NOT: {
+                nome: 'Terapia ABA',
+              },
+            },
           });
           break;
         case 'status':
+          console.log();
+
           dropdrown = await prisma.status.findMany({
             select: {
               id: true,
               nome: true,
+            },
+            where: {
+              NOT: {
+                nome: Number(query.statusPacienteId) === 1 ? 'Voltou ABA' : '',
+              },
             },
           });
           break;
@@ -205,7 +217,7 @@ export class filterController {
               nome: true,
             },
             where: {
-              emAtendimento: query.emAtendimento === 'true',
+              statusPacienteId: Number(query.statusPacienteId),
             },
           });
           break;

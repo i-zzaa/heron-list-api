@@ -53,7 +53,6 @@ app.get('/pacientes', auth, patientController.get);
 app.post('/pacientes', auth, patientController.create);
 app.put('/pacientes', auth, patientController.update);
 app.put('/paciente/desabilitar', auth, patientController.disabled);
-app.get('/pacientes/:search', auth, patientController.search);
 
 app.put('/vagas/agendar', auth, vagaController.update);
 app.put(
