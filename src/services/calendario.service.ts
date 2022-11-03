@@ -234,6 +234,7 @@ export const createCalendario = async (
 
   if (body.frequencia.nome === 'Único') {
     body.dataFim = body.dataInicio;
+    body.diasFrequencia = [];
     body.intervalo = {
       id: 1,
       nome: '1 Semana',
@@ -263,8 +264,6 @@ export const createCalendario = async (
       usuarioId: user.id,
     },
   });
-
-  // setPacienteEmAtendimento(true, body.paciente.id);
 
   return evento;
 };

@@ -255,7 +255,7 @@ model Calendario {
   diasFrequencia Int[]
 
   ciclo           String
-  observacao      String
+  observacao      String?
   pacienteId      Int
   modalidadeId    Int
   especialidadeId Int

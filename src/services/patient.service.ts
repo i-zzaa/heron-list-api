@@ -87,6 +87,7 @@ export const getPatientsQueueTherapy = async () => {
       disabled: true,
       tipoSessao: true,
       status: true,
+      statusPacienteId: true,
       vagaTerapia: {
         include: {
           periodo: true,
@@ -165,6 +166,22 @@ export const getPatientsAvaliation = async () => {
   }
 
   return [];
+};
+
+export const setStatusPaciente = async (
+  statusPacienteId: number,
+  pacienteId: number
+) => {
+  const paciente: any = await prisma.paciente.update({
+    data: {
+      statusPacienteId: statusPacienteId,
+    },
+    where: {
+      id: pacienteId,
+    },
+  });
+
+  return paciente;
 };
 
 export const getPatients = async (query: any) => {

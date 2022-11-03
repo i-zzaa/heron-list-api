@@ -27,10 +27,7 @@ export class vagaController {
   };
   static updateEspecialidadeVaga = async (req: any, res: any, next: any) => {
     try {
-      const data = await updateEspecialidadeVaga(
-        req.body.vagaId,
-        req.body.especialidadeId
-      );
+      const data = await updateEspecialidadeVaga(req.body);
 
       const message = {
         data: data ? 'Paciente ainda na fila' : 'Paciente saiu da fila',

@@ -5,6 +5,7 @@ import {
   formatadataPadraoBD,
   getFormat,
 } from '../utils/convert-hours';
+import { setStatusPaciente } from './patient.service';
 
 const prisma = new PrismaClient();
 
@@ -37,6 +38,12 @@ export interface VagaProps {
 export interface FilaProps {
   vagaId: number;
   dataAgendado: string;
+}
+
+export interface AgendarEspecialidadeProps {
+  vagaId: number;
+  especialidadeId: number;
+  statusPacienteId: number;
 }
 
 export const getVagas = async () => {
@@ -277,12 +284,15 @@ export const updateReturn = async ({ id, devolutiva }: any) => {
       id: id,
     },
   });
+
+  await setStatusPaciente(2, id);
 };
 
-export const updateEspecialidadeVaga = async (
-  vagaId: number,
-  especialidadeId: number
-) => {
+export const updateEspecialidadeVaga = async ({
+  vagaId,
+  especialidadeId,
+  statusPacienteId,
+}: AgendarEspecialidadeProps) => {
   const dataAgendado = formatadataPadraoBD(new Date());
   await prisma.vagaOnEspecialidade.updateMany({
     data: {
@@ -295,6 +305,8 @@ export const updateEspecialidadeVaga = async (
     },
   });
 
-  const isFila = verifyInFila(vagaId, dataAgendado);
+  const isFila = await verifyInFila(vagaId, dataAgendado);
+  if (isFila) await setStatusPaciente(statusPacienteId === 1 ? 4 : 3, vagaId);
+
   return isFila;
 };

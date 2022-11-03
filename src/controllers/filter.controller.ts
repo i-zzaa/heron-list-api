@@ -9,6 +9,21 @@ export interface ListProps {
   nome: string;
 }
 
+const setFilterStatusPacienteId = (statusPacienteId: number) => {
+  switch (statusPacienteId) {
+    case 1:
+      return [1, 4];
+    case 2:
+      return [2, 3];
+    case 3:
+      return [3, 4];
+    case 4:
+      return [4];
+    case 5:
+      return [];
+  }
+};
+
 export class filterController {
   static filter = async (req: any, res: any, next: any) => {
     try {
@@ -116,10 +131,13 @@ export class filterController {
           });
           break;
         case 'paciente-especialidade':
+          const vaga =
+            Number(query.statusPacienteId) === 1 ? 'vaga' : 'vagaTerapia';
+
           help = await prisma.paciente.findUniqueOrThrow({
             select: {
               emAtendimento: true,
-              vaga: {
+              [vaga]: {
                 include: {
                   especialidades: {
                     include: {
@@ -134,7 +152,7 @@ export class filterController {
             },
           });
 
-          dropdrown = help.vaga?.especialidades.map((especialidade: any) => {
+          dropdrown = help[vaga].especialidades.map((especialidade: any) => {
             return {
               id: especialidade.especialidade.id,
               nome: especialidade.especialidade.nome,
@@ -211,13 +229,16 @@ export class filterController {
           });
           break;
         case 'paciente':
+          help = setFilterStatusPacienteId(Number(query.statusPacienteId));
           dropdrown = await prisma.paciente.findMany({
             select: {
               id: true,
               nome: true,
             },
             where: {
-              statusPacienteId: Number(query.statusPacienteId),
+              statusPacienteId: {
+                in: help,
+              },
             },
           });
           break;
