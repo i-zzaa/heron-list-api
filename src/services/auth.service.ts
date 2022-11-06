@@ -18,6 +18,7 @@ export interface AuthProps {
 export async function loginService(params: AuthProps) {
   const user: UserProps = await prisma.usuario.findFirstOrThrow({
     select: {
+      id: true,
       nome: true,
       login: true,
       senha: true,

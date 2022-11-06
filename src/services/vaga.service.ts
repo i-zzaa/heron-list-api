@@ -5,7 +5,11 @@ import {
   formatadataPadraoBD,
   getFormat,
 } from '../utils/convert-hours';
-import { setStatusPaciente } from './patient.service';
+import {
+  getPatientId,
+  PatientProps,
+  setStatusPaciente,
+} from './patient.service';
 
 const prisma = new PrismaClient();
 
@@ -285,7 +289,13 @@ export const updateReturn = async ({ id, devolutiva }: any) => {
     },
   });
 
-  await setStatusPaciente(2, id);
+  let statusPacienteIdNext = 2;
+  if (!devolutiva) {
+    const { statusPacienteId }: any = await getPatientId(id);
+    statusPacienteIdNext = statusPacienteId === 2 ? 1 : 2;
+  }
+
+  await setStatusPaciente(statusPacienteIdNext, id);
 };
 
 export const updateEspecialidadeVaga = async ({

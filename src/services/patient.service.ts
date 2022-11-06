@@ -77,6 +77,24 @@ const formatPatients = (patients: any) => {
   return pacientes;
 };
 
+export const getPatientId = async (id: number) => {
+  return await prisma.paciente.findFirstOrThrow({
+    select: {
+      id: true,
+      nome: true,
+      telefone: true,
+      responsavel: true,
+      dataNascimento: true,
+      convenioId: true,
+      statusId: true,
+      statusPacienteId: true,
+    },
+    where: {
+      id,
+    },
+  });
+};
+
 export const getPatientsQueueTherapy = async (statusPacienteId: number) => {
   const patients = await prisma.paciente.findMany({
     select: {
@@ -200,6 +218,8 @@ export const getPatients = async (query: any) => {
 };
 
 export const filterSinglePatients = async (body: any) => {
+  if (body.devolutiva) return filterPatientsAvaliaton(body);
+
   switch (Number(body.statusPacienteId)) {
     case 1:
       return filterPatientsAvaliaton(body);

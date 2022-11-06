@@ -160,6 +160,24 @@ export class filterController {
           });
 
           break;
+        case 'paciente-terapeuta':
+          help = await prisma.calendario.findMany({
+            select: {
+              paciente: true,
+            },
+            where: {
+              terapeutaId: Number(query.terapeutaId),
+            },
+          });
+
+          dropdrown = help.map((evento: any) => {
+            return {
+              id: evento.paciente.id,
+              nome: evento.paciente.nome,
+            };
+          });
+
+          break;
         case 'especialidade-funcao':
           dropdrown = await prisma.funcao.findMany({
             select: {

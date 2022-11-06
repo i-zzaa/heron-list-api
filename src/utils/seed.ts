@@ -11,6 +11,7 @@ async function main() {
     'Administrador',
     'Recepcionista',
     'Coordenador',
+    'Coordenador-terapeuta',
     'Terapeuta',
   ].map(async (perfil: string, index: number) => {
     await prisma.perfil.upsert({
