@@ -320,6 +320,8 @@ const formatEvents = async (eventos: any) => {
       id: evento.terapeuta.usuario.id,
     };
 
+    const groupId = evento.groupId !== 0 ? evento.groupId : evento.id;
+
     switch (true) {
       case evento.diasFrequencia.length && evento.intervalo.id === 1: // com dias selecionados e todas semanas
         formated = {
@@ -331,7 +333,7 @@ const formatEvents = async (eventos: any) => {
           title: evento.paciente.nome,
           startRecur: evento.dataInicio,
           endRecur: moment(evento.dataFim).add(1, 'days'),
-          groupId: evento.id, // recurrent events in this group move together
+          groupId: groupId, // recurrent events in this group move together
           daysOfWeek: evento.diasFrequencia,
           start: formatDateTime(evento.start, evento.dataInicio),
           end: formatDateTime(evento.end, evento.dataInicio),
@@ -349,7 +351,7 @@ const formatEvents = async (eventos: any) => {
             end: evento.end,
           },
           title: evento.paciente.nome,
-          groupId: evento.id, // recurrent events in this group move together
+          groupId: groupId, // recurrent events in this group move together
           borderColor: cor,
           backgroundColor: cor,
           startTime: formatDateTime(evento.start, evento.dataInicio),
