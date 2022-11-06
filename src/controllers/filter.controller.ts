@@ -16,7 +16,7 @@ const setFilterStatusPacienteId = (statusPacienteId: number) => {
     case 2:
       return [2, 3];
     case 3:
-      return [3, 4];
+      return [3, 4, 5];
     case 4:
       return [4];
     case 5:

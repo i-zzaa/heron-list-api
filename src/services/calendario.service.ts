@@ -6,6 +6,7 @@ import {
   getPrimeiroDoMes,
   getUltimoDoMes,
 } from '../utils/convert-hours';
+import { getFrequenciaName } from './frequencia.service';
 import { formatLocalidade } from './localidade.service';
 import { setPacienteEmAtendimento } from './patient.service';
 import { getUser } from './user.service';
@@ -31,7 +32,7 @@ export interface CalendarioCreateParam {
   end: string;
   diasFrequencia: number[];
   especialidade: ObjProps;
-  frequencia: ObjProps;
+  frequencia: any;
   funcao: ObjProps;
   localidade: ObjProps;
   modalidade: ObjProps;
@@ -231,8 +232,10 @@ export const createCalendario = async (
   login: string
 ) => {
   const user = await getUser(login);
+  const frequencia: ObjProps =
+    body.frequencia === '' ? await getFrequenciaName('Único') : body.frequencia;
 
-  if (body.frequencia.nome === 'Único') {
+  if (frequencia?.nome === 'Único') {
     body.dataFim = body.dataInicio;
     body.diasFrequencia = [];
     body.intervalo = {
@@ -258,7 +261,7 @@ export const createCalendario = async (
       funcaoId: body.funcao.id,
       localidadeId: body.localidade.id,
       statusEventosId: body.statusEventos.id,
-      frequenciaId: body.frequencia.id,
+      frequenciaId: frequencia.id,
       intervaloId: body.intervalo.id,
 
       usuarioId: user.id,
@@ -318,7 +321,7 @@ const formatEvents = async (eventos: any) => {
     };
 
     switch (true) {
-      case evento.diasFrequencia.length && evento.intervalo.id === 1:
+      case evento.diasFrequencia.length && evento.intervalo.id === 1: // com dias selecionados e todas semanas
         formated = {
           ...evento,
           data: {
@@ -327,6 +330,7 @@ const formatEvents = async (eventos: any) => {
           },
           title: evento.paciente.nome,
           startRecur: evento.dataInicio,
+          endRecur: moment(evento.dataFim).add(1, 'days'),
           groupId: evento.id, // recurrent events in this group move together
           daysOfWeek: evento.diasFrequencia,
           start: formatDateTime(evento.start, evento.dataInicio),
@@ -355,6 +359,7 @@ const formatEvents = async (eventos: any) => {
             interval: 2,
             byweekday: evento.diasFrequencia,
             dtstart: formatDateTime(evento.start, evento.dataInicio), // will also accept '20120201T103000'
+            dtend: formatDateTime(evento.end, evento.dataInicio), // will also accept '20120201T103000'
             // until: '2012-06-01' // will also accept '20120201'
           },
         };

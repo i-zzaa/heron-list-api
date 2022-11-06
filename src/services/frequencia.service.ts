@@ -24,6 +24,18 @@ export const getFrequencia = async () => {
   });
 };
 
+export const getFrequenciaName = async (nome: string) => {
+  return await prisma.frequencia.findFirstOrThrow({
+    select: {
+      id: true,
+      nome: true,
+    },
+    where: {
+      nome: nome,
+    },
+  });
+};
+
 export const searchFrequencia = async (word: string) => {
   return await prisma.frequencia.findMany({
     select: {
