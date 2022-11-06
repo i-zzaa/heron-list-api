@@ -20,7 +20,7 @@ const setFilterStatusPacienteId = (statusPacienteId: number) => {
     case 4:
       return [4];
     case 5:
-      return [];
+      return [5];
   }
 };
 

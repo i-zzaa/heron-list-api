@@ -60,7 +60,9 @@ const formatPatients = (patients: any) => {
       });
     } else if (patient?.vagaTerapia) {
       const vaga = Object.assign({}, paciente?.vagaTerapia);
-      vaga.dataInicio = vaga.dataVoltouAba;
+
+      vaga.dataContato = vaga?.dataVoltouAba;
+
       delete paciente.vagaTerapia;
 
       pacientes.push({
@@ -75,7 +77,7 @@ const formatPatients = (patients: any) => {
   return pacientes;
 };
 
-export const getPatientsQueueTherapy = async () => {
+export const getPatientsQueueTherapy = async (statusPacienteId: number) => {
   const patients = await prisma.paciente.findMany({
     select: {
       id: true,
@@ -100,7 +102,7 @@ export const getPatientsQueueTherapy = async () => {
       },
     },
     where: {
-      statusPacienteId: 2,
+      statusPacienteId: statusPacienteId,
       disabled: false,
       vagaTerapia: {
         naFila: true,
@@ -185,11 +187,13 @@ export const setStatusPaciente = async (
 };
 
 export const getPatients = async (query: any) => {
-  switch (Number(query.statusPacienteId)) {
+  const statusPacienteId = Number(query.statusPacienteId);
+  switch (statusPacienteId) {
     case 1:
       return getPatientsAvaliation();
     case 2:
-      return getPatientsQueueTherapy();
+    case 5:
+      return getPatientsQueueTherapy(statusPacienteId);
     default:
       break;
   }
@@ -283,6 +287,7 @@ export const createPatient = async (body: any) => {
     case 1:
       return createPatientAvaliation(body);
     case 2:
+    case 5:
       return createPatientQueueTherapy(body);
     default:
       break;
