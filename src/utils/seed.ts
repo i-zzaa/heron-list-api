@@ -9,7 +9,7 @@ async function main() {
   await [
     'Developer',
     'Administrador',
-    'Recepcionista',
+    'Secretária',
     'Coordenador',
     'Coordenador-terapeuta',
     'Terapeuta',
@@ -130,7 +130,7 @@ async function main() {
   });
 
   // await prisma.statusPaciente.createMany({
-  //   date: ['Fila', 'Avaliacao', 'Voltou Aba', 'Terapia'],
+  //   date: ['Fila avaliacao', 'Fila terapia', 'Terapia', 'Avaliacao', 'Crud Terapia' ],
   // });
 }
 
