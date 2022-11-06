@@ -321,7 +321,8 @@ const formatEvents = async (eventos: any) => {
       id: evento.terapeuta.usuario.id,
     };
 
-    const groupId = evento?.groupId !== 0 ? evento.groupId : evento.id;
+    const groupId =
+      evento?.groupId && evento?.groupId !== 0 ? evento.groupId : evento.id;
 
     switch (true) {
       case evento.diasFrequencia.length && evento.intervalo.id === 1: // com dias selecionados e todas semanas
