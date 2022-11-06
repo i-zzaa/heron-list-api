@@ -359,8 +359,6 @@ const formatEvents = async (eventos: any) => {
             interval: 2,
             byweekday: evento.diasFrequencia,
             dtstart: formatDateTime(evento.start, evento.dataInicio), // will also accept '20120201T103000'
-            dtend: formatDateTime(evento.end, evento.dataInicio), // will also accept '20120201T103000'
-            // until: '2012-06-01' // will also accept '20120201'
           },
         };
         break;
