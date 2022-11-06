@@ -62,6 +62,7 @@ export const geFilter = async (params: any, query: any) => {
       start: true,
       end: true,
       diasFrequencia: true,
+      groupId: true,
 
       ciclo: true,
       observacao: true,
@@ -152,7 +153,7 @@ export const getMonth = async (params: any) => {
       start: true,
       end: true,
       diasFrequencia: true,
-
+      groupId: true,
       ciclo: true,
       observacao: true,
       paciente: {
