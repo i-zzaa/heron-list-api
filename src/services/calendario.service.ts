@@ -57,7 +57,7 @@ export const geFilter = async (params: any, query: any) => {
   const eventos = await prisma.calendario.findMany({
     select: {
       id: true,
-      groupId: true,
+      // groupId: true,
       dataInicio: true,
       dataFim: true,
       start: true,
@@ -148,7 +148,7 @@ export const getMonth = async (params: any) => {
   const eventos = await prisma.calendario.findMany({
     select: {
       id: true,
-      groupId: true,
+      // groupId: true,
       dataInicio: true,
       dataFim: true,
       start: true,
