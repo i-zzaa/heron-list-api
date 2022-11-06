@@ -41,6 +41,7 @@ export interface CalendarioCreateParam {
   intervalo: ObjProps;
   terapeuta: any;
   observacao: string;
+  groupId: number;
 }
 
 export const getCalendario = async () => {
@@ -247,6 +248,7 @@ export const createCalendario = async (
 
   const evento = await prisma.calendario.create({
     data: {
+      groupId: body.groupId,
       dataInicio: body.dataInicio,
       dataFim: body.dataFim,
       start: body.start,
