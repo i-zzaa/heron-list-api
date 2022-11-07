@@ -23,7 +23,7 @@ export class calendarioController {
   };
   static update = async (req: any, res: any, next: any) => {
     try {
-      const data = await updateCalendario(req.body);
+      const data = await updateCalendario(req.body, req.headers.login);
       res.status(200).json({
         status: true,
         message: 'Atualizado com sucesso!',

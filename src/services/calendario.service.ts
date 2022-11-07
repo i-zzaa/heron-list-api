@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import moment from 'moment';
 import {
+  formatadataPadraoBD,
   formatDateTime,
   getDiasDoMes,
   getPrimeiroDoMes,
@@ -64,6 +65,7 @@ export const geFilter = async (params: any, query: any) => {
       start: true,
       end: true,
       diasFrequencia: true,
+      exdate: true,
 
       ciclo: true,
       observacao: true,
@@ -157,6 +159,7 @@ export const getMonth = async (params: any) => {
       diasFrequencia: true,
       ciclo: true,
       observacao: true,
+      exdate: true,
       paciente: {
         select: {
           nome: true,
@@ -274,30 +277,98 @@ export const createCalendario = async (
   return evento;
 };
 
-export const updateCalendario = async (body: any) => {
-  const evento = await prisma.calendario.updateMany({
-    data: {
-      dataInicio: body?.dataInicio,
-      dataFim: body?.dataFim,
-      start: body?.start,
-      end: body?.end,
-      ciclo: body?.ciclo,
-      observacao: body?.observacao,
-      pacienteId: body?.paciente?.id,
-      modalidadeId: body?.modalidade?.id,
-      especialidadeId: body?.especialidade?.id,
-      terapeutaId: body?.terapeuta?.id,
-      funcaoId: body?.funcao?.id,
-      localidadeId: body?.localidade?.id,
-      statusEventosId: body?.statusEventos?.id,
-      frequenciaId: body?.frequencia?.id,
-      intervaloId: body?.intervalo?.id,
-      diasFrequencia: body?.diasFrequencia,
-    },
+export const updateCalendario = async (body: any, login: string) => {
+  let dataFim = moment(body.dataAtual).subtract(1, 'days').format('YYYY-MM-DD');
+  if (body.statusEventos.nome === 'Cancelado' && !body?.dataFim) {
+    body.dataFim = dataFim;
+  }
+
+  const eventoUnico = await prisma.calendario.findFirstOrThrow({
     where: {
       id: body.id,
     },
   });
+
+  let evento;
+  switch (true) {
+    case body.frequencia.nome === 'Único':
+      evento = await prisma.calendario.updateMany({
+        data: {
+          dataInicio: body?.dataInicio,
+          dataFim: body?.dataFim,
+          start: body?.start,
+          end: body?.end,
+          ciclo: body?.ciclo,
+          observacao: body?.observacao,
+          pacienteId: body?.paciente?.id,
+          modalidadeId: body?.modalidade?.id,
+          especialidadeId: body?.especialidade?.id,
+          terapeutaId: body?.terapeuta?.id,
+          funcaoId: body?.funcao?.id,
+          localidadeId: body?.localidade?.id,
+          statusEventosId: body?.statusEventos?.id,
+          frequenciaId: body?.frequencia?.id,
+          intervaloId: body?.intervalo?.id,
+          diasFrequencia: body?.diasFrequencia,
+        },
+        where: {
+          id: body.id,
+        },
+      });
+      break;
+    case body.changeAll && dataFim !== eventoUnico.dataInicio:
+      evento = await prisma.calendario.updateMany({
+        data: {
+          dataFim,
+        },
+        where: {
+          id: body.id,
+        },
+      });
+
+      await createCalendario(
+        {
+          ...body,
+          dataInicio: body.dataInicio,
+        },
+        login
+      );
+      break;
+    case body.changeAll && dataFim === eventoUnico.dataInicio:
+      evento = await prisma.calendario.updateMany({
+        data: {
+          ...body,
+        },
+        where: {
+          id: body.id,
+        },
+      });
+      break;
+    case !body.changeAll:
+      console.log('passei aqui');
+
+      const exdate = eventoUnico.exdate;
+      exdate.push(formatDateTime(body.start, body.dataAtual));
+      evento = await prisma.calendario.updateMany({
+        data: {
+          exdate: exdate,
+        },
+        where: {
+          id: body.id,
+        },
+      });
+
+      await createCalendario(
+        {
+          ...body,
+          frequencia: '',
+        },
+        login
+      );
+      break;
+    default:
+      break;
+  }
 
   return evento;
 };
@@ -310,7 +381,10 @@ const formatEvents = async (eventos: any) => {
   const eventosFormat: any = [];
   eventos.map((evento: any) => {
     let formated: any = {};
-    const cor = evento.especialidade.cor;
+    const cor =
+      evento.statusEventos.nome === 'Cancelado'
+        ? '#f87171'
+        : evento.especialidade.cor;
     delete evento.especialidade.cor;
 
     evento.localidade = {
@@ -337,7 +411,7 @@ const formatEvents = async (eventos: any) => {
           title: evento.paciente.nome,
           startRecur: evento.dataInicio,
           endRecur: moment(evento.dataFim).add(1, 'days'),
-          groupId: evento.id, // recurrent events in this group move together
+          groupId: evento.id,
           daysOfWeek: evento.diasFrequencia,
           start: formatDateTime(evento.start, evento.dataInicio),
           end: formatDateTime(evento.end, evento.dataInicio),
@@ -347,7 +421,7 @@ const formatEvents = async (eventos: any) => {
           backgroundColor: cor,
         };
         break;
-      case evento.diasFrequencia.length && evento.intervalo.id !== 1:
+      case evento.diasFrequencia.length && evento.intervalo.id !== 1: // com dias selecionados e intervalos
         formated = {
           ...evento,
           data: {
@@ -355,21 +429,22 @@ const formatEvents = async (eventos: any) => {
             end: evento.end,
           },
           title: evento.paciente.nome,
-          groupId: evento.id, // recurrent events in this group move together
+          groupId: evento.id,
           borderColor: cor,
           backgroundColor: cor,
           startTime: formatDateTime(evento.start, evento.dataInicio),
           endTime: formatDateTime(evento.end, evento.dataInicio),
           rrule: {
             freq: 'weekly',
-            interval: 2,
+            interval: evento.interval,
             byweekday: evento.diasFrequencia,
-            dtstart: formatDateTime(evento.start, evento.dataInicio), // will also accept '20120201T103000'
+            dtstart: formatDateTime(evento.start, evento.dataInicio),
+            exdate: evento.exdate,
           },
         };
         break;
 
-      default:
+      default: // evento unico
         formated = {
           ...evento,
           data: {

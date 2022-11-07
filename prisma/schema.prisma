@@ -254,6 +254,7 @@ model Calendario {
   start          String
   end            String?
   diasFrequencia Int[]
+  exdate         String[] @default([])
 
   ciclo           String
   observacao      String?
