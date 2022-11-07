@@ -225,6 +225,7 @@ CREATE TABLE "terapeutaOnFuncao" (
 -- CreateTable
 CREATE TABLE "Calendario" (
     "id" SERIAL NOT NULL,
+    "groupId" INTEGER NOT NULL,
     "dataInicio" TEXT NOT NULL,
     "dataFim" TEXT NOT NULL,
     "start" TEXT NOT NULL,

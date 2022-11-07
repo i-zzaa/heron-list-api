@@ -248,7 +248,7 @@ export const createCalendario = async (
 
   const evento = await prisma.calendario.create({
     data: {
-      groupId: body.groupId,
+      groupId: body.groupId || 0,
       dataInicio: body.dataInicio,
       dataFim: body.dataFim,
       start: body.start,
