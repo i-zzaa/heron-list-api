@@ -345,8 +345,6 @@ export const updateCalendario = async (body: any, login: string) => {
       });
       break;
     case !body.changeAll:
-      console.log('passei aqui');
-
       const exdate = eventoUnico.exdate;
       exdate.push(formatDateTime(body.start, body.dataAtual));
       evento = await prisma.calendario.updateMany({
@@ -409,16 +407,20 @@ const formatEvents = async (eventos: any) => {
             end: evento.end,
           },
           title: evento.paciente.nome,
-          startRecur: evento.dataInicio,
-          endRecur: moment(evento.dataFim).add(1, 'days'),
+
           groupId: evento.id,
           daysOfWeek: evento.diasFrequencia,
           start: formatDateTime(evento.start, evento.dataInicio),
           end: formatDateTime(evento.end, evento.dataInicio),
-          startTime: evento.start,
-          endTime: evento.end,
+
           borderColor: cor,
           backgroundColor: cor,
+          exdate: evento.exdate,
+          rrule: {
+            freq: 'weekly',
+            byweekday: evento.diasFrequencia,
+            dtstart: formatDateTime(evento.start, evento.dataInicio),
+          },
         };
         break;
       case evento.diasFrequencia.length && evento.intervalo.id !== 1: // com dias selecionados e intervalos
@@ -432,14 +434,14 @@ const formatEvents = async (eventos: any) => {
           groupId: evento.id,
           borderColor: cor,
           backgroundColor: cor,
-          startTime: formatDateTime(evento.start, evento.dataInicio),
-          endTime: formatDateTime(evento.end, evento.dataInicio),
+
+          exdate: evento.exdate,
+
           rrule: {
             freq: 'weekly',
-            interval: evento.interval,
+            interval: evento.intervalo.id,
             byweekday: evento.diasFrequencia,
             dtstart: formatDateTime(evento.start, evento.dataInicio),
-            exdate: evento.exdate,
           },
         };
         break;
