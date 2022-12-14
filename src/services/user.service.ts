@@ -14,6 +14,7 @@ export interface UserRequestProps {
   ativo: boolean;
   perfilId: number;
 
+  permissoesId: number[];
   especialidadeId: number;
   funcaoId: number;
   fazDevolutiva: boolean;
@@ -26,6 +27,7 @@ export interface UserProps {
   senha?: string;
   perfil?: PerfilProps;
   ativo?: boolean;
+  permissoes?: any;
 }
 
 export const getUsers = async () => {
@@ -36,6 +38,11 @@ export const getUsers = async () => {
       login: true,
       perfil: true,
       ativo: true,
+      permissoes: {
+        include: {
+          permissao: true,
+        },
+      },
       terapeuta: {
         include: {
           especialidade: {
@@ -77,9 +84,21 @@ export const getUsers = async () => {
       };
     });
 
+    const permissoesId = usuario?.permissoes.map(({ permissao }: any) => {
+      const { cod, descricao, id } = permissao;
+      return {
+        id,
+        cod,
+        descricao,
+      };
+    });
+
+    delete usuario.permissoes;
+
     return {
       ...usuario,
       especialidadeId: usuario?.terapeuta?.especialidade,
+      permissoesId: permissoesId,
       funcoes: funcoes,
     };
   });
@@ -95,6 +114,11 @@ export const getUser = async (login: string) => {
       login: true,
       perfil: true,
       ativo: true,
+      permissoes: {
+        select: {
+          permissao: true,
+        },
+      },
     },
     where: {
       login: login,
@@ -134,6 +158,11 @@ export const searchUsers = async (word: string) => {
       nome: true,
       login: true,
       perfil: true,
+      permissoes: {
+        select: {
+          permissaoId: true,
+        },
+      },
     },
     where: {
       OR: [
@@ -168,12 +197,22 @@ export const createUser = async (body: any) => {
       login: true,
       id: true,
       perfil: true,
+      permissoes: true,
     },
     data: {
       nome: body.nome.toUpperCase(),
       login: body.login.toLowerCase(),
       perfilId: body.perfilId,
       senha: body.senha,
+      permissoes: {
+        create: [
+          ...body.permissoesId.map((id: number) => {
+            return {
+              permissaoId: id,
+            };
+          }),
+        ],
+      },
     },
   });
 
@@ -211,6 +250,15 @@ export const updateUser = async (body: UserRequestProps) => {
       login: body.login,
       perfilId: Number(body.perfilId),
       ativo: body.ativo,
+      permissoes: {
+        create: [
+          ...body.permissoesId.map((id: number) => {
+            return {
+              permissaoId: id,
+            };
+          }),
+        ],
+      },
     },
     where: {
       id: body.id,
