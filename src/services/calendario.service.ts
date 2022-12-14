@@ -256,7 +256,7 @@ export const createCalendario = async (
       dataFim: body.dataFim,
       start: body.start,
       end: body.end,
-      diasFrequencia: body.diasFrequencia,
+      diasFrequencia: body.diasFrequencia.join(','),
 
       ciclo: 'ativo',
       observacao: body.observacao,
@@ -319,7 +319,7 @@ export const updateCalendario = async (body: any, login: string) => {
           statusEventosId: body?.statusEventos?.id,
           frequenciaId: body?.frequencia?.id,
           intervaloId: body?.intervalo?.id,
-          diasFrequencia: body?.diasFrequencia,
+          diasFrequencia: body?.diasFrequencia.join(','),
         },
         where: {
           id: body.id,
@@ -368,11 +368,12 @@ export const updateCalendario = async (body: any, login: string) => {
       });
       break;
     case !body.changeAll:
-      const exdate = eventoUnico.exdate;
+      const exdate = eventoUnico.exdate.split(',');
       exdate.push(formatDateTime(body.start, body.dataAtual));
+
       evento = await prisma.calendario.updateMany({
         data: {
-          exdate: exdate,
+          exdate: exdate.join(','),
         },
         where: {
           id: body.id,
@@ -418,6 +419,9 @@ const formatEvents = async (eventos: any) => {
       nome: evento.terapeuta.usuario.nome,
       id: evento.terapeuta.usuario.id,
     };
+
+    evento.diasFrequencia = evento.diasFrequencia.split(',');
+    evento.exdate = evento.exdate.split(',');
 
     // const groupId =
     //   evento?.groupId && evento?.groupId !== 0 ? evento.groupId : evento.id;

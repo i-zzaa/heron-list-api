@@ -8,8 +8,8 @@ generator client {
 
 datasource db {
   //   provider             = "sqlite"
-  provider             = "postgresql"
-  // provider             = "mysql"
+  // provider             = "postgresql"
+  provider             = "mysql"
   url                  = env("VITE_DATABASE_URL")
   referentialIntegrity = "prisma"
 }
@@ -254,8 +254,8 @@ model Calendario {
   dataFim        String
   start          String
   end            String?
-  diasFrequencia Int[]
-  exdate         String[] @default([])
+  diasFrequencia String
+  exdate         String  @default("[]")
 
   ciclo           String
   observacao      String?
