@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { getUser } from './user.service';
 
 const prisma = new PrismaClient();
 
@@ -8,17 +9,28 @@ export interface permissaoProps {
   descricao: string;
 }
 
-export const getPermissao = async () => {
-  return await prisma.permissao.findMany({
+export const getPermissaoUser = async (login: string) => {
+  const { id } = await getUser(login);
+  const permissoes = await prisma.usuarioOnPermissao.findMany({
     select: {
-      id: true,
-      cod: true,
-      descricao: true,
+      permissao: {
+        select: {
+          cod: true,
+          descricao: true,
+        },
+      },
+    },
+    where: {
+      usuarioId: id,
     },
     orderBy: {
-      cod: 'asc',
+      permissao: {
+        cod: 'asc',
+      },
     },
   });
+
+  return permissoes.map(({ permissao }: any) => permissao.cod);
 };
 
 export const searchPermissao = async (word: string) => {
