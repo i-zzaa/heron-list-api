@@ -251,7 +251,7 @@ export const createCalendario = async (
 
   const evento = await prisma.calendario.create({
     data: {
-      groupId: body.groupId || 0,
+      groupId: 0,
       dataInicio: body.dataInicio,
       dataFim: body.dataFim,
       start: body.start,
@@ -274,12 +274,22 @@ export const createCalendario = async (
     },
   });
 
+  await prisma.calendario.update({
+    data: {
+      groupId: evento.id,
+    },
+    where: {
+      id: evento.id,
+    },
+  });
+
   return evento;
 };
 
 export const updateCalendario = async (body: any, login: string) => {
-  let dataFim = moment(body.dataAtual).subtract(1, 'days').format('YYYY-MM-DD');
-  if (body.statusEventos.nome === 'Cancelado' && !body?.dataFim) {
+  let dataFim = moment(body.dataAtual).subtract(2, 'days').format('YYYY-MM-DD');
+  const isCanceled = body.statusEventos.nome === 'Cancelado';
+  if (isCanceled && !body?.dataFim) {
     body.dataFim = dataFim;
   }
 
@@ -316,19 +326,32 @@ export const updateCalendario = async (body: any, login: string) => {
         },
       });
       break;
+    case isCanceled && body.changeAll:
+      evento = await prisma.calendario.updateMany({
+        data: {
+          ...body,
+          dataFim,
+        },
+        where: {
+          groupId: body.groupId,
+        },
+      });
+      break;
+
     case body.changeAll && dataFim !== eventoUnico.dataInicio:
       evento = await prisma.calendario.updateMany({
         data: {
           dataFim,
         },
         where: {
-          id: body.id,
+          groupId: body.groupId,
         },
       });
 
       await createCalendario(
         {
           ...body,
+          groupId: body.groupId,
           dataInicio: body.dataInicio,
         },
         login
@@ -340,7 +363,7 @@ export const updateCalendario = async (body: any, login: string) => {
           ...body,
         },
         where: {
-          id: body.id,
+          groupId: body.groupId,
         },
       });
       break;
@@ -360,6 +383,7 @@ export const updateCalendario = async (body: any, login: string) => {
         {
           ...body,
           frequencia: '',
+          groupId: body.id,
         },
         login
       );
@@ -418,6 +442,7 @@ const formatEvents = async (eventos: any) => {
             freq: 'weekly',
             byweekday: evento.diasFrequencia,
             dtstart: formatDateTime(evento.start, evento.dataInicio),
+            until: formatDateTime(evento.start, evento.dataFim),
           },
         };
         break;
@@ -438,6 +463,7 @@ const formatEvents = async (eventos: any) => {
             interval: evento.intervalo.id,
             byweekday: evento.diasFrequencia,
             dtstart: formatDateTime(evento.start, evento.dataInicio),
+            until: formatDateTime(evento.start, evento.dataFim),
           },
         };
         break;
@@ -445,6 +471,7 @@ const formatEvents = async (eventos: any) => {
       default: // evento unico
         formated = {
           ...evento,
+          groupId: evento.groupId,
           data: {
             start: evento.start,
             end: evento.end,
