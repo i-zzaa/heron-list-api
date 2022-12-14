@@ -24,7 +24,15 @@ export async function loginService(params: AuthProps) {
       senha: true,
       perfil: true,
       ativo: true,
-      permissoes: true,
+      permissoes: {
+        select: {
+          permissao: {
+            select: {
+              cod: true,
+            },
+          },
+        },
+      },
     },
     where: {
       login: params.login,
