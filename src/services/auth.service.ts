@@ -24,6 +24,7 @@ export async function loginService(params: AuthProps) {
       senha: true,
       perfil: true,
       ativo: true,
+      permissoes: true,
     },
     where: {
       login: params.login,

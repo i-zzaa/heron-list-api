@@ -152,9 +152,10 @@ model Usuario {
   perfilId  Int
   createdAt DateTime @default(now())
 
-  perfil     Perfil       @relation(fields: [perfilId], references: [id])
+  perfil     Perfil               @relation(fields: [perfilId], references: [id])
   calendario Calendario[]
   terapeuta  Terapeuta?
+  permissoes UsuarioOnPermissao[]
 }
 
 model Perfil {
@@ -282,4 +283,21 @@ model Calendario {
   frequencia    Frequencia    @relation(fields: [frequenciaId], references: [id])
   intervalo     Intervalo     @relation(fields: [intervaloId], references: [id])
   usuario       Usuario       @relation(fields: [usuarioId], references: [id])
+}
+
+model Permissao {
+  id        Int                  @id @default(autoincrement())
+  cod       String
+  descricao String
+  usuarios  UsuarioOnPermissao[]
+}
+
+model UsuarioOnPermissao {
+  permissaoId Int
+  usuarioId   Int
+
+  permissao Permissao? @relation(fields: [permissaoId], references: [id], onDelete: Cascade)
+  usuario   Usuario?   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@id([permissaoId, usuarioId])
 }

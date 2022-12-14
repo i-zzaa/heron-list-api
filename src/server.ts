@@ -12,7 +12,7 @@ import { convenioController } from './controllers/convenio.controller';
 import { periodoController } from './controllers/periodo.controller';
 import { filterController } from './controllers/filter.controller';
 import { vagaController } from './controllers/vaga.controller';
-import { agendaController } from './controllers/agenda.controller';
+import { permissaoController } from './controllers/permissao.controller';
 import { funcaoController } from './controllers/funcao.controller';
 import { localidadeController } from './controllers/localidade.controller';
 import { statusEventosController } from './controllers/statusEventos.controller';
@@ -147,6 +147,12 @@ app.post('/modalidade', auth, modalidadeController.create);
 app.get('/modalidade/:search', auth, modalidadeController.search);
 app.put('/modalidade', auth, modalidadeController.update);
 app.delete('/modalidade/:id', auth, modalidadeController.delete);
+
+//Permissao
+app.get('/permissao', auth, permissaoController.get);
+app.post('/permissao', auth, permissaoController.create);
+app.get('/permissao/:search', auth, permissaoController.search);
+app.put('/permissao', auth, permissaoController.update);
 
 //Calendario
 app.get('/evento/mes/:mes/:ano', auth, calendarioController.getMonth);

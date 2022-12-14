@@ -6,7 +6,9 @@ const prisma = new PrismaClient();
 
 export interface ListProps {
   id: number;
-  nome: string;
+  nome?: string;
+  cod?: string;
+  descricao?: string;
 }
 
 const setFilterStatusPacienteId = (statusPacienteId: number) => {
@@ -61,6 +63,15 @@ export class filterController {
                   in: ['Developer', 'developer'],
                 },
               },
+            },
+          });
+          break;
+        case 'permissao':
+          dropdrown = await prisma.permissao.findMany({
+            select: {
+              id: true,
+              cod: true,
+              descricao: true,
             },
           });
           break;
