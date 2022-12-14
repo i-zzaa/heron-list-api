@@ -407,12 +407,10 @@ const formatEvents = async (eventos: any) => {
             end: evento.end,
           },
           title: evento.paciente.nome,
-
           groupId: evento.id,
           daysOfWeek: evento.diasFrequencia,
-          start: formatDateTime(evento.start, evento.dataInicio),
-          end: formatDateTime(evento.end, evento.dataInicio),
-
+          // start: formatDateTime(evento.start, evento.dataInicio),
+          // end: formatDateTime(evento.end, evento.dataInicio),
           borderColor: cor,
           backgroundColor: cor,
           exdate: evento.exdate,
@@ -423,7 +421,7 @@ const formatEvents = async (eventos: any) => {
           },
         };
         break;
-      case evento.diasFrequencia.length && evento.intervalo.id !== 1: // com dias selecionados e intervalos
+      case evento.intervalo.id !== 1: // com dias selecionados e intervalos
         formated = {
           ...evento,
           data: {
@@ -434,9 +432,7 @@ const formatEvents = async (eventos: any) => {
           groupId: evento.id,
           borderColor: cor,
           backgroundColor: cor,
-
           exdate: evento.exdate,
-
           rrule: {
             freq: 'weekly',
             interval: evento.intervalo.id,
