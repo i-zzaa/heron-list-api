@@ -7,7 +7,7 @@ import { PerfilProps } from './perfil.service';
 const prisma = new PrismaClient();
 
 export interface UserRequestProps {
-  id?: number;
+  id: number;
   nome: string;
   login: string;
   senha: string;
@@ -84,14 +84,9 @@ export const getUsers = async () => {
       };
     });
 
-    const permissoesId = usuario?.permissoes.map(({ permissao }: any) => {
-      const { cod, descricao, id } = permissao;
-      return {
-        id,
-        cod,
-        descricao,
-      };
-    });
+    const permissoesId = usuario?.permissoes.map(
+      ({ permissao }: any) => permissao.id
+    );
 
     delete usuario.permissoes;
 
@@ -241,24 +236,35 @@ export const createUser = async (body: any) => {
 };
 
 export const updateUser = async (body: UserRequestProps) => {
-  const user: UserProps = await prisma.usuario.update({
-    include: {
+  await prisma.usuarioOnPermissao.deleteMany({
+    where: {
+      usuarioId: body.id,
+    },
+  });
+
+  await prisma.usuarioOnPermissao.createMany({
+    data: [
+      ...body.permissoesId.map((permissao: number) => {
+        return {
+          permissaoId: permissao,
+          usuarioId: body.id,
+        };
+      }),
+    ],
+  });
+
+  const user = await prisma.usuario.update({
+    select: {
+      nome: true,
+      login: true,
       perfil: true,
+      ativo: true,
     },
     data: {
       nome: body.nome,
       login: body.login,
       perfilId: Number(body.perfilId),
       ativo: body.ativo,
-      permissoes: {
-        create: [
-          ...body.permissoesId.map((id: number) => {
-            return {
-              permissaoId: id,
-            };
-          }),
-        ],
-      },
     },
     where: {
       id: body.id,
@@ -266,7 +272,7 @@ export const updateUser = async (body: UserRequestProps) => {
   });
 
   if (!user) throw createError(500, ERROR_CREATE);
-  delete user.senha;
+
   return user;
 };
 
