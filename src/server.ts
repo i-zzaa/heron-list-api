@@ -39,7 +39,7 @@ app.use(cors());
 app.get('/', async (request, response) => {
   response.status(200).json({
     status: true,
-    data: `versão ${package_json.version}`,
+    data: `versão backend ${package_json.version}`,
   });
 });
 
