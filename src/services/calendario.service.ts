@@ -458,7 +458,7 @@ const formatEvents = async (eventos: any) => {
         }
 
         break;
-      case evento.intervalo.id !== 1: // com dias selecionados e intervalos
+      case evento.diasFrequencia.length && evento.intervalo.id !== 1: // com dias selecionados e intervalos
         formated = {
           ...evento,
           data: {
