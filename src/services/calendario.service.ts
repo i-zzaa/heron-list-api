@@ -427,6 +427,9 @@ const formatEvents = async (eventos: any) => {
     evento.diasFrequencia = evento.diasFrequencia.split(',');
     evento.exdate = evento.exdate.split(',');
 
+    const until = evento.dataFim
+      ? formatDateTime(evento.start, evento.dataFim)
+      : '';
     // const groupId =
     //   evento?.groupId && evento?.groupId !== 0 ? evento.groupId : evento.id;
 
@@ -450,7 +453,7 @@ const formatEvents = async (eventos: any) => {
             freq: 'weekly',
             byweekday: evento.diasFrequencia,
             dtstart: formatDateTime(evento.start, evento.dataInicio),
-            until: formatDateTime(evento.start, evento.dataFim),
+            until: until,
           },
         };
         break;
@@ -471,7 +474,7 @@ const formatEvents = async (eventos: any) => {
             interval: evento.intervalo.id,
             byweekday: evento.diasFrequencia,
             dtstart: formatDateTime(evento.start, evento.dataInicio),
-            until: formatDateTime(evento.start, evento.dataFim),
+            until: until,
           },
         };
         break;
