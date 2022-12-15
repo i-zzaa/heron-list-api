@@ -370,7 +370,7 @@ export const updateCalendario = async (body: any, login: string) => {
       });
       break;
     case !body.changeAll:
-      const exdate = eventoUnico.exdate ? eventoUnico.exdate.split(',') : [];
+      const exdate = eventoUnico?.exdate.split(',') || [];
       exdate.push(formatDateTime(body.start, body.dataAtual));
 
       const format = exdate.join(',');
