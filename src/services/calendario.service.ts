@@ -429,7 +429,7 @@ const formatEvents = async (eventos: any) => {
     if (evento.exdate) evento.exdate = evento.exdate.split(',');
 
     switch (true) {
-      case evento.frequencia.id === 1 && evento.intervalo.id === 1: // com dias selecionados e todas semanas
+      case evento.frequencia.id !== 1 && evento.intervalo.id === 1: // com dias selecionados e todas semanas
         formated = {
           ...evento,
           data: {
@@ -452,11 +452,11 @@ const formatEvents = async (eventos: any) => {
         };
 
         if (evento.dataFim) {
-          formated.rrule = formatDateTime(evento.start, evento.dataFim);
+          formated.rrule.until = formatDateTime(evento.start, evento.dataFim);
         }
 
         break;
-      case evento.frequencia.id === 1 && evento.intervalo.id !== 1: // com dias selecionados e intervalos
+      case evento.frequencia.id !== 1 && evento.intervalo.id !== 1: // com dias selecionados e intervalos
         formated = {
           ...evento,
           data: {
@@ -477,7 +477,7 @@ const formatEvents = async (eventos: any) => {
         };
 
         if (evento.dataFim) {
-          formated.rrule = formatDateTime(evento.start, evento.dataFim);
+          formated.rrule.until = formatDateTime(evento.start, evento.dataFim);
         }
 
         break;
