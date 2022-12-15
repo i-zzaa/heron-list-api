@@ -424,14 +424,12 @@ const formatEvents = async (eventos: any) => {
       id: evento.terapeuta.usuario.id,
     };
 
-    evento.diasFrequencia = evento.diasFrequencia.split(',');
-    evento.exdate = evento.exdate.split(',');
-
-    // const groupId =
-    //   evento?.groupId && evento?.groupId !== 0 ? evento.groupId : evento.id;
+    if (evento.diasFrequencia)
+      evento.diasFrequencia = evento.diasFrequencia.split(',');
+    if (evento.exdate) evento.exdate = evento.exdate.split(',');
 
     switch (true) {
-      case evento.diasFrequencia.length && evento.intervalo.id === 1: // com dias selecionados e todas semanas
+      case evento.frequencia.id === 1 && evento.intervalo.id === 1: // com dias selecionados e todas semanas
         formated = {
           ...evento,
           data: {
@@ -458,7 +456,7 @@ const formatEvents = async (eventos: any) => {
         }
 
         break;
-      case evento.diasFrequencia.length && evento.intervalo.id !== 1: // com dias selecionados e intervalos
+      case evento.frequencia.id === 1 && evento.intervalo.id !== 1: // com dias selecionados e intervalos
         formated = {
           ...evento,
           data: {
