@@ -19,7 +19,7 @@ export const messageSuccessLogin = (data: any) => ({
   ...data,
 });
 
-export const messageSuccessList = (data: any) => (data);
+export const messageSuccessList = (data: any) => data;
 
 export const messageSuccess = (data: any) => ({
   message: SUCCESS_CREATE,

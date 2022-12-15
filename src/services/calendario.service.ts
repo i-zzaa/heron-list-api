@@ -249,6 +249,8 @@ export const createCalendario = async (
     };
   }
 
+  const diasFrequencia = body.diasFrequencia.join(',');
+
   const evento = await prisma.calendario.create({
     data: {
       groupId: 0,
@@ -256,7 +258,7 @@ export const createCalendario = async (
       dataFim: body.dataFim,
       start: body.start,
       end: body.end,
-      diasFrequencia: body.diasFrequencia.join(','),
+      diasFrequencia: diasFrequencia,
 
       ciclo: 'ativo',
       observacao: body.observacao,
@@ -368,12 +370,14 @@ export const updateCalendario = async (body: any, login: string) => {
       });
       break;
     case !body.changeAll:
-      const exdate = eventoUnico.exdate.split(',');
+      const exdate = eventoUnico.exdate ? eventoUnico.exdate.split(',') : [];
       exdate.push(formatDateTime(body.start, body.dataAtual));
+
+      const format = exdate.join(',');
 
       evento = await prisma.calendario.updateMany({
         data: {
-          exdate: exdate.join(','),
+          exdate: format,
         },
         where: {
           id: body.id,
