@@ -320,7 +320,7 @@ export const updateUser = async (body: UserRequestProps) => {
     },
   });
 
-  if (!user) throw createError(500, ERROR_CREATE);
+  // if (!user) throw createError(500, ERROR_CREATE);
 
   return user;
 };

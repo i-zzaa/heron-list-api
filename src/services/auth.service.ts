@@ -50,6 +50,13 @@ export async function loginService(params: AuthProps) {
 
   delete user.senha;
 
+  const permissoesList: string[] = [];
+  user.permissoes?.map(({ permissao }: any) => {
+    permissoesList.push(permissao.cod);
+  });
+
+  user.permissoes = permissoesList;
+
   return {
     accessToken,
     user,
