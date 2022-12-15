@@ -429,7 +429,7 @@ const formatEvents = async (eventos: any) => {
 
     const until = evento.dataFim
       ? formatDateTime(evento.start, evento.dataFim)
-      : '';
+      : null;
     // const groupId =
     //   evento?.groupId && evento?.groupId !== 0 ? evento.groupId : evento.id;
 
