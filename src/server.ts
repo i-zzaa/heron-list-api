@@ -19,6 +19,7 @@ import { statusEventosController } from './controllers/statusEventos.controller'
 import { frequenciaController } from './controllers/frequencia.controller';
 import { modalidadeController } from './controllers/modalidade.controller';
 import { calendarioController } from './controllers/calendario.controller';
+const package_json = require('../package.json');
 
 const app = express();
 
@@ -38,7 +39,7 @@ app.use(cors());
 app.get('/', async (request, response) => {
   response.status(200).json({
     status: true,
-    data: 'versão: 0.6.5-beta.0',
+    data: `versão ${package_json.version}`,
   });
 });
 
