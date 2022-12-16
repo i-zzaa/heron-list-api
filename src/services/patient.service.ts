@@ -28,6 +28,10 @@ interface Props extends PatientProps {
   emAtendimento?: boolean;
   dataVoltouAba?: string;
 }
+interface Sessao {
+  valor: string;
+  km: string;
+}
 interface PatientQueueTherapyPropsProps extends PatientProps {
   dataVoltouAba: string;
   periodoId: number;
@@ -35,6 +39,7 @@ interface PatientQueueTherapyPropsProps extends PatientProps {
   especialidades: any;
   observacao: string;
   naFila: boolean;
+  sessao: any;
 }
 interface PatientQueueAvaliationPropsProps extends PatientProps {
   dataContato: string;
@@ -288,9 +293,11 @@ export const createPatientQueueTherapy = async (
           periodoId: body.periodoId,
           especialidades: {
             create: [
-              ...body.especialidades.map((especialidade: string) => {
+              ...body.sessao.map((sessao: any) => {
                 return {
-                  especialidadeId: especialidade,
+                  especialidadeId: sessao.especialidadeId,
+                  valor: sessao.valor,
+                  km: sessao.km,
                 };
               }),
             ],
@@ -299,6 +306,7 @@ export const createPatientQueueTherapy = async (
       },
     },
   });
+
   return paciente;
 };
 

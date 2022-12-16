@@ -102,10 +102,12 @@ model VagaTerapia {
 }
 
 model VagaTerapiaOnEspecialidade {
-  especialidadeId Int // relation scalar field (used in the `@relation` attribute above)
-  vagaId          Int // relation scalar field (used in the `@relation` attribute above)
+  especialidadeId Int
+  vagaId          Int
   agendado        Boolean @default(false)
   dataAgendado    String?
+  valor           String  @default("200")
+  km              String  @default("0")
 
   vaga          VagaTerapia   @relation(fields: [vagaId], references: [id], onDelete: Cascade)
   especialidade Especialidade @relation(fields: [especialidadeId], references: [id])
@@ -221,22 +223,25 @@ model Funcao {
   especialidade Especialidade @relation(fields: [especialidadeId], references: [id])
   calendario    Calendario[]
 
-  terapeutas terapeutaOnFuncao[]
+  terapeutas TerapeutaOnFuncao[]
 }
 
 model Terapeuta {
-  usuarioId       Int     @unique
+  usuarioId       Int      @unique
   especialidadeId Int
-  fazDevolutiva   Boolean @default(true)
+  fazDevolutiva   Boolean? @default(true)
+  cargaHoraria    Json?
+  comissao        String?  @default("80")
+  tipo            String?  @default("fixo")
 
   usuario       Usuario?       @relation(fields: [usuarioId], references: [id])
   especialidade Especialidade? @relation(fields: [especialidadeId], references: [id])
   calendario    Calendario[]
 
-  funcoes terapeutaOnFuncao[]
+  funcoes TerapeutaOnFuncao[]
 }
 
-model terapeutaOnFuncao {
+model TerapeutaOnFuncao {
   terapeutaId Int
   funcaoId    Int
 
