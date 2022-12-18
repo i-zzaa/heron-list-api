@@ -21,11 +21,11 @@ interface FinancialProps {
   datatInicio: string;
 }
 
-export const getFinancial = async (query: FinancialProps) => {
+export const getFinancial = async (body: FinancialProps) => {
   // filtra eventos por terapeuta no peridodo
   // filtra statusEventos cobrados
   // agrupa por paciente
-  const { terapeutaId, datatFim, datatInicio } = query;
+  const { terapeutaId, datatFim, datatInicio } = body;
 
   const eventos = await getFilterFinancialTerapeuta({
     terapeutaId,
