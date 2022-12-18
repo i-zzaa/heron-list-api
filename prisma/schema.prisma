@@ -179,6 +179,7 @@ model Localidade {
 model StatusEventos {
   id         Int          @id @default(autoincrement())
   nome       String
+  cobrar     Boolean      @default(true)
   ativo      Boolean      @default(true)
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @default(now())
@@ -231,8 +232,6 @@ model Terapeuta {
   especialidadeId Int
   fazDevolutiva   Boolean? @default(true)
   cargaHoraria    Json?
-  comissao        String?  @default("80")
-  tipo            String?  @default("fixo")
 
   usuario       Usuario?       @relation(fields: [usuarioId], references: [id])
   especialidade Especialidade? @relation(fields: [especialidadeId], references: [id])
@@ -244,6 +243,8 @@ model Terapeuta {
 model TerapeutaOnFuncao {
   terapeutaId Int
   funcaoId    Int
+  comissao    String? @default("80")
+  tipo        String? @default("fixo")
 
   terapeuta Terapeuta? @relation(fields: [terapeutaId], references: [usuarioId], onDelete: Cascade)
   funcao    Funcao?    @relation(fields: [funcaoId], references: [id], onDelete: Cascade)

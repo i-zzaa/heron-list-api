@@ -201,6 +201,7 @@ export const statusVaga = async () => {
         backgroundColor: ['#38bdf880', '#7f1d1d80', '#312e8180'],
         borderColor: ['#38bdf8', '#7f1d1d', '#312e81'],
         borderWidth: 1,
+        borderRadius: 4,
       },
     ],
   };

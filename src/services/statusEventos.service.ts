@@ -6,6 +6,7 @@ export interface StatusEventosProps {
   id: number;
   nome: string;
   ativo: boolean;
+  cobrar: boolean;
 }
 
 export const getStatusEventos = async () => {
@@ -13,6 +14,7 @@ export const getStatusEventos = async () => {
     select: {
       id: true,
       nome: true,
+      cobrar: true,
       ativo: true,
     },
     orderBy: {
@@ -29,6 +31,7 @@ export const searchStatusEventos = async (word: string) => {
     select: {
       id: true,
       nome: true,
+      cobrar: true,
       ativo: true,
     },
     orderBy: {
@@ -58,6 +61,7 @@ export const updateStatusEventos = async (body: StatusEventosProps) => {
     data: {
       nome: body.nome,
       ativo: body.ativo,
+      cobrar: body.cobrar,
     },
     where: {
       id: Number(body.id),
@@ -78,6 +82,7 @@ export const getStatusUnique = async (id: number) => {
     select: {
       nome: true,
       id: true,
+      cobrar: true,
     },
     where: {
       id: Number(id),
