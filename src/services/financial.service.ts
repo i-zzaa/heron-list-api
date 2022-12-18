@@ -6,32 +6,34 @@ import {
 } from '../model/financial.model';
 import { getFilterFinancialTerapeuta } from './calendario.service';
 
-import {
-  getPatientId,
-  PatientProps,
-  setStatusPaciente,
-} from './patient.service';
-
 const prisma = new PrismaClient();
 
 interface FinancialProps {
   terapeutaId: number;
   pacienteId: number;
   datatFim: string;
-  datatInicio: string;
+  dataInicio: string;
 }
 
 export const getFinancial = async (body: FinancialProps) => {
   // filtra eventos por terapeuta no peridodo
   // filtra statusEventos cobrados
   // agrupa por paciente
-  const { terapeutaId, datatFim, datatInicio } = body;
+  const { terapeutaId, datatFim, dataInicio } = body;
 
   const eventos = await getFilterFinancialTerapeuta({
     terapeutaId,
     datatFim,
-    datatInicio,
+    dataInicio,
   });
+
+  if (!eventos.length)
+    return {
+      data: [],
+      valorTotal: 0,
+      terapeuta: '',
+    };
+
   const relatorio: FinancialTerapeutaProps[] = [];
   let terapeuta;
 
@@ -40,19 +42,24 @@ export const getFinancial = async (body: FinancialProps) => {
       (especialidade: any) =>
         especialidade.especialidadeId === evento.especialidade.id
     )[0];
+
     const comissao = evento.terapeuta.funcoes.filter(
-      (funcao: any) => funcao.funcaoId === evento.funcaoId
+      (funcao: any) => funcao.funcaoId === evento.funcao.id
     )[0];
+
+    const sessaoValor = parseFloat(sessao.valor);
+    const comissaoValor = parseFloat(comissao.comissao);
+
     const isDevolutiva = evento.modalidade.nome === 'Devolutiva';
 
-    terapeuta = evento.terapeuta.nome;
+    terapeuta = evento.terapeuta.usuario.nome;
     const financeiro = new FinancialTerapeuta({
       paciente: evento.paciente.nome,
-      terapeuta: evento.terapeuta.nome,
-      data: evento.dataInicio,
+      terapeuta: terapeuta,
+      data: moment(evento.dataInicio).format('DD/MM/YYYY'),
       sessao: sessao.valor,
       km: sessao.km,
-      comissao: comissao.valor,
+      comissao: comissaoValor,
       tipo: comissao.tipo,
       status: evento.statusEventos.nome,
       devolutiva: isDevolutiva,
@@ -72,10 +79,10 @@ export const getFinancial = async (body: FinancialProps) => {
 
     switch (comissao.tipo) {
       case 'fixo':
-        valorSessao = comissao.valor;
+        valorSessao = comissaoValor;
         break;
       default:
-        valorSessao = sessao.valor * (comissao.valor / 100);
+        valorSessao = sessaoValor * (comissaoValor / 100);
         break;
     }
 
@@ -83,25 +90,24 @@ export const getFinancial = async (body: FinancialProps) => {
     financeiro.valorSessao = valorSessao;
     financeiro.valorTotal = valorSessao + valorKm;
 
-    relatorio.push(financeiro);
+    relatorio.push({ ...financeiro });
 
     return;
   });
 
-  const groubyPaciente: any = {};
-  const valorTotal = relatorio
-    .map((evento: any) => {
-      if (groubyPaciente.hasOwnProperty(evento.paciente)) {
-        groubyPaciente[evento.paciente].push(evento);
-      }
+  // const groubyPaciente: any = {};
+  // console.log(relatorio);
 
-      return evento.valorTotal;
-    })
-    .reduce((total, valorTotalEvento) => (total += valorTotalEvento));
+  // const valorTotal = relatorio
+  //   .map((evento: any) => {
+  //     groubyPaciente[evento.paciente].push(evento);
+
+  //     return evento.valorTotal;
+  //   })
+  //   .reduce((total, valorTotalEvento) => (total += valorTotalEvento));
 
   return {
-    data: Object.keys(groubyPaciente),
-    valorTotal,
+    data: relatorio,
     terapeuta,
   };
 };

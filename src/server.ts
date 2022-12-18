@@ -165,7 +165,11 @@ app.post('/evento', auth, calendarioController.create);
 app.put('/evento', auth, calendarioController.update);
 app.delete('/evento/:id', auth, calendarioController.delete);
 
-app.post('/financeiro/terapeuta', auth, terapeutaController.getTerapeuta);
+app.post(
+  '/filtro/financeiro/terapeuta',
+  auth,
+  terapeutaController.getTerapeuta
+);
 
 const PORT = process.env.PORT || 3333;
 app.listen(PORT);

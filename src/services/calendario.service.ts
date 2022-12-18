@@ -226,7 +226,7 @@ export const getFilterFinancialTerapeuta = async ({
     },
     where: {
       dataInicio: {
-        lte: dataInicio, // menor que o ultimo dia do mes
+        lte: dataFim, // menor que o ultimo dia do mes
       },
       OR: [
         {
@@ -250,8 +250,7 @@ export const getFilterFinancialTerapeuta = async ({
     },
   });
 
-  const eventosFormat = await formatEvents(eventos);
-  return eventosFormat;
+  return eventos;
 };
 
 export const getMonth = async (params: any) => {
