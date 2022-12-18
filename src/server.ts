@@ -19,6 +19,7 @@ import { statusEventosController } from './controllers/statusEventos.controller'
 import { frequenciaController } from './controllers/frequencia.controller';
 import { modalidadeController } from './controllers/modalidade.controller';
 import { calendarioController } from './controllers/calendario.controller';
+import { terapeutaController } from './controllers/financial.controller';
 const package_json = require('../package.json');
 
 const app = express();
@@ -163,6 +164,12 @@ app.get('/evento/filter/:mes/:ano', auth, calendarioController.geFilter);
 app.post('/evento', auth, calendarioController.create);
 app.put('/evento', auth, calendarioController.update);
 app.delete('/evento/:id', auth, calendarioController.delete);
+
+app.get(
+  '/financeiro/terapeuta/:terapeutaId/:dataInicio/:dataFim',
+  auth,
+  terapeutaController.getTerapeuta
+);
 
 const PORT = process.env.PORT || 3333;
 app.listen(PORT);

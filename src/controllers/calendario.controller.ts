@@ -8,6 +8,13 @@ import {
 } from '../services/calendario.service';
 
 export class calendarioController {
+  static getTerapeuta(
+    arg0: string,
+    auth: (req: any, res: any, next: any) => Promise<void>,
+    getTerapeuta: any
+  ) {
+    throw new Error('Method not implemented.');
+  }
   static create = async (req: any, res: any, next: any) => {
     try {
       const data = await createCalendario(req.body, req.headers.login);

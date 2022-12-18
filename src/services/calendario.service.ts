@@ -144,6 +144,116 @@ export const geFilter = async (params: any, query: any) => {
   return eventosFormat;
 };
 
+export const getFilterFinancialTerapeuta = async ({
+  dataInicio,
+  dataFim,
+  terapeutaId,
+}: any) => {
+  const eventos = await prisma.calendario.findMany({
+    select: {
+      id: true,
+      groupId: true,
+      dataInicio: true,
+      dataFim: true,
+      start: true,
+      end: true,
+      diasFrequencia: true,
+      exdate: true,
+
+      ciclo: true,
+      observacao: true,
+      paciente: {
+        select: {
+          nome: true,
+          id: true,
+          vagaTerapia: {
+            select: {
+              especialidades: true,
+            },
+          },
+        },
+      },
+      modalidade: {
+        select: {
+          nome: true,
+          id: true,
+        },
+      },
+      especialidade: true,
+      terapeuta: {
+        select: {
+          usuario: {
+            select: {
+              nome: true,
+              id: true,
+            },
+          },
+          funcoes: {
+            select: {
+              comissao: true,
+              tipo: true,
+              funcaoId: true,
+            },
+          },
+        },
+      },
+      funcao: {
+        select: {
+          nome: true,
+          id: true,
+        },
+      },
+      localidade: true,
+      statusEventos: {
+        select: {
+          nome: true,
+          cobrar: true,
+          id: true,
+        },
+      },
+      frequencia: {
+        select: {
+          nome: true,
+          id: true,
+        },
+      },
+      intervalo: {
+        select: {
+          nome: true,
+          id: true,
+        },
+      },
+    },
+    where: {
+      dataInicio: {
+        lte: dataInicio, // menor que o ultimo dia do mes
+      },
+      OR: [
+        {
+          dataFim: '',
+        },
+        {
+          dataFim: {
+            gte: dataInicio, // maior que o primeiro dia do mes
+          },
+        },
+      ],
+      terapeutaId: terapeutaId,
+      statusEventos: {
+        cobrar: true,
+      },
+    },
+    orderBy: {
+      paciente: {
+        nome: 'asc',
+      },
+    },
+  });
+
+  const eventosFormat = await formatEvents(eventos);
+  return eventosFormat;
+};
+
 export const getMonth = async (params: any) => {
   const inicioDoMes = getPrimeiroDoMes(params.ano, params.mes);
   const ultimoDiaDoMes = getUltimoDoMes(params.ano, params.mes);
