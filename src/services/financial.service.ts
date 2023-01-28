@@ -7,7 +7,7 @@ import {
   FinancialTerapeuta,
   FinancialTerapeutaProps,
 } from '../model/financial.model';
-import { formatDateTime } from '../utils/convert-hours';
+import { formatDateTime, formaTime } from '../utils/convert-hours';
 import {
   getFilterFinancialPaciente,
   getFilterFinancialTerapeuta,
@@ -42,6 +42,11 @@ export const getFinancialPaciente = async (body: FinancialProps) => {
   const relatorio: FinancialPacienteProps[] = [];
   let paciente;
 
+  let valorTotal = 0;
+  let valorKm = 0;
+  let horas = moment.duration(0);
+  const especialidadeTimeSessions: any = {};
+
   eventos.map((evento: any) => {
     const sessao = evento.paciente.vagaTerapia.especialidades.filter(
       (especialidade: any) =>
@@ -53,24 +58,41 @@ export const getFinancialPaciente = async (body: FinancialProps) => {
     const start = formatDateTime(evento.start, evento.dataInicio);
     const end = formatDateTime(evento.end, evento.dataInicio);
 
-    var diff = moment(end, 'YYYY-MM-DD HH:mm').diff(
+    let diff = moment(end, 'YYYY-MM-DD HH:mm').diff(
       moment(start, 'YYYY-MM-DD HH:mm')
+    );
+
+    let duracaoTotal = moment.duration(
+      especialidadeTimeSessions[evento.especialidade.nome] || 0
+    );
+    const duracaoEspecialidadeSessaoTotal = duracaoTotal.add(
+      moment.duration(diff)
+    );
+
+    especialidadeTimeSessions[evento.especialidade.nome] = formaTime(
+      duracaoEspecialidadeSessaoTotal
     );
 
     const financeiro = new FinancialPaciente({
       paciente: evento.paciente.nome,
       terapeuta: evento.terapeuta.usuario.nome,
       data: moment(evento.dataInicio).format('DD/MM/YYYY'),
-      sessao: sessao.valor,
+      sessao: parseFloat(sessao.valor),
       km: sessao.km,
       status: evento.statusEventos.nome,
       valorSessao: parseFloat(sessao.valor),
       funcao: evento.funcao.nome,
       valorTotal: parseFloat(sessao.valor),
-      horas: diff,
+      horas: formaTime(moment.duration(diff)),
+      especialidade: evento.especialidade.nome,
     });
 
     relatorio.push({ ...financeiro });
+
+    valorTotal += parseFloat(sessao.valor);
+
+    valorTotal += financeiro.valorTotal;
+    horas = horas.add(financeiro.horas);
 
     return;
   });
@@ -78,6 +100,13 @@ export const getFinancialPaciente = async (body: FinancialProps) => {
   return {
     data: relatorio,
     nome: paciente,
+    geral: {
+      nome: paciente,
+      valorTotal: valorTotal,
+      horas: formaTime(horas),
+      valorKm: valorKm,
+      especialidadeSessoes: especialidadeTimeSessions,
+    },
   };
 };
 export const getFinancial = async (body: FinancialProps) => {
@@ -103,7 +132,7 @@ export const getFinancial = async (body: FinancialProps) => {
   let terapeuta;
   let valorTotal = 0;
   let valorKm = 0;
-  let horas = 0;
+  let horas = moment.duration(0);
   let especialidade = '';
 
   eventos.map((evento: any) => {
@@ -134,13 +163,13 @@ export const getFinancial = async (body: FinancialProps) => {
       paciente: evento.paciente.nome,
       terapeuta: terapeuta,
       data: moment(evento.dataInicio).format('DD/MM/YYYY'),
-      sessao: sessao.valor,
+      sessao: parseFloat(sessao.valor),
       km: sessao.km,
       comissao: comissaoValor,
       tipo: comissao.tipo,
       status: evento.statusEventos.nome,
       devolutiva: isDevolutiva,
-      horas: diff,
+      horas: formaTime(moment.duration(diff)),
     });
 
     if (isDevolutiva) {
@@ -148,7 +177,7 @@ export const getFinancial = async (body: FinancialProps) => {
       financeiro.valorTotal = 50;
 
       valorTotal += financeiro.valorTotal;
-      horas += financeiro.horas;
+      horas = horas.add(financeiro.horas);
 
       relatorio.push(financeiro);
 
@@ -173,7 +202,7 @@ export const getFinancial = async (body: FinancialProps) => {
 
     valorTotal += financeiro.valorTotal;
     valorKm += financeiro.valorKm;
-    horas += financeiro.horas;
+    horas = horas.add(financeiro.horas);
 
     relatorio.push({ ...financeiro });
 
@@ -186,7 +215,7 @@ export const getFinancial = async (body: FinancialProps) => {
     geral: {
       nome: terapeuta,
       valorTotal: valorTotal,
-      horas: horas,
+      horas: formaTime(horas),
       valorKm: valorKm,
       especialidade: especialidade,
     },

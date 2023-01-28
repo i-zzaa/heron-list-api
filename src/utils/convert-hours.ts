@@ -29,6 +29,13 @@ const SEMANA = [
   'sábado',
 ];
 
+export const formaTime = (duration: any) => {
+  return `${duration.hours().toString().padStart(2, '0')}:${duration
+    .minutes()
+    .toString()
+    .padStart(2, '0')}:${duration.seconds().toString().padStart(2, '0')}`;
+};
+
 export const formatDateTime = (hours: any, date: any) => {
   const arrTime = hours.split(':');
   return moment(date)

@@ -8,7 +8,7 @@ export interface FinancialTerapeutaProps {
   km: number;
   devolutiva: boolean;
   data: string;
-  horas: number;
+  horas: string;
 }
 export interface FinancialPacienteProps {
   paciente: string;
@@ -20,7 +20,8 @@ export interface FinancialPacienteProps {
   valorTotal: number;
   data: string;
   funcao: string;
-  horas: number;
+  horas: string;
+  especialidade: string;
 }
 
 export class FinancialTerapeuta {
@@ -30,7 +31,7 @@ export class FinancialTerapeuta {
   tipo: string;
   status: string;
   data: string;
-  horas: number;
+  horas: string;
   sessao: number;
   km: number;
   devolutiva: boolean;
@@ -68,8 +69,9 @@ export class FinancialPaciente {
   terapeuta: string;
   status: string;
   funcao: string;
+  especialidade: string;
   data: string;
-  horas: number;
+  horas: string;
   sessao: number;
   km: number;
   valorSessao: number = 0;
@@ -86,6 +88,7 @@ export class FinancialPaciente {
     valorTotal,
     funcao,
     horas,
+    especialidade,
   }: FinancialPacienteProps) {
     this.paciente = paciente;
     this.terapeuta = terapeuta;
@@ -97,5 +100,7 @@ export class FinancialPaciente {
     this.valorSessao = valorSessao;
     this.valorTotal = valorTotal;
     this.horas = horas;
+
+    this.especialidade = especialidade;
   }
 }
