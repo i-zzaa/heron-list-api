@@ -2,8 +2,8 @@ import createError from 'http-errors';
 import {
   createCalendario,
   deleteCalendario,
-  geFilter,
-  getMonth,
+  getFilter,
+  getRange,
   updateCalendario,
 } from '../services/calendario.service';
 
@@ -55,18 +55,18 @@ export class calendarioController {
     }
   };
 
-  static getMonth = async (req: any, res: any, next: any) => {
+  static getRange = async (req: any, res: any, next: any) => {
     try {
-      const data = await getMonth(req.params);
+      const data = await getRange(req.params);
       res.status(200).json(data);
     } catch (error: any) {
       res.status(401).json(error);
       next();
     }
   };
-  static geFilter = async (req: any, res: any, next: any) => {
+  static getFilter = async (req: any, res: any, next: any) => {
     try {
-      const data = await geFilter(req.params, req.query);
+      const data = await getFilter(req.params, req.query);
       res.status(200).json(data);
     } catch (error: any) {
       res.status(401).json(error);

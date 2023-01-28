@@ -1,15 +1,12 @@
 import { PrismaClient } from '@prisma/client';
 import moment from 'moment';
 import {
-  formatadataPadraoBD,
   formatDateTime,
-  getDiasDoMes,
   getPrimeiroDoMes,
   getUltimoDoMes,
 } from '../utils/convert-hours';
 import { getFrequenciaName } from './frequencia.service';
 import { formatLocalidade } from './localidade.service';
-import { setPacienteEmAtendimento } from './patient.service';
 import { getUser } from './user.service';
 
 const prisma = new PrismaClient();
@@ -49,9 +46,9 @@ export const getCalendario = async () => {
   return [];
 };
 
-export const geFilter = async (params: any, query: any) => {
-  const inicioDoMes = getPrimeiroDoMes(params.ano, params.mes);
-  const ultimoDiaDoMes = getUltimoDoMes(params.ano, params.mes);
+export const getFilter = async (params: any, query: any) => {
+  const inicioDoMes = params.start;
+  const ultimoDiaDoMes = params.end;
 
   const filter: any = {};
   Object.keys(query).map((key: string) => (filter[key] = Number(query[key])));
@@ -253,9 +250,120 @@ export const getFilterFinancialTerapeuta = async ({
   return eventos;
 };
 
-export const getMonth = async (params: any) => {
-  const inicioDoMes = getPrimeiroDoMes(params.ano, params.mes);
-  const ultimoDiaDoMes = getUltimoDoMes(params.ano, params.mes);
+export const getFilterFinancialPaciente = async ({
+  dataInicio,
+  dataFim,
+  pacienteId,
+}: any) => {
+  const eventos = await prisma.calendario.findMany({
+    select: {
+      id: true,
+      groupId: true,
+      dataInicio: true,
+      dataFim: true,
+      start: true,
+      end: true,
+      diasFrequencia: true,
+      exdate: true,
+
+      ciclo: true,
+      observacao: true,
+      paciente: {
+        select: {
+          nome: true,
+          id: true,
+          vagaTerapia: {
+            select: {
+              especialidades: true,
+            },
+          },
+        },
+      },
+      modalidade: {
+        select: {
+          nome: true,
+          id: true,
+        },
+      },
+      especialidade: true,
+      terapeuta: {
+        select: {
+          usuario: {
+            select: {
+              nome: true,
+              id: true,
+            },
+          },
+          funcoes: {
+            select: {
+              comissao: true,
+              tipo: true,
+              funcaoId: true,
+            },
+          },
+        },
+      },
+      funcao: {
+        select: {
+          nome: true,
+          id: true,
+        },
+      },
+      localidade: true,
+      statusEventos: {
+        select: {
+          nome: true,
+          cobrar: true,
+          id: true,
+        },
+      },
+      frequencia: {
+        select: {
+          nome: true,
+          id: true,
+        },
+      },
+      intervalo: {
+        select: {
+          nome: true,
+          id: true,
+        },
+      },
+    },
+    where: {
+      dataInicio: {
+        lte: dataFim, // menor que o ultimo dia do mes
+      },
+      OR: [
+        {
+          dataFim: '',
+        },
+        {
+          dataFim: {
+            gte: dataInicio, // maior que o primeiro dia do mes
+          },
+        },
+      ],
+      pacienteId: pacienteId,
+      statusEventos: {
+        cobrar: true,
+      },
+    },
+    orderBy: {
+      terapeuta: {
+        usuario: {
+          nome: 'asc',
+        },
+      },
+    },
+  });
+
+  return eventos;
+};
+
+export const getRange = async (params: any) => {
+  const inicioDoMes = params.start;
+  const ultimoDiaDoMes = params.end;
 
   const eventos = await prisma.calendario.findMany({
     select: {
@@ -412,7 +520,7 @@ export const updateCalendario = async (body: any, login: string) => {
 
   let evento;
   switch (true) {
-    case body.frequencia.nome === 'Único':
+    case body.frequencia.id === 1 && !body.changeAll:
       evento = await prisma.calendario.updateMany({
         data: {
           dataInicio: body?.dataInicio,
@@ -428,9 +536,6 @@ export const updateCalendario = async (body: any, login: string) => {
           funcaoId: body?.funcao?.id,
           localidadeId: body?.localidade?.id,
           statusEventosId: body?.statusEventos?.id,
-          frequenciaId: body?.frequencia?.id,
-          intervaloId: body?.intervalo?.id,
-          diasFrequencia: body?.diasFrequencia.join(','),
         },
         where: {
           id: body.id,
@@ -448,7 +553,6 @@ export const updateCalendario = async (body: any, login: string) => {
         },
       });
       break;
-
     case body.changeAll && dataFim !== eventoUnico.dataInicio:
       evento = await prisma.calendario.updateMany({
         data: {
@@ -478,8 +582,8 @@ export const updateCalendario = async (body: any, login: string) => {
         },
       });
       break;
-    case !body.changeAll:
-      const exdate = eventoUnico?.exdate.split(',') || [];
+    case body.frequencia.id !== 1 && !body.changeAll:
+      const exdate = eventoUnico?.exdate ? eventoUnico?.exdate.split(',') : [];
       exdate.push(formatDateTime(body.start, body.dataAtual));
 
       const format = exdate.join(',');
@@ -533,9 +637,9 @@ const formatEvents = async (eventos: any) => {
       id: evento.terapeuta.usuario.id,
     };
 
-    if (evento.diasFrequencia)
-      evento.diasFrequencia = evento.diasFrequencia.split(',');
-    if (evento.exdate) evento.exdate = evento.exdate.split(',');
+    evento.diasFrequencia =
+      evento.diasFrequencia && evento.diasFrequencia.split(',');
+    evento.exdate = evento?.exdate ? evento.exdate.split(',') : [];
 
     switch (true) {
       case evento.frequencia.id !== 1 && evento.intervalo.id === 1: // com dias selecionados e todas semanas
@@ -548,14 +652,14 @@ const formatEvents = async (eventos: any) => {
           title: evento.paciente.nome,
           groupId: evento.id,
           daysOfWeek: evento.diasFrequencia,
-          // start: formatDateTime(evento.start, evento.dataInicio),
-          // end: formatDateTime(evento.end, evento.dataInicio),
+          // startTime: formatDateTime(evento.start, evento.dataInicio),
+          // endTime: formatDateTime(evento.end, evento.dataInicio),
           borderColor: cor,
           backgroundColor: cor,
           exdate: evento.exdate,
           rrule: {
             freq: 'weekly',
-            byweekday: evento.diasFrequencia,
+            // byweekday: evento.diasFrequencia,
             dtstart: formatDateTime(evento.start, evento.dataInicio),
           },
         };
@@ -606,11 +710,15 @@ const formatEvents = async (eventos: any) => {
           borderColor: cor,
           backgroundColor: cor,
         };
+
+        delete formated.exdate;
+        delete formated.diasFrequencia;
         break;
     }
 
     eventosFormat.push(formated);
   });
+  console.log(eventosFormat);
 
   return eventosFormat;
 };

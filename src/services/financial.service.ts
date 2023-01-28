@@ -1,12 +1,17 @@
 import { PrismaClient } from '@prisma/client';
 import moment from 'moment';
+import { especialidadeController } from '../controllers/especialidade.controller';
 import {
+  FinancialPaciente,
+  FinancialPacienteProps,
   FinancialTerapeuta,
   FinancialTerapeutaProps,
 } from '../model/financial.model';
-import { getFilterFinancialTerapeuta } from './calendario.service';
-
-const prisma = new PrismaClient();
+import { formatDateTime } from '../utils/convert-hours';
+import {
+  getFilterFinancialPaciente,
+  getFilterFinancialTerapeuta,
+} from './calendario.service';
 
 interface FinancialProps {
   terapeutaId: number;
@@ -15,6 +20,66 @@ interface FinancialProps {
   dataInicio: string;
 }
 
+export const getFinancialPaciente = async (body: FinancialProps) => {
+  // filtra eventos por terapeuta no peridodo
+  // filtra statusEventos cobrados
+  // agrupa por paciente
+  const { pacienteId, datatFim, dataInicio } = body;
+
+  const eventos = await getFilterFinancialPaciente({
+    pacienteId,
+    datatFim,
+    dataInicio,
+  });
+
+  if (!eventos.length)
+    return {
+      data: [],
+      valorTotal: 0,
+      paciente: '',
+    };
+
+  const relatorio: FinancialPacienteProps[] = [];
+  let paciente;
+
+  eventos.map((evento: any) => {
+    const sessao = evento.paciente.vagaTerapia.especialidades.filter(
+      (especialidade: any) =>
+        especialidade.especialidadeId === evento.especialidade.id
+    )[0];
+
+    paciente = evento.paciente.nome;
+
+    const start = formatDateTime(evento.start, evento.dataInicio);
+    const end = formatDateTime(evento.end, evento.dataInicio);
+
+    var diff = moment(end, 'YYYY-MM-DD HH:mm').diff(
+      moment(start, 'YYYY-MM-DD HH:mm')
+    );
+
+    const financeiro = new FinancialPaciente({
+      paciente: evento.paciente.nome,
+      terapeuta: evento.terapeuta.usuario.nome,
+      data: moment(evento.dataInicio).format('DD/MM/YYYY'),
+      sessao: sessao.valor,
+      km: sessao.km,
+      status: evento.statusEventos.nome,
+      valorSessao: parseFloat(sessao.valor),
+      funcao: evento.funcao.nome,
+      valorTotal: parseFloat(sessao.valor),
+      horas: diff,
+    });
+
+    relatorio.push({ ...financeiro });
+
+    return;
+  });
+
+  return {
+    data: relatorio,
+    nome: paciente,
+  };
+};
 export const getFinancial = async (body: FinancialProps) => {
   // filtra eventos por terapeuta no peridodo
   // filtra statusEventos cobrados
@@ -36,6 +101,10 @@ export const getFinancial = async (body: FinancialProps) => {
 
   const relatorio: FinancialTerapeutaProps[] = [];
   let terapeuta;
+  let valorTotal = 0;
+  let valorKm = 0;
+  let horas = 0;
+  let especialidade = '';
 
   eventos.map((evento: any) => {
     const sessao = evento.paciente.vagaTerapia.especialidades.filter(
@@ -52,7 +121,15 @@ export const getFinancial = async (body: FinancialProps) => {
 
     const isDevolutiva = evento.modalidade.nome === 'Devolutiva';
 
+    const start = formatDateTime(evento.start, evento.dataInicio);
+    const end = formatDateTime(evento.end, evento.dataInicio);
+
+    var diff = moment(end, 'YYYY-MM-DD HH:mm').diff(
+      moment(start, 'YYYY-MM-DD HH:mm')
+    );
+
     terapeuta = evento.terapeuta.usuario.nome;
+    especialidade = evento.especialidade.nome;
     const financeiro = new FinancialTerapeuta({
       paciente: evento.paciente.nome,
       terapeuta: terapeuta,
@@ -63,18 +140,22 @@ export const getFinancial = async (body: FinancialProps) => {
       tipo: comissao.tipo,
       status: evento.statusEventos.nome,
       devolutiva: isDevolutiva,
+      horas: diff,
     });
 
     if (isDevolutiva) {
       financeiro.valorSessao = 50;
       financeiro.valorTotal = 50;
 
+      valorTotal += financeiro.valorTotal;
+      horas += financeiro.horas;
+
       relatorio.push(financeiro);
 
       return;
     }
 
-    const valorKm = sessao.km * 0.9;
+    const valorKmEvento = sessao.km * 0.9;
     let valorSessao = 0;
 
     switch (comissao.tipo) {
@@ -86,28 +167,28 @@ export const getFinancial = async (body: FinancialProps) => {
         break;
     }
 
-    financeiro.valorKm = valorKm;
+    financeiro.valorKm = valorKmEvento;
     financeiro.valorSessao = valorSessao;
-    financeiro.valorTotal = valorSessao + valorKm;
+    financeiro.valorTotal = valorSessao + valorKmEvento;
+
+    valorTotal += financeiro.valorTotal;
+    valorKm += financeiro.valorKm;
+    horas += financeiro.horas;
 
     relatorio.push({ ...financeiro });
 
     return;
   });
 
-  // const groubyPaciente: any = {};
-  // console.log(relatorio);
-
-  // const valorTotal = relatorio
-  //   .map((evento: any) => {
-  //     groubyPaciente[evento.paciente].push(evento);
-
-  //     return evento.valorTotal;
-  //   })
-  //   .reduce((total, valorTotalEvento) => (total += valorTotalEvento));
-
   return {
     data: relatorio,
-    terapeuta,
+    nome: terapeuta,
+    geral: {
+      nome: terapeuta,
+      valorTotal: valorTotal,
+      horas: horas,
+      valorKm: valorKm,
+      especialidade: especialidade,
+    },
   };
 };

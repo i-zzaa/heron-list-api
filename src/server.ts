@@ -19,7 +19,7 @@ import { statusEventosController } from './controllers/statusEventos.controller'
 import { frequenciaController } from './controllers/frequencia.controller';
 import { modalidadeController } from './controllers/modalidade.controller';
 import { calendarioController } from './controllers/calendario.controller';
-import { terapeutaController } from './controllers/financial.controller';
+import { fiancialController } from './controllers/financial.controller';
 const package_json = require('../package.json');
 
 const app = express();
@@ -157,19 +157,16 @@ app.get('/permissao/:search', auth, permissaoController.search);
 app.put('/permissao', auth, permissaoController.update);
 
 //Calendario
-app.get('/evento/mes/:mes/:ano', auth, calendarioController.getMonth);
-app.get('/evento/filter/:mes/:ano', auth, calendarioController.geFilter);
-// app.get('/evento/:start/:end', auth, calendarioController.getWeek);
+// app.get('/evento/mes/:mes/:ano', auth, calendarioController.getMonth);
+app.get('/evento/filter/:start/:end', auth, calendarioController.getFilter);
+app.get('/evento/:start/:end', auth, calendarioController.getRange);
 
 app.post('/evento', auth, calendarioController.create);
 app.put('/evento', auth, calendarioController.update);
 app.delete('/evento/:id', auth, calendarioController.delete);
 
-app.post(
-  '/filtro/financeiro/terapeuta',
-  auth,
-  terapeutaController.getTerapeuta
-);
+app.post('/filtro/financeiro/terapeuta', auth, fiancialController.getTerapeuta);
+app.post('/filtro/financeiro/paciente', auth, fiancialController.getPaciente);
 
 const PORT = process.env.PORT || 3333;
 app.listen(PORT);
