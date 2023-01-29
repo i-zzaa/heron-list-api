@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import createError from 'http-errors';
 import { ERROR_CREATE } from '../utils/message.response';
+import { moneyFormat } from '../utils/util';
 import { PerfilProps } from './perfil.service';
 
 const prisma = new PrismaClient();
@@ -89,6 +90,25 @@ export const getUsers = async () => {
     );
 
     delete usuario.permissoes;
+
+    if (usuario?.terapeuta?.fazDevolutiva) {
+      usuario.devolutiva = usuario?.terapeuta?.fazDevolutiva;
+    }
+
+    if (usuario?.terapeuta?.cargaHoraria) {
+      usuario.cargaHoraria = JSON.parse(usuario.terapeuta?.cargaHoraria);
+    }
+
+    if (usuario?.terapeuta?.funcoes) {
+      usuario.comissao = usuario?.terapeuta?.funcoes.map((funcao: any) => {
+        return {
+          funcaoId: funcao.funcaoId,
+          valor: moneyFormat.format(funcao.comissao),
+          tipo: funcao.tipo,
+          funcao: funcao.funcao.nome,
+        };
+      });
+    }
 
     return {
       ...usuario,
@@ -212,8 +232,6 @@ export const createUser = async (body: any) => {
     },
   });
 
-  console.log(body);
-
   // await prisma.usuarioOnPermissao.createMany({
   //   data: [
   //     ...body.permissoesId.map((id: number) => {
@@ -225,7 +243,7 @@ export const createUser = async (body: any) => {
   //   ],
   // });
 
-  if (user.perfil?.nome === 'Terapeuta') {
+  if (user.perfil?.id === 6) {
     await prisma.terapeuta.create({
       data: {
         usuarioId: user.id,
@@ -278,22 +296,24 @@ export const updateUser = async (body: any) => {
     });
   }
 
-  await prisma.usuarioOnPermissao.deleteMany({
-    where: {
-      usuarioId: body.id,
-    },
-  });
+  if (body?.permissoesId) {
+    await prisma.usuarioOnPermissao.deleteMany({
+      where: {
+        usuarioId: body.id,
+      },
+    });
 
-  await prisma.usuarioOnPermissao.createMany({
-    data: [
-      ...body.permissoesId.map((permissao: number) => {
-        return {
-          permissaoId: permissao,
-          usuarioId: body.id,
-        };
-      }),
-    ],
-  });
+    await prisma.usuarioOnPermissao.createMany({
+      data: [
+        ...body.permissoesId.map((permissao: number) => {
+          return {
+            permissaoId: permissao,
+            usuarioId: body.id,
+          };
+        }),
+      ],
+    });
+  }
 
   if (body.perfilId === 6) {
     //Terapeuta
@@ -309,9 +329,9 @@ export const updateUser = async (body: any) => {
         data: [
           ...body.comissao.map((comissao: any) => {
             return {
-              funcaoId: comissao.funcaoId,
               terapeutaId: body.id,
-              valor: comissao.valor,
+              funcaoId: comissao.funcaoId,
+              comissao: body.comissao[0].valor.split('R$ ')[1],
               tipo: comissao.tipo,
             };
           }),
@@ -322,8 +342,8 @@ export const updateUser = async (body: any) => {
     await prisma.terapeuta.update({
       data: {
         especialidadeId: body.especialidadeId,
-        fazDevolutiva: body.fazDevolutiva,
-        cargaHoraria: body.cargaHoraria,
+        fazDevolutiva: body.devolutiva,
+        cargaHoraria: JSON.stringify(body.cargaHoraria),
       },
       where: {
         usuarioId: body.id,
