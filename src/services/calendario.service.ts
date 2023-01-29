@@ -718,7 +718,6 @@ const formatEvents = async (eventos: any) => {
 
     eventosFormat.push(formated);
   });
-  console.log(eventosFormat);
 
   return eventosFormat;
 };

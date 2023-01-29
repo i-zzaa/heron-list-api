@@ -119,8 +119,6 @@ export class filterController {
           });
           break;
         case 'status':
-          console.log();
-
           dropdrown = await prisma.status.findMany({
             select: {
               id: true,

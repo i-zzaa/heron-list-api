@@ -244,7 +244,7 @@ model TerapeutaOnFuncao {
   terapeutaId Int
   funcaoId    Int
   comissao    String? @default("80")
-  tipo        String? @default("fixo")
+  tipo        String? @default("Fixo")
 
   terapeuta Terapeuta? @relation(fields: [terapeutaId], references: [usuarioId], onDelete: Cascade)
   funcao    Funcao?    @relation(fields: [funcaoId], references: [id], onDelete: Cascade)

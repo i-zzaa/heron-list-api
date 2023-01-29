@@ -194,7 +194,6 @@ export const createUser = async (body: any) => {
       login: true,
       id: true,
       perfil: true,
-      permissoes: true,
     },
     data: {
       nome: body.nome.toUpperCase(),
@@ -212,6 +211,8 @@ export const createUser = async (body: any) => {
       },
     },
   });
+
+  console.log(body);
 
   // await prisma.usuarioOnPermissao.createMany({
   //   data: [
@@ -235,8 +236,9 @@ export const createUser = async (body: any) => {
         //   create: [
         //     ...body.comissao.map((comissao: any) => {
         //       return {
+        //         terapeutaId: user.id,
         //         funcaoId: comissao.funcaoId,
-        //         comissao: comissao.valor,
+        //         comissao: comissao.valor.toString(),
         //         tipo: comissao.tipo,
         //       };
         //     }),
@@ -249,8 +251,9 @@ export const createUser = async (body: any) => {
       data: [
         ...body.comissao.map((comissao: any) => {
           return {
+            terapeutaId: user.id,
             funcaoId: comissao.funcaoId,
-            comissao: comissao.valor,
+            comissao: comissao.valor.toString(),
             tipo: comissao.tipo,
           };
         }),
