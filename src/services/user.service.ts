@@ -101,9 +101,13 @@ export const getUsers = async () => {
 
     if (usuario?.terapeuta?.funcoes) {
       usuario.comissao = usuario?.terapeuta?.funcoes.map((funcao: any) => {
+        const comissao =
+          funcao.tipo === 'Fixo'
+            ? moneyFormat.format(funcao.comissao)
+            : funcao.comissao;
         return {
           funcaoId: funcao.funcaoId,
-          valor: moneyFormat.format(funcao.comissao),
+          valor: comissao,
           tipo: funcao.tipo,
           funcao: funcao.funcao.nome,
         };
@@ -268,10 +272,15 @@ export const createUser = async (body: any) => {
     await prisma.terapeutaOnFuncao.createMany({
       data: [
         ...body.comissao.map((comissao: any) => {
+          const formatComissao =
+            typeof comissao.valor === 'string'
+              ? comissao.valor.split('R$ ')[1]
+              : comissao.valor.toString();
+
           return {
             terapeutaId: user.id,
             funcaoId: comissao.funcaoId,
-            comissao: comissao.valor.toString(),
+            comissao: formatComissao,
             tipo: comissao.tipo,
           };
         }),
@@ -328,10 +337,15 @@ export const updateUser = async (body: any) => {
       await prisma.terapeutaOnFuncao.createMany({
         data: [
           ...body.comissao.map((comissao: any) => {
+            const formatComissao =
+              typeof comissao.valor === 'string'
+                ? comissao.valor.split('R$ ')[1]
+                : comissao.valor.toString();
+
             return {
               terapeutaId: body.id,
               funcaoId: comissao.funcaoId,
-              comissao: body.comissao[0].valor.split('R$ ')[1],
+              comissao: formatComissao,
               tipo: comissao.tipo,
             };
           }),
@@ -400,5 +414,5 @@ export const updatePasswordLogin = async (login: string, data: any) => {
     },
   });
 
-  return user;
+  return {};
 };
