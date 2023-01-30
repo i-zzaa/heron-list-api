@@ -163,7 +163,7 @@ export const getFinancial = async (body: FinancialProps) => {
       paciente: evento.paciente.nome,
       terapeuta: terapeuta,
       data: moment(evento.dataInicio).format('DD/MM/YYYY'),
-      sessao: parseFloat(sessao.valor),
+      sessao: sessaoValor,
       km: sessao.km,
       comissao: comissaoValor,
       tipo: comissao.tipo,
@@ -184,7 +184,7 @@ export const getFinancial = async (body: FinancialProps) => {
       return;
     }
 
-    const valorKmEvento = sessao.km * 0.9;
+    const valorKmEvento = evento.isExterno ? sessao.km * 0.9 : 0;
     let valorSessao = 0;
 
     switch (comissao.tipo.toLowerCase()) {
