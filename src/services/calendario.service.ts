@@ -1,10 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import moment from 'moment';
-import {
-  formatDateTime,
-  getPrimeiroDoMes,
-  getUltimoDoMes,
-} from '../utils/convert-hours';
+import { formatDateTime } from '../utils/convert-hours';
 import { getFrequenciaName } from './frequencia.service';
 import { formatLocalidade } from './localidade.service';
 import { getUser } from './user.service';
@@ -32,7 +28,7 @@ export interface CalendarioCreateParam {
   especialidade: ObjProps;
   frequencia: any;
   funcao: ObjProps;
-  localidade?: ObjProps;
+  localidade: ObjProps;
   modalidade: ObjProps;
   paciente: ObjProps;
   statusEventos: ObjProps;
@@ -485,7 +481,7 @@ export const createCalendario = async (
       especialidadeId: body.especialidade.id,
       terapeutaId: body.terapeuta.id,
       funcaoId: body.funcao.id,
-      localidadeId: body?.localidade?.id,
+      localidadeId: body.localidade.id,
       statusEventosId: body.statusEventos.id,
       frequenciaId: frequencia.id,
       intervaloId: body.intervalo.id,
@@ -536,7 +532,7 @@ export const updateCalendario = async (body: any, login: string) => {
           especialidadeId: body?.especialidade?.id,
           terapeutaId: body?.terapeuta?.id,
           funcaoId: body?.funcao?.id,
-          localidadeId: body?.localidade?.id,
+          localidadeId: body.localidade?.id,
           statusEventosId: body?.statusEventos?.id,
         },
         where: {
