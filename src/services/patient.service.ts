@@ -66,7 +66,16 @@ const formatPatients = (patients: any) => {
     } else if (patient?.vagaTerapia) {
       const vaga = Object.assign({}, paciente?.vagaTerapia);
 
-      vaga.dataContato = vaga?.dataVoltouAba;
+      switch (true) {
+        case vaga?.dataVoltouAba === 'Invalid date':
+          vaga.dataVoltouAba = null;
+          vaga.dataContato = null;
+          break;
+        case vaga?.dataVoltouAba !== null &&
+          vaga.dataVoltouAba !== 'Invalid date':
+          vaga.dataContato = vaga.dataVoltouAba;
+          break;
+      }
 
       delete paciente.vagaTerapia;
 
