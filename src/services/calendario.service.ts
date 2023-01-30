@@ -469,8 +469,6 @@ export const createCalendario = async (
 
   const diasFrequencia = body.diasFrequencia.join(',');
 
-  const localidade = !body.isExterno ? body?.localidade?.id : undefined;
-
   const evento = await prisma.calendario.create({
     data: {
       groupId: 0,
@@ -487,7 +485,7 @@ export const createCalendario = async (
       especialidadeId: body.especialidade.id,
       terapeutaId: body.terapeuta.id,
       funcaoId: body.funcao.id,
-      localidadeId: localidade,
+      localidadeId: body?.localidade?.id,
       statusEventosId: body.statusEventos.id,
       frequenciaId: frequencia.id,
       intervaloId: body.intervalo.id,
@@ -623,6 +621,7 @@ export const deleteCalendario = async (id: number) => {
 
 const formatEvents = async (eventos: any) => {
   const eventosFormat: any = [];
+
   eventos.map((evento: any) => {
     let formated: any = {};
     const cor =
