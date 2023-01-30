@@ -187,7 +187,7 @@ export const getFinancial = async (body: FinancialProps) => {
     const valorKmEvento = sessao.km * 0.9;
     let valorSessao = 0;
 
-    switch (comissao.tipo) {
+    switch (comissao.tipo.toLowerCase()) {
       case 'fixo':
         valorSessao = comissaoValor;
         break;
