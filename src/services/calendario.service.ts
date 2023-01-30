@@ -32,7 +32,7 @@ export interface CalendarioCreateParam {
   especialidade: ObjProps;
   frequencia: any;
   funcao: ObjProps;
-  localidade: ObjProps;
+  localidade?: ObjProps;
   modalidade: ObjProps;
   paciente: ObjProps;
   statusEventos: ObjProps;
@@ -40,6 +40,7 @@ export interface CalendarioCreateParam {
   terapeuta: any;
   observacao: string;
   groupId: number;
+  isExterno: boolean;
 }
 
 export const getCalendario = async () => {
@@ -468,6 +469,8 @@ export const createCalendario = async (
 
   const diasFrequencia = body.diasFrequencia.join(',');
 
+  const localidade = !body.isExterno ? body?.localidade?.id : undefined;
+
   const evento = await prisma.calendario.create({
     data: {
       groupId: 0,
@@ -484,10 +487,11 @@ export const createCalendario = async (
       especialidadeId: body.especialidade.id,
       terapeutaId: body.terapeuta.id,
       funcaoId: body.funcao.id,
-      localidadeId: body.localidade.id,
+      localidadeId: localidade,
       statusEventosId: body.statusEventos.id,
       frequenciaId: frequencia.id,
       intervaloId: body.intervalo.id,
+      isExterno: body.isExterno,
 
       usuarioId: user.id,
     },

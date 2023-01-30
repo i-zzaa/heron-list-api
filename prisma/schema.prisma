@@ -271,7 +271,7 @@ model Calendario {
   especialidadeId Int
   terapeutaId     Int
   funcaoId        Int
-  localidadeId    Int
+  localidadeId    Int?
   statusEventosId Int
   frequenciaId    Int
   intervaloId     Int
@@ -285,7 +285,7 @@ model Calendario {
   modalidade    Modalidade    @relation(fields: [modalidadeId], references: [id])
   especialidade Especialidade @relation(fields: [especialidadeId], references: [id])
   funcao        Funcao        @relation(fields: [funcaoId], references: [id])
-  localidade    Localidade    @relation(fields: [localidadeId], references: [id])
+  localidade    Localidade?   @relation(fields: [localidadeId], references: [id])
   statusEventos StatusEventos @relation(fields: [statusEventosId], references: [id])
   frequencia    Frequencia    @relation(fields: [frequenciaId], references: [id])
   intervalo     Intervalo     @relation(fields: [intervaloId], references: [id])
