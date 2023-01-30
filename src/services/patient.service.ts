@@ -284,11 +284,15 @@ export const createPatientQueueTherapy = async (
   body: PatientQueueTherapyPropsProps
 ) => {
   const paciente: any = await prisma.paciente.create({
+    include: {
+      vagaTerapia: true,
+    },
     data: {
       nome: body.nome.toUpperCase(),
       telefone: body.telefone,
       responsavel: body.responsavel.toUpperCase(),
       disabled: false,
+      emAtendimento: true,
       convenioId: body.convenioId,
       dataNascimento: formatadataPadraoBD(body.dataNascimento),
       statusPacienteId: body.statusPacienteId,
@@ -296,7 +300,7 @@ export const createPatientQueueTherapy = async (
       tipoSessaoId: 2,
       vagaTerapia: {
         create: {
-          dataVoltouAba: formatadataPadraoBD(body.dataVoltouAba),
+          dataVoltouAba: body.dataVoltouAba || '', //formatadataPadraoBD(body.dataVoltouAba),
           observacao: body.observacao,
           naFila: true,
           periodoId: body.periodoId,
@@ -305,8 +309,10 @@ export const createPatientQueueTherapy = async (
               ...body.sessao.map((sessao: any) => {
                 return {
                   especialidadeId: sessao.especialidadeId,
-                  valor: sessao.valor,
-                  km: sessao.km,
+                  valor: sessao.valor.split('R$ ')[1],
+                  km: sessao.km.toString(),
+                  agendado: true,
+                  dataAgendado: formatadataPadraoBD(new Date()),
                 };
               }),
             ],
