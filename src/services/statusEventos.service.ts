@@ -25,7 +25,7 @@ export const getStatusEventos = async () => {
     },
   });
 
-  return statusEVentos || [];
+  return [];
 };
 
 export const searchStatusEventos = async (word: string) => {
