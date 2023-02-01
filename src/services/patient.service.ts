@@ -254,13 +254,13 @@ export const createPatientAvaliation = async (
       responsavel: body.responsavel.toUpperCase(),
       disabled: false,
       convenioId: body.convenioId,
-      dataNascimento: formatadataPadraoBD(body.dataNascimento),
+      dataNascimento: body.dataNascimento,
       statusPacienteId: body.statusPacienteId,
       statusId: body.statusId,
       tipoSessaoId: body.tipoSessaoId,
       vaga: {
         create: {
-          dataContato: formatadataPadraoBD(body.dataContato),
+          dataContato: body.dataContato,
           observacao: body.observacao,
           naFila: body.naFila,
           periodoId: body.periodoId,
@@ -294,13 +294,13 @@ export const createPatientQueueTherapy = async (
       disabled: false,
       emAtendimento: true,
       convenioId: body.convenioId,
-      dataNascimento: formatadataPadraoBD(body.dataNascimento),
+      dataNascimento: body.dataNascimento,
       statusPacienteId: body.statusPacienteId,
       statusId: body.statusId,
       tipoSessaoId: 2,
       vagaTerapia: {
         create: {
-          dataVoltouAba: body.dataVoltouAba || '', //formatadataPadraoBD(body.dataVoltouAba),
+          dataVoltouAba: body.dataVoltouAba ? body.dataVoltouAba : '', //body.dataVoltouAba),
           observacao: body.observacao,
           naFila: true,
           periodoId: body.periodoId,
@@ -312,7 +312,9 @@ export const createPatientQueueTherapy = async (
                   valor: sessao.valor.split('R$ ')[1],
                   km: sessao.km.toString(),
                   agendado: true,
-                  dataAgendado: formatadataPadraoBD(new Date()),
+                  dataAgendado: sessao.dataContato
+                    ? sessao.dataContato
+                    : new Date(),
                 };
               }),
             ],
@@ -338,6 +340,35 @@ export const createPatient = async (body: any) => {
 };
 
 export const updatePatient = async (body: any) => {
+  let vaga = {};
+  switch (body.statusPacienteId) {
+    case 1:
+      vaga = {
+        vaga: {
+          update: {
+            periodoId: body.periodoId,
+            observacao: body.observacao,
+            dataContato: body.dataContato ? body.dataContato : '',
+          },
+        },
+      };
+      break;
+    case 2:
+    case 5:
+      vaga = {
+        vagaTerapia: {
+          update: {
+            periodoId: body.periodoId,
+            observacao: body.observacao,
+            dataVoltouAba: body.dataVoltouAba ? body.dataVoltouAba : '',
+          },
+        },
+      };
+      break;
+    default:
+      break;
+  }
+
   const [, , especialidades] = await prisma.$transaction([
     prisma.paciente.update({
       data: {
@@ -345,15 +376,10 @@ export const updatePatient = async (body: any) => {
         telefone: body.telefone,
         responsavel: body.responsavel.toUpperCase(),
         convenioId: body.convenioId,
-        dataNascimento: formatadataPadraoBD(body.dataNascimento),
+        dataNascimento: body.dataNascimento,
         tipoSessaoId: body.tipoSessaoId,
         statusId: body.statusId,
-        vaga: {
-          update: {
-            periodoId: body.periodoId,
-            observacao: body.observacao,
-          },
-        },
+        ...vaga,
       },
       where: {
         id: body.id,
