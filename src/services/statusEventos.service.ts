@@ -10,7 +10,7 @@ export interface StatusEventosProps {
 }
 
 export const getStatusEventos = async () => {
-  const statusEVentos = await prisma.statusEventos.findMany({
+  return await prisma.statusEventos.findMany({
     select: {
       id: true,
       nome: true,
@@ -24,8 +24,6 @@ export const getStatusEventos = async () => {
       ativo: true,
     },
   });
-
-  return [];
 };
 
 export const searchStatusEventos = async (word: string) => {

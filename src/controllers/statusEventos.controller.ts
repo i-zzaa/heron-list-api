@@ -34,8 +34,8 @@ export class statusEventosController {
   };
   static get = async (req: any, res: any, next: any) => {
     try {
-      const data = await getStatusEventos();
-      res.status(200).json(data);
+      // const data = await getStatusEventos();
+      res.status(200).json([]);
     } catch (error: any) {
       next(createError(error.statusCode, error.message));
     }
