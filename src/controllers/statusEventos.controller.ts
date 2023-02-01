@@ -33,14 +33,14 @@ export class statusEventosController {
     }
   };
   static get = async (req: any, res: any, next: any) => {
-    // try {
-    const data = await getStatusEventos();
-    res.status(200).json(data);
-    // } catch (error: any) {
-    //   res.status(401).json(error);
-    //   next();
-    //   // next(createError(error.statusCode, error.message));
-    // }
+    try {
+      const data = await getStatusEventos();
+      res.status(200).json(data);
+    } catch (error: any) {
+      res.status(401).json(error);
+      next();
+      // next(createError(error.statusCode, error.message));
+    }
   };
   static search = async (req: any, res: any, next: any) => {
     try {
