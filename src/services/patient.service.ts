@@ -297,7 +297,7 @@ export const createPatientQueueTherapy = async (
       dataNascimento: body.dataNascimento,
       statusPacienteId: body.statusPacienteId,
       statusId: body.statusId,
-      tipoSessaoId: 2,
+      tipoSessaoId: 3, // Terapia ABA
       vagaTerapia: {
         create: {
           dataVoltouAba: body.dataVoltouAba ? body.dataVoltouAba : '', //body.dataVoltouAba),
@@ -311,7 +311,7 @@ export const createPatientQueueTherapy = async (
                   especialidadeId: sessao.especialidadeId,
                   valor: sessao.valor.split('R$ ')[1],
                   km: sessao.km.toString(),
-                  agendado: true,
+                  agendado: body.statusPacienteId === 5, // se for 2, é para cadastrar como nao agendado
                   dataAgendado: sessao.dataContato
                     ? sessao.dataContato
                     : new Date(),
