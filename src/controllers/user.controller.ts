@@ -8,6 +8,7 @@ import {
   getTerapeuta,
 } from '../services/user.service';
 import {
+  ERROR_UPDATE,
   messageSuccess,
   messageSuccessList,
   messageUpdate,
@@ -49,6 +50,17 @@ export class userController {
       res.status(200).json(messageUpdate(data));
     } catch (error: any) {
       res.status(401).json(error);
+      next();
+    }
+  };
+  static updatePasswordCurrent = async (req: any, res: any, next: any) => {
+    try {
+      const data = await updatePasswordLogin(req.headers.login, req.body);
+      res.status(200).json(messageUpdate(data));
+    } catch (error: any) {
+      res.status(401).json({
+        message: ERROR_UPDATE,
+      });
       next();
     }
   };

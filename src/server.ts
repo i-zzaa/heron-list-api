@@ -79,6 +79,7 @@ app.get('/usuarios/:search', auth, userController.search);
 app.post('/usuarios', userController.create);
 app.put('/usuarios', auth, userController.update);
 app.get('/usuarios/reset-senha/:id', auth, userController.updatePassword);
+app.put('/usuarios/reset-senha', auth, userController.updatePasswordCurrent);
 app.put(
   '/usuarios/reset-senha/:login',
   auth,
