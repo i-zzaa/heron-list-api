@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { STATUS_PACIENT_ID } from '../constants/patient';
 import { calculaIdade, formatadataPadraoBD } from '../utils/convert-hours';
 import { getStatusUnique } from './statusEventos.service';
 
@@ -180,7 +181,7 @@ export const getPatientsAvaliation = async () => {
       },
     },
     where: {
-      statusPacienteId: 1,
+      statusPacienteId: STATUS_PACIENT_ID.queue_avaliation,
       disabled: false,
       vaga: {
         naFila: true,
@@ -311,7 +312,7 @@ export const createPatientQueueTherapy = async (
                   especialidadeId: sessao.especialidadeId,
                   valor: sessao.valor.split('R$ ')[1],
                   km: sessao.km.toString(),
-                  agendado: body.statusPacienteId === 5, // se for 2, é para cadastrar como nao agendado
+                  agendado: false, // se for 2, é para cadastrar como nao agendado
                   dataAgendado: sessao.dataContato
                     ? sessao.dataContato
                     : new Date(),
@@ -469,7 +470,7 @@ export const filterPatientsQueueTherapy = async (body: any) => {
       },
     },
     where: {
-      statusPacienteId: 2,
+      statusPacienteId: STATUS_PACIENT_ID.queue_therapy,
       disabled: body.disabled,
       convenioId: body.convenios,
       tipoSessaoId: body.tipoSessoes,

@@ -452,7 +452,9 @@ export const createCalendario = async (
 ) => {
   const user = await getUser(login);
   const frequencia: ObjProps =
-    body.frequencia === '' ? await getFrequenciaName('Único') : body.frequencia;
+    !body?.frequencia || body.frequencia === ''
+      ? await getFrequenciaName('Único')
+      : body.frequencia;
 
   if (frequencia?.nome === 'Único') {
     body.dataFim = body.dataInicio;
