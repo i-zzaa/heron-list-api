@@ -52,7 +52,10 @@ export const searchStatusEventos = async (word: string) => {
 
 export const createStatusEventos = async (body: StatusEventosProps) => {
   return await prisma.statusEventos.create({
-    data: body,
+    data: {
+      nome: body.nome,
+      cobrar: body?.cobrar || false,
+    },
   });
 };
 

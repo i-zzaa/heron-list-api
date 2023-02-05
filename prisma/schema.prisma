@@ -179,7 +179,7 @@ model Localidade {
 model StatusEventos {
   id         Int          @id @default(autoincrement())
   nome       String
-  cobrar     Boolean      @default(true)
+  cobrar     Boolean      @default(false)
   ativo      Boolean      @default(true)
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @default(now())
