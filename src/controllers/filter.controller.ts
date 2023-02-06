@@ -114,7 +114,7 @@ export class filterController {
             },
             where: {
               NOT: {
-                nome: 'Terapia ABA',
+                nome: 'Terapia',
               },
             },
           });
