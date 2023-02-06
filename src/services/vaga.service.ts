@@ -445,7 +445,7 @@ export const updateEspecialidadeVaga = async ({
   }
 
   const isFila = await verifyInFila(vagaId, dataAgendado, statusPacienteId);
-  if (isFila)
+  if (!isFila)
     await setStatusPaciente(
       statusPacienteId === STATUS_PACIENT_ID.queue_avaliation
         ? STATUS_PACIENT_ID.avaliation

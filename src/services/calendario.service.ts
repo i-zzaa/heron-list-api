@@ -710,6 +710,7 @@ const formatEvents = async (eventos: any) => {
           end: formatDateTime(evento.end, evento.dataInicio),
           borderColor: cor,
           backgroundColor: cor,
+          allDay: false,
         };
 
         delete formated.exdate;
