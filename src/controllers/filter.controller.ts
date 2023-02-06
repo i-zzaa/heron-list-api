@@ -85,6 +85,7 @@ export class filterController {
               perfil: {
                 nome: 'Terapeuta',
               },
+              ativo: true,
             },
           });
           break;
