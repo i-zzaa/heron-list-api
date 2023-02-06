@@ -680,6 +680,8 @@ const formatEvents = async (eventos: any) => {
           title: evento.paciente.nome,
           groupId: evento.id,
           borderColor: cor,
+          startTime: evento.start,
+          endTime: evento.end,
           backgroundColor: cor,
           exdate: evento.exdate,
           rrule: {
@@ -705,6 +707,8 @@ const formatEvents = async (eventos: any) => {
             end: evento.end,
           },
           title: evento.paciente.nome,
+          startTime: evento.start,
+          endTime: evento.end,
           date: evento.dataInicio,
           start: formatDateTime(evento.start, evento.dataInicio),
           end: formatDateTime(evento.end, evento.dataInicio),
