@@ -21,22 +21,22 @@ model Convenio {
 }
 
 model Paciente {
-  id               Int    @id @default(autoincrement())
-  nome             String
-  telefone         String
-  responsavel      String
-  dataNascimento   String
-  convenioId       Int
-  statusPacienteId Int
-  tipoSessaoId     Int
-  statusId         Int?
+  id                Int    @id @default(autoincrement())
+  nome              String
+  telefone          String
+  responsavel       String
+  dataNascimento    String
+  convenioId        Int
+  statusPacienteCod String
+  tipoSessaoId      Int
+  statusId          Int?
 
   emAtendimento Boolean @default(false)
   disabled      Boolean @default(false)
 
   vaga           Vaga?
   calendario     Calendario[]
-  statusPaciente StatusPaciente @relation(fields: [statusPacienteId], references: [id])
+  statusPaciente StatusPaciente @relation(fields: [statusPacienteCod], references: [cod])
   convenio       Convenio?      @relation(fields: [convenioId], references: [id])
   tipoSessao     TipoSessao?    @relation(fields: [tipoSessaoId], references: [id])
   status         Status?        @relation(fields: [statusId], references: [id])
@@ -49,6 +49,7 @@ model Paciente {
 model StatusPaciente {
   id       Int        @id @default(autoincrement())
   nome     String
+  cod      String     @unique @default("therapy")
   Paciente Paciente[]
 }
 

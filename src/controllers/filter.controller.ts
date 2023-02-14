@@ -1,6 +1,7 @@
 import { filterSinglePatients } from '../services/patient.service';
 import { PrismaClient } from '@prisma/client';
 import { formatLocalidade } from '../services/localidade.service';
+import { STATUS_PACIENT_COD } from '../constants/patient';
 
 const prisma = new PrismaClient();
 
@@ -11,18 +12,32 @@ export interface ListProps {
   descricao?: string;
 }
 
-const setFilterStatusPacienteId = (statusPacienteId: number) => {
-  switch (statusPacienteId) {
-    case 1:
-      return [1, 4];
-    case 2:
-      return [2, 3];
-    case 3:
-      return [3, 4, 5];
-    case 4:
-      return [4];
-    case 5:
-      return [5];
+const setFilterstatusPacienteCod = (statusPacienteCod: string) => {
+  switch (statusPacienteCod) {
+    case STATUS_PACIENT_COD.queue_avaliation:
+      return [
+        STATUS_PACIENT_COD.queue_avaliation,
+        STATUS_PACIENT_COD.avaliation,
+      ];
+    case STATUS_PACIENT_COD.queue_therapy:
+      return [STATUS_PACIENT_COD.queue_therapy, STATUS_PACIENT_COD.therapy];
+    case STATUS_PACIENT_COD.therapy:
+      return [
+        STATUS_PACIENT_COD.therapy,
+        STATUS_PACIENT_COD.avaliation,
+        STATUS_PACIENT_COD.crud_therapy,
+      ];
+    case STATUS_PACIENT_COD.avaliation:
+      return [STATUS_PACIENT_COD.avaliation];
+    case STATUS_PACIENT_COD.crud_therapy:
+      return [STATUS_PACIENT_COD.crud_therapy];
+    case STATUS_PACIENT_COD.queue_devolutiva:
+      return [
+        STATUS_PACIENT_COD.queue_devolutiva,
+        STATUS_PACIENT_COD.devolutiva,
+      ];
+    case STATUS_PACIENT_COD.devolutiva:
+      return [STATUS_PACIENT_COD.devolutiva];
   }
 };
 
@@ -127,7 +142,7 @@ export class filterController {
             },
             where: {
               NOT: {
-                nome: Number(query.statusPacienteId) === 1 ? 'Voltou ABA' : '',
+                nome: Number(query.statusPacienteCod) === 1 ? 'Voltou ABA' : '',
               },
             },
           });
@@ -142,7 +157,9 @@ export class filterController {
           break;
         case 'paciente-especialidade':
           const vaga =
-            Number(query.statusPacienteId) === 1 ? 'vaga' : 'vagaTerapia';
+            query.statusPacienteCod === STATUS_PACIENT_COD.queue_avaliation
+              ? 'vaga'
+              : 'vagaTerapia';
 
           help = await prisma.paciente.findUniqueOrThrow({
             select: {
@@ -152,6 +169,9 @@ export class filterController {
                   especialidades: {
                     include: {
                       especialidade: true,
+                    },
+                    where: {
+                      agendado: false,
                     },
                   },
                 },
@@ -257,25 +277,45 @@ export class filterController {
           });
           break;
         case 'paciente':
-          help = setFilterStatusPacienteId(Number(query.statusPacienteId));
+          help = setFilterstatusPacienteCod(query.statusPacienteCod);
           dropdrown = await prisma.paciente.findMany({
             select: {
               id: true,
               nome: true,
             },
             where: {
-              statusPacienteId: {
+              statusPacienteCod: {
                 in: help,
               },
             },
           });
           break;
         case 'modalidade':
+          switch (query.statusPacienteCod) {
+            case STATUS_PACIENT_COD.queue_avaliation:
+              help = [1];
+              break;
+            case STATUS_PACIENT_COD.queue_devolutiva:
+              help = [2];
+              break;
+            case STATUS_PACIENT_COD.queue_therapy:
+              help = [3];
+              break;
+            default:
+              help = [1, 2, 3];
+              break;
+          }
+
           dropdrown = [];
           dropdrown = await prisma.modalidade.findMany({
             select: {
               id: true,
               nome: true,
+            },
+            where: {
+              id: {
+                in: help,
+              },
             },
           });
           break;

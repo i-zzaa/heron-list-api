@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import moment from 'moment';
+import { STATUS_PACIENT_COD } from '../constants/patient';
 import { formatDateTime } from '../utils/convert-hours';
 import { getFrequenciaName } from './frequencia.service';
 import { formatLocalidade } from './localidade.service';
@@ -722,4 +723,44 @@ const formatEvents = async (eventos: any) => {
   });
 
   return eventosFormat;
+};
+
+export const removeEvents = async (
+  pacienteId: number,
+  statusPacienteCod: string,
+  especialidadeIds: number[]
+) => {
+  let modalidade = '';
+
+  switch (statusPacienteCod) {
+    case STATUS_PACIENT_COD.queue_avaliation:
+    case STATUS_PACIENT_COD.avaliation:
+    case STATUS_PACIENT_COD.queue_devolutiva:
+      modalidade = 'Avaliação';
+      break;
+    case STATUS_PACIENT_COD.devolutiva:
+      modalidade = 'Devolutiva';
+      break;
+    case STATUS_PACIENT_COD.queue_therapy:
+      modalidade = 'Terapia';
+      break;
+  }
+
+  const modalidadeDB = await prisma.modalidade.findFirst({
+    where: {
+      nome: modalidade,
+    },
+  });
+
+  console.log(modalidadeDB);
+
+  return await prisma.calendario.deleteMany({
+    where: {
+      pacienteId,
+      especialidadeId: {
+        in: especialidadeIds,
+      },
+      modalidadeId: modalidadeDB?.id,
+    },
+  });
 };

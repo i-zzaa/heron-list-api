@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { STATUS_PACIENT_ID } from '../constants/patient';
+import { STATUS_PACIENT_COD, STATUS_PACIENT_ID } from '../constants/patient';
 import { calculaIdade, formatadataPadraoBD } from '../utils/convert-hours';
 import { getStatusUnique } from './statusEventos.service';
 
@@ -12,7 +12,7 @@ export interface PatientProps {
   dataNascimento: string;
   convenioId: number;
   statusId: number;
-  statusPacienteId: number;
+  statusPacienteCod: string;
 }
 
 interface Props extends PatientProps {
@@ -102,7 +102,7 @@ export const getPatientId = async (id: number) => {
       dataNascimento: true,
       convenioId: true,
       statusId: true,
-      statusPacienteId: true,
+      statusPacienteCod: true,
     },
     where: {
       id,
@@ -110,7 +110,7 @@ export const getPatientId = async (id: number) => {
   });
 };
 
-export const getPatientsQueueTherapy = async (statusPacienteId: number) => {
+export const getPatientsQueueTherapy = async (statusPacienteCod: string) => {
   const patients = await prisma.paciente.findMany({
     select: {
       id: true,
@@ -122,7 +122,7 @@ export const getPatientsQueueTherapy = async (statusPacienteId: number) => {
       disabled: true,
       tipoSessao: true,
       status: true,
-      statusPacienteId: true,
+      statusPacienteCod: true,
       vagaTerapia: {
         include: {
           periodo: true,
@@ -135,7 +135,7 @@ export const getPatientsQueueTherapy = async (statusPacienteId: number) => {
       },
     },
     where: {
-      statusPacienteId: statusPacienteId,
+      statusPacienteCod: statusPacienteCod,
       disabled: false,
       vagaTerapia: {
         naFila: true,
@@ -156,7 +156,10 @@ export const getPatientsQueueTherapy = async (statusPacienteId: number) => {
   return [];
 };
 
-export const getPatientsAvaliation = async () => {
+export const getPatientsAvaliation = async (
+  statusPacienteCod: string[],
+  naFila: boolean
+) => {
   const patients = await prisma.paciente.findMany({
     select: {
       id: true,
@@ -166,7 +169,7 @@ export const getPatientsAvaliation = async () => {
       dataNascimento: true,
       convenio: true,
       disabled: true,
-      statusPacienteId: true,
+      statusPacienteCod: true,
       tipoSessao: true,
       status: true,
       vaga: {
@@ -181,11 +184,12 @@ export const getPatientsAvaliation = async () => {
       },
     },
     where: {
-      statusPacienteId: STATUS_PACIENT_ID.queue_avaliation,
+      statusPacienteCod: {
+        in: statusPacienteCod,
+      },
       disabled: false,
       vaga: {
-        naFila: true,
-        devolutiva: false,
+        naFila: naFila,
       },
     },
     orderBy: {
@@ -204,12 +208,12 @@ export const getPatientsAvaliation = async () => {
 };
 
 export const setStatusPaciente = async (
-  statusPacienteId: number,
+  statusPacienteCod: string,
   pacienteId: number
 ) => {
   const paciente: any = await prisma.paciente.update({
     data: {
-      statusPacienteId: statusPacienteId,
+      statusPacienteCod: statusPacienteCod,
     },
     where: {
       id: pacienteId,
@@ -220,25 +224,39 @@ export const setStatusPaciente = async (
 };
 
 export const getPatients = async (query: any) => {
-  const statusPacienteId = Number(query.statusPacienteId);
-  switch (statusPacienteId) {
-    case 1:
-      return getPatientsAvaliation();
-    case 2:
-    case 5:
-      return getPatientsQueueTherapy(statusPacienteId);
+  const statusPacienteCod = query.statusPacienteCod;
+  switch (statusPacienteCod) {
+    case STATUS_PACIENT_COD.queue_avaliation:
+      return getPatientsAvaliation(
+        [STATUS_PACIENT_COD.queue_avaliation, STATUS_PACIENT_COD.avaliation],
+        true
+      );
+    case STATUS_PACIENT_COD.queue_devolutiva:
+      return getPatientsAvaliation(
+        [STATUS_PACIENT_COD.queue_devolutiva, STATUS_PACIENT_COD.devolutiva],
+        false
+      );
+    case STATUS_PACIENT_COD.queue_therapy:
+    case STATUS_PACIENT_COD.crud_therapy:
+      return getPatientsQueueTherapy(statusPacienteCod);
     default:
       break;
   }
 };
 
 export const filterSinglePatients = async (body: any) => {
-  if (body.devolutiva) return filterPatientsAvaliaton(body);
-
-  switch (Number(body.statusPacienteId)) {
-    case 1:
-      return filterPatientsAvaliaton(body);
-    case 2:
+  switch (body.statusPacienteCod) {
+    case STATUS_PACIENT_COD.queue_avaliation:
+      return filterPatientsAvaliaton(
+        [STATUS_PACIENT_COD.queue_avaliation, STATUS_PACIENT_COD.avaliation],
+        body
+      );
+    case STATUS_PACIENT_COD.queue_devolutiva:
+      return filterPatientsAvaliaton(
+        [STATUS_PACIENT_COD.queue_devolutiva, STATUS_PACIENT_COD.devolutiva],
+        body
+      );
+    case STATUS_PACIENT_COD.queue_therapy:
       return filterPatientsQueueTherapy(body);
     default:
       break;
@@ -256,7 +274,7 @@ export const createPatientAvaliation = async (
       disabled: false,
       convenioId: body.convenioId,
       dataNascimento: body.dataNascimento,
-      statusPacienteId: body.statusPacienteId,
+      statusPacienteCod: body.statusPacienteCod,
       statusId: body.statusId,
       tipoSessaoId: body.tipoSessaoId,
       vaga: {
@@ -296,7 +314,7 @@ export const createPatientQueueTherapy = async (
       emAtendimento: true,
       convenioId: body.convenioId,
       dataNascimento: body.dataNascimento,
-      statusPacienteId: body.statusPacienteId,
+      statusPacienteCod: body.statusPacienteCod,
       statusId: body.statusId,
       tipoSessaoId: 3, // Terapia ABA
       vagaTerapia: {
@@ -329,11 +347,11 @@ export const createPatientQueueTherapy = async (
 };
 
 export const createPatient = async (body: any) => {
-  switch (body.statusPacienteId) {
-    case 1:
+  switch (body.statusPacienteCod) {
+    case STATUS_PACIENT_COD.queue_avaliation:
       return createPatientAvaliation(body);
-    case 2:
-    case 5:
+    case STATUS_PACIENT_COD.queue_therapy:
+    case STATUS_PACIENT_COD.crud_therapy:
       return createPatientQueueTherapy(body);
     default:
       break;
@@ -342,8 +360,8 @@ export const createPatient = async (body: any) => {
 
 export const updatePatient = async (body: any) => {
   let vaga = {};
-  switch (body.statusPacienteId) {
-    case 1:
+  switch (body.statusPacienteCod) {
+    case STATUS_PACIENT_COD.queue_avaliation:
       vaga = {
         vaga: {
           update: {
@@ -354,8 +372,8 @@ export const updatePatient = async (body: any) => {
         },
       };
       break;
-    case 2:
-    case 5:
+    case STATUS_PACIENT_COD.queue_therapy:
+    case STATUS_PACIENT_COD.crud_therapy:
       vaga = {
         vagaTerapia: {
           update: {
@@ -456,7 +474,7 @@ export const filterPatientsQueueTherapy = async (body: any) => {
       convenio: true,
       disabled: true,
       tipoSessao: true,
-      statusPacienteId: true,
+      statusPacienteCod: true,
       status: true,
       vagaTerapia: {
         include: {
@@ -470,7 +488,7 @@ export const filterPatientsQueueTherapy = async (body: any) => {
       },
     },
     where: {
-      statusPacienteId: STATUS_PACIENT_ID.queue_therapy,
+      statusPacienteCod: STATUS_PACIENT_COD.queue_therapy,
       disabled: body.disabled,
       convenioId: body.convenios,
       tipoSessaoId: body.tipoSessoes,
@@ -496,7 +514,10 @@ export const filterPatientsQueueTherapy = async (body: any) => {
   return pacientes;
 };
 
-export const filterPatientsAvaliaton = async (body: any) => {
+export const filterPatientsAvaliaton = async (
+  statusPacienteCod: string[],
+  body: any
+) => {
   const filter = await prisma.paciente.findMany({
     select: {
       id: true,
@@ -506,7 +527,7 @@ export const filterPatientsAvaliaton = async (body: any) => {
       dataNascimento: true,
       convenio: true,
       disabled: true,
-      statusPacienteId: true,
+      statusPacienteCod: true,
       tipoSessao: true,
       status: true,
       vaga: {
@@ -521,7 +542,9 @@ export const filterPatientsAvaliaton = async (body: any) => {
       },
     },
     where: {
-      statusPacienteId: body.statusPacienteId,
+      statusPacienteCod: {
+        in: statusPacienteCod,
+      },
       disabled: body.disabled,
       convenioId: body.convenios,
       tipoSessaoId: body.tipoSessoes,
