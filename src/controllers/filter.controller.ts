@@ -148,7 +148,11 @@ export class filterController {
             },
             where: {
               NOT: {
-                nome: Number(query.statusPacienteCod) === 1 ? 'Voltou ABA' : '',
+                nome:
+                  query.statusPacienteCod ===
+                  STATUS_PACIENT_COD.queue_avaliation
+                    ? 'Voltou ABA'
+                    : '',
               },
             },
           });
