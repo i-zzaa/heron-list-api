@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { STATUS_PACIENT_COD, STATUS_PACIENT_ID } from '../constants/patient';
 import { calculaIdade, formatadataPadraoBD } from '../utils/convert-hours';
+import { moneyFormat } from '../utils/util';
 import { getStatusUnique } from './statusEventos.service';
 
 const prisma = new PrismaClient();
@@ -32,6 +33,8 @@ interface Props extends PatientProps {
 interface Sessao {
   valor: string;
   km: string;
+  especialidadeId: number;
+  vagaId: number;
 }
 interface PatientQueueTherapyPropsProps extends PatientProps {
   dataVoltouAba: string;
@@ -80,11 +83,24 @@ const formatPatients = (patients: any) => {
 
       delete paciente.vagaTerapia;
 
+      const sessao: any[] = [];
+      if (patient.statusPacienteCod === STATUS_PACIENT_COD.crud_therapy) {
+        vaga.especialidades.map((especialidade: any) => {
+          sessao.push({
+            especialidade: especialidade.especialidade.nome,
+            especialidadeId: especialidade.especialidadeId,
+            km: especialidade.km,
+            valor: moneyFormat.format(parseFloat(especialidade.valor)),
+          });
+        });
+      }
+
       pacientes.push({
         ...paciente,
         // dataContato: formatdate(patient.vaga.dataContato),
         idade: calculaIdade(patient.dataNascimento),
         vaga: vaga,
+        sessao,
       });
     }
   });
@@ -136,7 +152,7 @@ export const getPatientsQueueTherapy = async (statusPacienteCod: string[]) => {
     },
     where: {
       statusPacienteCod: {
-        in: ['queue_therapy'],
+        in: statusPacienteCod,
       },
       disabled: false,
       OR: [
@@ -250,8 +266,8 @@ export const getPatients = async (query: any) => {
     case STATUS_PACIENT_COD.crud_therapy:
       return getPatientsQueueTherapy([
         STATUS_PACIENT_COD.therapy,
-        STATUS_PACIENT_COD.avaliation,
         STATUS_PACIENT_COD.devolutiva,
+        STATUS_PACIENT_COD.crud_therapy,
       ]);
     default:
       break;
@@ -375,36 +391,7 @@ export const createPatient = async (body: any) => {
   }
 };
 
-export const updatePatient = async (body: any) => {
-  let vaga = {};
-  switch (body.statusPacienteCod) {
-    case STATUS_PACIENT_COD.queue_avaliation:
-      vaga = {
-        vaga: {
-          update: {
-            periodoId: body.periodoId,
-            observacao: body.observacao,
-            dataContato: body.dataContato ? body.dataContato : '',
-          },
-        },
-      };
-      break;
-    case STATUS_PACIENT_COD.queue_therapy:
-    case STATUS_PACIENT_COD.crud_therapy:
-      vaga = {
-        vagaTerapia: {
-          update: {
-            periodoId: body.periodoId,
-            observacao: body.observacao,
-            dataVoltouAba: body.dataVoltouAba ? body.dataVoltouAba : '',
-          },
-        },
-      };
-      break;
-    default:
-      break;
-  }
-
+const updatePatientAvaliation = async (body: any) => {
   const [, , especialidades] = await prisma.$transaction([
     prisma.paciente.update({
       data: {
@@ -415,7 +402,13 @@ export const updatePatient = async (body: any) => {
         dataNascimento: body.dataNascimento,
         tipoSessaoId: body.tipoSessaoId,
         statusId: body.statusId,
-        ...vaga,
+        vaga: {
+          update: {
+            periodoId: body.periodoId,
+            observacao: body.observacao,
+            dataContato: body.dataContato ? body.dataContato : '',
+          },
+        },
       },
       where: {
         id: body.id,
@@ -464,6 +457,123 @@ export const updatePatient = async (body: any) => {
   }
 
   return [];
+};
+
+const updatePatientQueueTherapy = async (body: any) => {
+  const [, , especialidades] = await prisma.$transaction([
+    prisma.paciente.update({
+      data: {
+        nome: body.nome.toUpperCase(),
+        telefone: body.telefone,
+        responsavel: body.responsavel.toUpperCase(),
+        convenioId: body.convenioId,
+        dataNascimento: body.dataNascimento,
+        tipoSessaoId: body.tipoSessaoId,
+        statusId: body.statusId,
+        vagaTerapia: {
+          update: {
+            periodoId: body.periodoId,
+            observacao: body.observacao,
+            dataVoltouAba: body.dataVoltouAba ? body.dataVoltouAba : '',
+          },
+        },
+      },
+      where: {
+        id: body.id,
+      },
+    }),
+    prisma.vagaTerapiaOnEspecialidade.deleteMany({
+      where: {
+        vagaId: body.vagaId,
+        agendado: false,
+        NOT: {
+          especialidadeId: {
+            in: body.especialidades,
+          },
+        },
+      },
+    }),
+    prisma.vagaTerapiaOnEspecialidade.findMany({
+      select: {
+        especialidadeId: true,
+        valor: true,
+        km: true,
+      },
+      where: {
+        vagaId: body.vagaId,
+      },
+    }),
+  ]);
+
+  const arrEspecialidade = especialidades.map(
+    (especialidade: any) => especialidade.especialidadeId
+  );
+
+  const createEspecialidade = body.especialidades.filter(
+    (especialidade: number) => !arrEspecialidade.includes(especialidade)
+  );
+
+  if (STATUS_PACIENT_COD.crud_therapy === body.statusPacienteCod) {
+    body.sessao.map(async (especialidade: Sessao) => {
+      const formatSessao =
+        typeof especialidade.valor === 'string'
+          ? especialidade.valor.split('R$')[1]
+          : especialidade.valor;
+
+      if (!arrEspecialidade.includes(especialidade.especialidadeId)) {
+        await prisma.vagaTerapiaOnEspecialidade.create({
+          data: {
+            vagaId: body.vagaId,
+            agendado: false,
+            especialidadeId: especialidade.especialidadeId,
+            valor: formatSessao,
+            km: especialidade.km.toString(),
+          },
+        });
+      } else {
+        await prisma.vagaTerapiaOnEspecialidade.updateMany({
+          data: {
+            vagaId: body.vagaId,
+            agendado: false,
+            valor: formatSessao,
+            km: especialidade.km.toString(),
+          },
+          where: {
+            vagaId: body.vagaId,
+            especialidadeId: especialidade.especialidadeId,
+          },
+        });
+      }
+    });
+  } else {
+    if (createEspecialidade.length) {
+      const data = createEspecialidade.map((especialidade: any) => {
+        return {
+          vagaId: body.id,
+          agendado: false,
+          especialidadeId: especialidade.especialidadeId,
+        };
+      });
+
+      await prisma.vagaTerapiaOnEspecialidade.createMany({
+        data,
+      });
+    }
+  }
+
+  return [];
+};
+
+export const updatePatient = async (body: any) => {
+  switch (body.statusPacienteCod) {
+    case STATUS_PACIENT_COD.queue_avaliation:
+      return updatePatientAvaliation(body);
+    case STATUS_PACIENT_COD.queue_therapy:
+    case STATUS_PACIENT_COD.crud_therapy:
+      return updatePatientQueueTherapy(body);
+    default:
+      break;
+  }
 };
 
 export const setPacienteEmAtendimento = async (
