@@ -282,6 +282,7 @@ export const filterSinglePatients = async (body: any) => {
         body
       );
     case STATUS_PACIENT_COD.queue_devolutiva:
+    case STATUS_PACIENT_COD.devolutiva:
       return filterPatientsAvaliaton(
         [STATUS_PACIENT_COD.queue_devolutiva, STATUS_PACIENT_COD.devolutiva],
         body
@@ -684,7 +685,7 @@ export const filterPatientsAvaliaton = async (
       vaga: {
         pacienteId: body.pacientes,
         periodoId: body.periodos,
-        naFila: body.naFila,
+        // naFila: body.naFila,
         devolutiva: body.devolutiva,
         especialidades: {
           some: {
@@ -699,6 +700,7 @@ export const filterPatientsAvaliaton = async (
       },
     },
   });
+
   const pacientes: any = filter.length ? formatPatients(filter) : filter;
   return pacientes;
 };
