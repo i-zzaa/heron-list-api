@@ -103,8 +103,9 @@ export const getUsers = async () => {
       usuario.comissao = usuario?.terapeuta?.funcoes.map((funcao: any) => {
         const comissao =
           funcao.tipo === 'Fixo'
-            ? moneyFormat.format(funcao.comissao)
+            ? moneyFormat.format(parseFloat(funcao.comissao))
             : funcao.comissao;
+
         return {
           funcaoId: funcao.funcaoId,
           valor: comissao,
@@ -274,7 +275,7 @@ export const createUser = async (body: any) => {
         ...body.comissao.map((comissao: any) => {
           const formatComissao =
             typeof comissao.valor === 'string'
-              ? comissao.valor.split('R$ ')[1]
+              ? comissao.valor.split('R$')[1]
               : comissao.valor.toString();
 
           return {
@@ -339,7 +340,7 @@ export const updateUser = async (body: any) => {
           ...body.comissao.map((comissao: any) => {
             const formatComissao =
               typeof comissao.valor === 'string'
-                ? comissao.valor.split('R$ ')[1]
+                ? comissao.valor.split('R$')[1]
                 : comissao.valor.toString();
 
             return {
