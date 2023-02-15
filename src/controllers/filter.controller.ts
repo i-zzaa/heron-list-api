@@ -20,11 +20,17 @@ const setFilterstatusPacienteCod = (statusPacienteCod: string) => {
         STATUS_PACIENT_COD.avaliation,
       ];
     case STATUS_PACIENT_COD.queue_therapy:
-      return [STATUS_PACIENT_COD.queue_therapy, STATUS_PACIENT_COD.therapy];
+      return [
+        STATUS_PACIENT_COD.queue_therapy,
+        STATUS_PACIENT_COD.therapy,
+        STATUS_PACIENT_COD.devolutiva,
+      ];
     case STATUS_PACIENT_COD.therapy:
+    case STATUS_PACIENT_COD.crud_therapy:
       return [
         STATUS_PACIENT_COD.therapy,
         STATUS_PACIENT_COD.avaliation,
+        STATUS_PACIENT_COD.devolutiva,
         STATUS_PACIENT_COD.crud_therapy,
       ];
     case STATUS_PACIENT_COD.avaliation:
@@ -157,7 +163,8 @@ export class filterController {
           break;
         case 'paciente-especialidade':
           const vaga =
-            query.statusPacienteCod === STATUS_PACIENT_COD.queue_avaliation
+            query.statusPacienteCod === STATUS_PACIENT_COD.queue_avaliation ||
+            query.statusPacienteCod === STATUS_PACIENT_COD.queue_devolutiva
               ? 'vaga'
               : 'vagaTerapia';
 
@@ -171,7 +178,9 @@ export class filterController {
                       especialidade: true,
                     },
                     where: {
-                      agendado: false,
+                      agendado:
+                        query.statusPacienteCod ===
+                        STATUS_PACIENT_COD.queue_devolutiva,
                     },
                   },
                 },
@@ -299,6 +308,7 @@ export class filterController {
               help = [2];
               break;
             case STATUS_PACIENT_COD.queue_therapy:
+            case STATUS_PACIENT_COD.devolutiva:
               help = [3];
               break;
             default:

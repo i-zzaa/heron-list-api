@@ -110,7 +110,7 @@ export const getPatientId = async (id: number) => {
   });
 };
 
-export const getPatientsQueueTherapy = async (statusPacienteCod: string) => {
+export const getPatientsQueueTherapy = async (statusPacienteCod: string[]) => {
   const patients = await prisma.paciente.findMany({
     select: {
       id: true,
@@ -135,11 +135,20 @@ export const getPatientsQueueTherapy = async (statusPacienteCod: string) => {
       },
     },
     where: {
-      statusPacienteCod: statusPacienteCod,
-      disabled: false,
-      vagaTerapia: {
-        naFila: true,
+      statusPacienteCod: {
+        in: ['queue_therapy'],
       },
+      disabled: false,
+      OR: [
+        {
+          vagaTerapia: null,
+        },
+        {
+          vagaTerapia: {
+            naFila: true,
+          },
+        },
+      ],
     },
     orderBy: {
       vagaTerapia: {
@@ -237,8 +246,13 @@ export const getPatients = async (query: any) => {
         false
       );
     case STATUS_PACIENT_COD.queue_therapy:
+      return getPatientsQueueTherapy([STATUS_PACIENT_COD.queue_therapy]);
     case STATUS_PACIENT_COD.crud_therapy:
-      return getPatientsQueueTherapy(statusPacienteCod);
+      return getPatientsQueueTherapy([
+        STATUS_PACIENT_COD.therapy,
+        STATUS_PACIENT_COD.avaliation,
+        STATUS_PACIENT_COD.devolutiva,
+      ]);
     default:
       break;
   }
@@ -257,7 +271,10 @@ export const filterSinglePatients = async (body: any) => {
         body
       );
     case STATUS_PACIENT_COD.queue_therapy:
-      return filterPatientsQueueTherapy(body);
+      return filterPatientsQueueTherapy(
+        [STATUS_PACIENT_COD.queue_therapy],
+        body
+      );
     default:
       break;
   }
@@ -463,7 +480,10 @@ export const setPacienteEmAtendimento = async (
   });
 };
 
-export const filterPatientsQueueTherapy = async (body: any) => {
+export const filterPatientsQueueTherapy = async (
+  statusPacienteCod: string[],
+  body: any
+) => {
   const filter = await prisma.paciente.findMany({
     select: {
       id: true,
@@ -488,7 +508,9 @@ export const filterPatientsQueueTherapy = async (body: any) => {
       },
     },
     where: {
-      statusPacienteCod: STATUS_PACIENT_COD.queue_therapy,
+      statusPacienteCod: {
+        in: statusPacienteCod,
+      },
       disabled: body.disabled,
       convenioId: body.convenios,
       tipoSessaoId: body.tipoSessoes,
