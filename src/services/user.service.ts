@@ -172,6 +172,31 @@ export const getTerapeuta = async () => {
   return user;
 };
 
+export const getTerapeutaEspecialidade = async () => {
+  const user = await prisma.terapeuta.findMany({
+    select: {
+      usuarioId: true,
+      usuario: true,
+      especialidade: true,
+    },
+    // where: {
+    //   especialidade: {
+    //     id: especialidadeId,
+    //   },
+    // },
+  });
+
+  const list = user.map((terapeuta: any) => {
+    return {
+      id: terapeuta.usuario.id,
+      nome: terapeuta.usuario.nome,
+      especialidadeId: terapeuta.especialidade.id,
+    };
+  });
+
+  return list;
+};
+
 export const searchUsers = async (word: string) => {
   return await prisma.usuario.findMany({
     select: {

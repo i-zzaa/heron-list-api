@@ -447,10 +447,107 @@ export const getRange = async (params: any) => {
   return eventosFormat;
 };
 
-export const createCalendario = async (
+const createEventoDefault = async (
   body: CalendarioCreateParam,
-  login: string
+  login: string,
+  diasFrequencia: any,
+  frequencia: any,
+  user: any
 ) => {
+  console.log('createEventoDefault');
+  const evento = await prisma.calendario.create({
+    data: {
+      groupId: 0,
+      dataInicio: body.dataInicio,
+      dataFim: body.dataFim,
+      start: body.start,
+      end: body.end,
+      diasFrequencia: diasFrequencia,
+
+      ciclo: 'ativo',
+      observacao: body.observacao || '',
+      pacienteId: body.paciente.id,
+      modalidadeId: body.modalidade.id,
+      especialidadeId: body.especialidade.id,
+      terapeutaId: body.terapeuta.id,
+      funcaoId: body.funcao.id,
+      localidadeId: body.localidade.id,
+      statusEventosId: body.statusEventos.id,
+      frequenciaId: frequencia.id,
+      intervaloId: body.intervalo.id,
+      isExterno: !!body.isExterno,
+
+      usuarioId: user.id,
+    },
+  });
+
+  console.log(evento);
+
+  await prisma.calendario.update({
+    data: {
+      groupId: evento.id,
+    },
+    where: {
+      id: evento.id,
+    },
+  });
+
+  return evento;
+};
+
+const createEventoDevolutiva = async (
+  body: any,
+  login: string,
+  diasFrequencia: any,
+  frequencia: any,
+  user: any
+) => {
+  const filter = Object.keys(body).filter(
+    (key: string) => key.includes('terapeuta') && Object.keys(body[key]).length
+  );
+
+  const datas: any[] = filter.map((key: string) => {
+    if (key.includes('terapeuta')) {
+      const index = key.split('terapeuta')[1];
+
+      const data = { ...body };
+
+      data['terapeuta'] = { id: body[key].id };
+      data['especialidade'] = { id: body[`especialidade${index}`].id };
+      data['funcao'] = { id: body[`funcao${index}`].id };
+
+      return {
+        groupId: data.paciente.id,
+        dataInicio: data.dataInicio,
+        dataFim: data.dataFim,
+        start: data.start,
+        end: data.end,
+        diasFrequencia: diasFrequencia,
+
+        ciclo: 'ativo',
+        observacao: data.observacao || '',
+        pacienteId: data.paciente.id,
+        modalidadeId: data.modalidade.id,
+        especialidadeId: data.especialidade.id,
+        terapeutaId: data.terapeuta.id,
+        funcaoId: data.funcao.id,
+        localidadeId: data.localidade.id,
+        statusEventosId: data.statusEventos.id,
+        frequenciaId: frequencia.id,
+        intervaloId: data.intervalo.id,
+        isExterno: !!data.isExterno,
+
+        usuarioId: user.id,
+      };
+    }
+  });
+
+  return await prisma.calendario.createMany({
+    data: [...datas],
+  });
+};
+
+export const createCalendario = async (body: any, login: string) => {
   const user = await getUser(login);
   const frequencia: ObjProps =
     !body?.frequencia || body.frequencia === ''
@@ -468,42 +565,17 @@ export const createCalendario = async (
 
   const diasFrequencia = body.diasFrequencia.join(',');
 
-  const evento = await prisma.calendario.create({
-    data: {
-      groupId: 0,
-      dataInicio: body.dataInicio,
-      dataFim: body.dataFim,
-      start: body.start,
-      end: body.end,
-      diasFrequencia: diasFrequencia,
-
-      ciclo: 'ativo',
-      observacao: body.observacao,
-      pacienteId: body.paciente.id,
-      modalidadeId: body.modalidade.id,
-      especialidadeId: body.especialidade.id,
-      terapeutaId: body.terapeuta.id,
-      funcaoId: body.funcao.id,
-      localidadeId: body.localidade.id,
-      statusEventosId: body.statusEventos.id,
-      frequenciaId: frequencia.id,
-      intervaloId: body.intervalo.id,
-      isExterno: body.isExterno,
-
-      usuarioId: user.id,
-    },
-  });
-
-  await prisma.calendario.update({
-    data: {
-      groupId: evento.id,
-    },
-    where: {
-      id: evento.id,
-    },
-  });
-
-  return evento;
+  if (body.modalidade.nome === 'Devolutiva') {
+    return createEventoDevolutiva(
+      body,
+      login,
+      diasFrequencia,
+      frequencia,
+      user
+    );
+  } else {
+    return createEventoDefault(body, login, diasFrequencia, frequencia, user);
+  }
 };
 
 export const updateCalendario = async (body: any, login: string) => {

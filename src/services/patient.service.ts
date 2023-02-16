@@ -3,6 +3,7 @@ import { STATUS_PACIENT_COD, STATUS_PACIENT_ID } from '../constants/patient';
 import { calculaIdade, formatadataPadraoBD } from '../utils/convert-hours';
 import { moneyFormat } from '../utils/util';
 import { getStatusUnique } from './statusEventos.service';
+import { getTerapeutaEspecialidade } from './user.service';
 
 const prisma = new PrismaClient();
 export interface PatientProps {
@@ -258,7 +259,7 @@ export const getPatients = async (query: any) => {
       );
     case STATUS_PACIENT_COD.queue_devolutiva:
       return getPatientsAvaliation(
-        [STATUS_PACIENT_COD.queue_devolutiva, STATUS_PACIENT_COD.devolutiva],
+        [STATUS_PACIENT_COD.queue_devolutiva],
         false
       );
     case STATUS_PACIENT_COD.queue_therapy:
@@ -272,6 +273,59 @@ export const getPatients = async (query: any) => {
     default:
       break;
   }
+};
+export const getPatientsEspcialidades = async (query: any) => {
+  const vaga =
+    query.statusPacienteCod === STATUS_PACIENT_COD.queue_avaliation ||
+    query.statusPacienteCod === STATUS_PACIENT_COD.queue_devolutiva
+      ? 'vaga'
+      : 'vagaTerapia';
+
+  const vagas: any = await prisma.paciente.findFirstOrThrow({
+    select: {
+      [vaga]: {
+        include: {
+          especialidades: {
+            include: {
+              especialidade: true,
+            },
+            where: {
+              agendado:
+                query.statusPacienteCod === STATUS_PACIENT_COD.queue_devolutiva,
+            },
+          },
+        },
+      },
+    },
+    where: {
+      id: Number(query.pacienteId),
+    },
+  });
+
+  const terapeutasAll = await getTerapeutaEspecialidade();
+  const especialidades: any[] = vagas[vaga].especialidades.map(
+    ({ especialidade: { id, cor, nome } }: any) => {
+      const terapeutas = terapeutasAll.filter((terapeuta: any) => {
+        if (terapeuta.especialidadeId === id) {
+          return {
+            nome: terapeuta.nome,
+            id: terapeuta.id,
+          };
+        }
+      });
+
+      return {
+        especialidade: {
+          id,
+          nome,
+          cor,
+        },
+        terapeutas,
+      };
+    }
+  );
+
+  return especialidades;
 };
 
 export const filterSinglePatients = async (body: any) => {

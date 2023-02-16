@@ -45,8 +45,10 @@ export interface FilaProps {
 
 export interface AgendarEspecialidadeProps {
   vagaId: number;
-  especialidadeId: number;
+  especialidadeId?: number;
+  especialidades?: number[];
   statusPacienteCod: string;
+  pacienteId: number;
 }
 
 export const getVagas = async () => {
@@ -156,14 +158,16 @@ const verifyInFila = async (
 
 const setQueueStatus = async (
   vagaId: number,
+  pacienteId: number,
   statusPacienteCod: string,
+  statusOne: string,
   statusTwo: string
 ) => {
   const dataAgendado = formatadataPadraoBD(new Date());
 
   const isQueue = await verifyInFila(vagaId, dataAgendado, statusPacienteCod);
 
-  await setStatusPaciente(isQueue ? statusPacienteCod : statusTwo, vagaId);
+  await setStatusPaciente(isQueue ? statusOne : statusTwo, pacienteId);
 
   return isQueue;
 };
@@ -190,6 +194,8 @@ export const updateVaga = async (body: VagaEspecialidadeProps) => {
 
         setQueueStatus(
           body.vagaId,
+          body.pacienteId,
+          STATUS_PACIENT_COD.queue_avaliation,
           STATUS_PACIENT_COD.queue_avaliation,
           STATUS_PACIENT_COD.avaliation
         );
@@ -211,6 +217,8 @@ export const updateVaga = async (body: VagaEspecialidadeProps) => {
 
         setQueueStatus(
           body.vagaId,
+          body.pacienteId,
+          STATUS_PACIENT_COD.queue_devolutiva,
           STATUS_PACIENT_COD.queue_devolutiva,
           STATUS_PACIENT_COD.devolutiva
         );
@@ -237,7 +245,13 @@ export const updateVaga = async (body: VagaEspecialidadeProps) => {
             ? STATUS_PACIENT_COD.crud_therapy
             : STATUS_PACIENT_COD.therapy;
 
-        setQueueStatus(body.vagaId, body.statusPacienteCod, now);
+        setQueueStatus(
+          body.vagaId,
+          body.pacienteId,
+          body.statusPacienteCod,
+          body.statusPacienteCod,
+          now
+        );
 
         break;
       default:
@@ -275,6 +289,8 @@ export const updateVaga = async (body: VagaEspecialidadeProps) => {
 
         setQueueStatus(
           body.vagaId,
+          body.pacienteId,
+          STATUS_PACIENT_COD.queue_avaliation,
           STATUS_PACIENT_COD.queue_avaliation,
           STATUS_PACIENT_COD.avaliation
         );
@@ -308,6 +324,8 @@ export const updateVaga = async (body: VagaEspecialidadeProps) => {
 
         const isQueue = setQueueStatus(
           body.vagaId,
+          body.pacienteId,
+          STATUS_PACIENT_COD.queue_devolutiva,
           STATUS_PACIENT_COD.queue_avaliation,
           STATUS_PACIENT_COD.avaliation
         );
@@ -346,6 +364,8 @@ export const updateVaga = async (body: VagaEspecialidadeProps) => {
 
         const isQueueTherapy = setQueueStatus(
           body.vagaId,
+          body.pacienteId,
+          body.statusPacienteCod,
           body.statusPacienteCod,
           now
         );
@@ -512,52 +532,75 @@ export const updateEspecialidadeVaga = async ({
   vagaId,
   especialidadeId,
   statusPacienteCod,
+  pacienteId,
+  especialidades,
 }: AgendarEspecialidadeProps) => {
   const dataAgendado = formatadataPadraoBD(new Date());
 
   switch (statusPacienteCod) {
     case STATUS_PACIENT_COD.queue_avaliation:
-      await prisma.vagaOnEspecialidade.updateMany({
-        data: {
-          agendado: true,
+      if (especialidadeId) {
+        await prisma.vagaOnEspecialidade.updateMany({
+          data: {
+            agendado: true,
+            dataAgendado,
+          },
+          where: {
+            especialidadeId: especialidadeId,
+            vagaId: vagaId,
+          },
+        });
+
+        const isAvaliationQueue = await verifyInFila(
+          vagaId,
           dataAgendado,
-        },
-        where: {
-          especialidadeId: especialidadeId,
-          vagaId: vagaId,
-        },
-      });
+          statusPacienteCod
+        );
+        await setStatusPaciente(
+          isAvaliationQueue
+            ? STATUS_PACIENT_COD.avaliation
+            : STATUS_PACIENT_COD.queue_devolutiva,
+          pacienteId
+        );
 
-      const isAvaliationQueue = await verifyInFila(
-        vagaId,
-        dataAgendado,
-        statusPacienteCod
-      );
-      await setStatusPaciente(
-        isAvaliationQueue
-          ? STATUS_PACIENT_COD.avaliation
-          : STATUS_PACIENT_COD.queue_devolutiva,
-        vagaId
-      );
-
-      return isAvaliationQueue;
+        return isAvaliationQueue;
+      }
+      return null;
     case STATUS_PACIENT_COD.queue_devolutiva:
-      await prisma.vagaOnEspecialidade.updateMany({
-        data: {
-          agendado: true,
-          dataAgendado,
-        },
-        where: {
-          especialidadeId: especialidadeId,
-          vagaId: vagaId,
-        },
-      });
+      if (especialidades?.length) {
+        especialidades?.map(async (id: number) => {
+          if (id === undefined) return;
+
+          await prisma.vagaOnEspecialidade.updateMany({
+            data: {
+              agendado: true,
+              dataAgendado,
+            },
+            where: {
+              especialidadeId: id,
+              vagaId: vagaId,
+            },
+          });
+        });
+      } else {
+        await prisma.vagaOnEspecialidade.updateMany({
+          data: {
+            agendado: true,
+            dataAgendado,
+          },
+          where: {
+            especialidadeId: especialidadeId,
+            vagaId: vagaId,
+          },
+        });
+      }
+
       const isReturnQueue = await verifyInFila(
         vagaId,
         dataAgendado,
         statusPacienteCod
       );
-      await setStatusPaciente(STATUS_PACIENT_COD.devolutiva, vagaId);
+      await setStatusPaciente(STATUS_PACIENT_COD.devolutiva, pacienteId);
       return isReturnQueue;
     case STATUS_PACIENT_COD.queue_therapy:
       await prisma.vagaTerapiaOnEspecialidade.updateMany({
@@ -576,7 +619,7 @@ export const updateEspecialidadeVaga = async ({
         statusPacienteCod
       );
       if (!isTherapyQueue)
-        await setStatusPaciente(STATUS_PACIENT_COD.therapy, vagaId);
+        await setStatusPaciente(STATUS_PACIENT_COD.therapy, pacienteId);
 
       return isTherapyQueue;
 
