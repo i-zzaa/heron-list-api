@@ -26,12 +26,12 @@ export class calendarioController {
   };
   static update = async (req: any, res: any, next: any) => {
     try {
-      let data: any;
-      if (req.headers.device === 'mobile') {
-        data = await updateCalendarioMobile(req.body, req.headers.login);
-      } else {
-        data = await updateCalendario(req.body, req.headers.login);
-      }
+      // let data: any;
+      // if (req.headers.device === 'mobile') {
+      //   data = await updateCalendarioMobile(req.body, req.headers.login);
+      // } else {
+      // }
+      const data = await updateCalendario(req.body, req.headers.login);
 
       res.status(200).json({
         status: true,

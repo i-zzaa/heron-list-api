@@ -701,7 +701,7 @@ export const updateCalendarioMobile = async (body: any, login: string) => {
   });
 
   if (Boolean(statusEventos)) {
-    await prisma.calendario.updateMany({
+    await prisma.calendario.update({
       data: {
         statusEventosId: statusEventos?.id,
       },
