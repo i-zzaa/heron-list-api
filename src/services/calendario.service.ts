@@ -686,6 +686,29 @@ export const updateCalendario = async (body: any, login: string) => {
   return evento;
 };
 
+export const updateCalendarioMobile = async (body: any, login: string) => {
+  const statusEventos = await prisma.statusEventos.findFirst({
+    where: {
+      nome: 'Atendido',
+    },
+  });
+
+  if (Boolean(statusEventos)) {
+    await prisma.calendario.updateMany({
+      data: {
+        statusEventosId: statusEventos?.id,
+      },
+      where: {
+        id: body.id,
+      },
+    });
+
+    return true;
+  }
+
+  return false;
+};
+
 export const deleteCalendario = async (id: number) => {
   return [];
 };

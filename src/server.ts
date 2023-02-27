@@ -162,7 +162,7 @@ app.put('/permissao', auth, permissaoController.update);
 // app.get('/evento/mes/:mes/:ano', auth, calendarioController.getMonth);
 app.get('/evento/filter/:start/:end', auth, calendarioController.getFilter);
 app.get('/evento/:start/:end', auth, calendarioController.getRange);
-
+app.get('/evento/:start/:end', auth, calendarioController.getRange);
 app.post('/evento', auth, calendarioController.create);
 app.put('/evento', auth, calendarioController.update);
 app.delete('/evento/:id', auth, calendarioController.delete);

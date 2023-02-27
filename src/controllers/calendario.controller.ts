@@ -5,6 +5,7 @@ import {
   getFilter,
   getRange,
   updateCalendario,
+  updateCalendarioMobile,
 } from '../services/calendario.service';
 
 export class calendarioController {
@@ -30,7 +31,13 @@ export class calendarioController {
   };
   static update = async (req: any, res: any, next: any) => {
     try {
-      const data = await updateCalendario(req.body, req.headers.login);
+      let data: any;
+      if (req.headers.device === 'mobile') {
+        data = await updateCalendarioMobile(req.body, req.headers.login);
+      } else {
+        data = await updateCalendario(req.body, req.headers.login);
+      }
+
       res.status(200).json({
         status: true,
         message: 'Atualizado com sucesso!',
