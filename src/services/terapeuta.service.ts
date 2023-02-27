@@ -151,21 +151,15 @@ function getDatesBetween(start: string, end: string) {
 }
 
 export async function getAvailableTimes(
-  terapeutaLogin: string,
   startDate: string,
-  endDate: string
+  endDate: string,
+  query: any,
+  device: string
 ) {
-  // const { id } = await prisma.usuario.findUniqueOrThrow({
-  //   select: {
-  //     id: true,
-  //   },
-  //   where: {
-  //     login: terapeutaLogin,
-  //   },
-  // });
+  const filter: any = {};
+  Object.keys(query).map((key: string) => (filter[key] = Number(query[key])));
 
-  const id = 6;
-
+  const terapeutaId = parseInt(query.terapeutaId);
   const [terapeuta, events, datas] = await Promise.all([
     prisma.terapeuta.findUnique({
       select: {
@@ -179,7 +173,7 @@ export async function getAvailableTimes(
         },
       },
       where: {
-        usuarioId: id,
+        usuarioId: terapeutaId,
       },
     }),
     prisma.calendario.findMany({
@@ -244,7 +238,8 @@ export async function getAvailableTimes(
         },
       },
       where: {
-        terapeutaId: id,
+        ...filter,
+        terapeutaId: 6,
         dataInicio: {
           lte: endDate, // menor que o ultimo dia do mes
           // gte: inicioDoMes, // maior que o primeiro dia do mes
@@ -269,8 +264,6 @@ export async function getAvailableTimes(
 
   const eventosFormatados: any = {};
   eventosFormat.flatMap((ev: any) => {
-    console.log(ev);
-
     if (ev.frequencia.id === 1) {
       if (Boolean(eventosFormatados[ev.dataInicio])) {
         eventosFormatados[ev.dataInicio].push(ev);
@@ -374,5 +367,5 @@ export async function getAvailableTimes(
     });
   });
 
-  return webArray;
+  return device === 'mobile' ? mobileArray : webArray;
 }

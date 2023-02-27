@@ -59,19 +59,19 @@ export class calendarioController {
 
   static getRange = async (req: any, res: any, next: any) => {
     try {
-      if (req.headers?.device !== 'mobile') {
-        const now = new Date();
-        const mouth = now.getMonth();
-        const inicioDoMes = getPrimeiroDoMes(now.getFullYear(), mouth - 1);
-        const ultimoDiaDoMes = getUltimoDoMes(now.getFullYear(), mouth + 2);
+      // if (req.headers?.device === 'mobile') {
+      //   const now = new Date();
+      //   const mouth = now.getMonth();
+      //   const inicioDoMes = getPrimeiroDoMes(now.getFullYear(), mouth - 1);
+      //   const ultimoDiaDoMes = getUltimoDoMes(now.getFullYear(), mouth + 2);
 
-        const data = await getAvailableTimes(
-          req.headers.login,
-          inicioDoMes,
-          ultimoDiaDoMes
-        );
-        res.status(200).json(data);
-      }
+      //   const data = await getAvailableTimes(
+      //     req.headers.login,
+      //     inicioDoMes,
+      //     ultimoDiaDoMes
+      //   );
+      //   res.status(200).json(data);
+      // }
 
       const data = await getRange(req.params, req.headers?.device);
       res.status(200).json(data);
@@ -82,8 +82,28 @@ export class calendarioController {
   };
   static getFilter = async (req: any, res: any, next: any) => {
     try {
-      const data = await getFilter(req.params, req.query);
-      res.status(200).json(data);
+      let inicioDoMes = req.params.start;
+      let ultimoDiaDoMes = req.params.end;
+
+      if (req.headers?.device === 'mobile') {
+        const now = new Date();
+        const mouth = now.getMonth();
+        inicioDoMes = getPrimeiroDoMes(now.getFullYear(), mouth - 1);
+        ultimoDiaDoMes = getUltimoDoMes(now.getFullYear(), mouth + 2);
+      }
+
+      if (req.query?.terapeutaId) {
+        const data = await getAvailableTimes(
+          inicioDoMes,
+          ultimoDiaDoMes,
+          req.query,
+          req.headers?.device
+        );
+        res.status(200).json(data);
+      } else {
+        const data = await getFilter(req.params, req.query);
+        res.status(200).json(data);
+      }
     } catch (error: any) {
       res.status(401).json(error);
       next();
