@@ -15,7 +15,16 @@ export interface AuthProps {
   senha: string;
 }
 
-export async function loginService(params: AuthProps) {
+export async function loginService(params: AuthProps, device: string) {
+  let filter = {};
+  if (device === 'mobile') {
+    filter = {
+      perfil: {
+        nome: 'Terapeuta',
+      },
+    };
+  }
+
   const user: UserProps = await prisma.usuario.findFirstOrThrow({
     select: {
       id: true,
@@ -36,6 +45,7 @@ export async function loginService(params: AuthProps) {
     },
     where: {
       login: params.login,
+      ...filter,
     },
   });
 
