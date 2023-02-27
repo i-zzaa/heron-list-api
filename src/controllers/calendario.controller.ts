@@ -64,7 +64,7 @@ export class calendarioController {
 
   static getRange = async (req: any, res: any, next: any) => {
     try {
-      const data = await getRange(req.params);
+      const data = await getRange(req.params, req.headers?.device);
       res.status(200).json(data);
     } catch (error: any) {
       res.status(401).json(error);

@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import moment from 'moment';
 import { STATUS_PACIENT_COD } from '../constants/patient';
-import { formatDateTime } from '../utils/convert-hours';
+import { formatDateTime, getPrimeiroDoMes } from '../utils/convert-hours';
 import { getFrequenciaName } from './frequencia.service';
 import { formatLocalidade } from './localidade.service';
 import { getUser } from './user.service';
@@ -359,9 +359,16 @@ export const getFilterFinancialPaciente = async ({
   return eventos;
 };
 
-export const getRange = async (params: any) => {
-  const inicioDoMes = params.start;
-  const ultimoDiaDoMes = params.end;
+export const getRange = async (params: any, device: string) => {
+  let inicioDoMes = params.start;
+  let ultimoDiaDoMes = params.end;
+
+  if (device === 'mobile') {
+    const now = new Date();
+    const mouth = now.getMonth();
+    inicioDoMes = getPrimeiroDoMes(now.getFullYear(), mouth - 1);
+    ultimoDiaDoMes = getPrimeiroDoMes(now.getFullYear(), mouth + 2);
+  }
 
   const eventos = await prisma.calendario.findMany({
     select: {
@@ -719,7 +726,8 @@ const formatEvents = async (eventos: any) => {
   eventos.map((evento: any) => {
     let formated: any = {};
     const cor =
-      evento.statusEventos.nome === 'Cancelado'
+      evento.statusEventos.nome.includes('Cancelado') ||
+      evento.statusEventos.nome.includes('cancelado')
         ? '#f87171'
         : evento.especialidade.cor;
     delete evento.especialidade.cor;
