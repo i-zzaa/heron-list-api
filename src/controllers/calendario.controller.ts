@@ -7,15 +7,10 @@ import {
   updateCalendario,
   updateCalendarioMobile,
 } from '../services/calendario.service';
+import { getAvailableTimes } from '../services/terapeuta.service';
+import { getPrimeiroDoMes, getUltimoDoMes } from '../utils/convert-hours';
 
 export class calendarioController {
-  static getTerapeuta(
-    arg0: string,
-    auth: (req: any, res: any, next: any) => Promise<void>,
-    getTerapeuta: any
-  ) {
-    throw new Error('Method not implemented.');
-  }
   static create = async (req: any, res: any, next: any) => {
     try {
       const data = await createCalendario(req.body, req.headers.login);
@@ -64,6 +59,20 @@ export class calendarioController {
 
   static getRange = async (req: any, res: any, next: any) => {
     try {
+      if (req.headers?.device !== 'mobile') {
+        const now = new Date();
+        const mouth = now.getMonth();
+        const inicioDoMes = getPrimeiroDoMes(now.getFullYear(), mouth - 1);
+        const ultimoDiaDoMes = getUltimoDoMes(now.getFullYear(), mouth + 2);
+
+        const data = await getAvailableTimes(
+          req.headers.login,
+          inicioDoMes,
+          ultimoDiaDoMes
+        );
+        res.status(200).json(data);
+      }
+
       const data = await getRange(req.params, req.headers?.device);
       res.status(200).json(data);
     } catch (error: any) {

@@ -720,7 +720,7 @@ export const deleteCalendario = async (id: number) => {
   return [];
 };
 
-const formatEvents = async (eventos: any) => {
+export const formatEvents = async (eventos: any) => {
   const eventosFormat: any = [];
 
   eventos.map((evento: any) => {

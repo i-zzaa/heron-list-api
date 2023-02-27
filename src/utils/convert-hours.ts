@@ -1,9 +1,7 @@
 import moment from 'moment';
 import momentBusinessDays from 'moment-business-days';
 
-moment.locale('pt-BR');
-
-const FERIADOS = [
+export const FERIADOS = [
   '01-01-2022',
   '21-04-2022',
   '01-05-2022',
@@ -20,15 +18,34 @@ momentBusinessDays.updateLocale('pt', {
   workingWeekdays: [1, 2, 3, 4, 5, 6],
 });
 
-const SEMANA = [
-  'segunda-feira',
-  'terça-feira',
-  'quarta-feira',
-  'quinta-feira',
-  'sexta-feira',
-  'sábado',
+moment.locale('pt-BR');
+
+export const momentBusiness = momentBusinessDays;
+
+export const weekDay = [
+  'Segunda-feira',
+  'Terca-feira',
+  'Quarta-feira',
+  'Quinta-feira',
+  'Sexta-feira',
+  'Sábado',
 ];
 
+export const HOURS = [
+  '08:00',
+  '09:00',
+  '10:00',
+  '11:00',
+  '12:00',
+  '13:00',
+  '14:00',
+  '15:00',
+  '16:00',
+  '17:00',
+  '18:00',
+  '19:00',
+  '20:00',
+];
 export const formaTime = (duration: any) => {
   return `${duration.hours().toString().padStart(2, '0')}:${duration
     .minutes()
