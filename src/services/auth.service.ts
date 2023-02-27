@@ -20,7 +20,9 @@ export async function loginService(params: AuthProps, device: string) {
   if (device === 'mobile') {
     filter = {
       perfil: {
-        nome: 'Terapeuta',
+        nome: {
+          in: ['Terapeuta', 'Developer'],
+        },
       },
     };
   }
