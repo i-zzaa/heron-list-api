@@ -3,7 +3,7 @@ import moment from 'moment';
 import momentBusinessDays from 'moment-business-days';
 import { FERIADOS, HOURS, weekDay } from '../utils/convert-hours';
 
-import { parseISO, format, addHours, isAfter } from 'date-fns';
+import { parseISO, format, addHours, isAfter, isBefore } from 'date-fns';
 import { formatEvents } from './calendario.service';
 
 momentBusinessDays.updateLocale('pt', {
@@ -314,10 +314,13 @@ export async function getAvailableTimes(
         dataFim: day,
         start: h,
         startTime: h,
+        time: `${h} - ${format(hoursFinal, 'HH:mm')}`,
         end: format(hoursFinal, 'HH:mm'),
         endTime: format(hoursFinal, 'HH:mm'),
         date: day,
         terapeuta: terapeuta,
+        disabled: true,
+        isDevolutiva: false,
         rrule: {
           dtstart: format(date, ' yyyy-MM-dd HH:mm'),
           until: format(hoursFinal, ' yyyy-MM-dd HH:mm'),
@@ -347,6 +350,19 @@ export async function getAvailableTimes(
         )[0];
 
         if (Boolean(sessao)) {
+          const isInPast = isBefore(
+            parseISO(`${day} ${sessao.data.dataFim}`),
+            new Date()
+          );
+
+          sessao.isDevolutiva = sessao.modalidade.nome === 'Devolutiva';
+          sessao.time = `${sessao.data.start} - ${sessao.data.end}`;
+          sessao.date = format(date, ' yyyy-MM-dd');
+          sessao.disabled =
+            isInPast ||
+            sessao.statusEventos.nome.includes('Cancelado') ||
+            sessao.statusEventos.nome == 'Atendido';
+
           if (Boolean(mobileArray[day])) {
             mobileArray[day].push(sessao);
           } else {

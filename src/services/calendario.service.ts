@@ -587,7 +587,7 @@ export const createCalendario = async (body: any, login: string) => {
 
 export const updateCalendario = async (body: any, login: string) => {
   let dataFim = moment(body.dataAtual).subtract(2, 'days').format('YYYY-MM-DD');
-  const isCanceled = body.statusEventos.nome === 'Cancelado';
+  const isCanceled = body.statusEventos.nome.includes('Cancelado');
   if (isCanceled && !body?.dataFim) {
     body.dataFim = dataFim;
   }
