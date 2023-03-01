@@ -85,7 +85,7 @@ export class calendarioController {
       let inicioDoMes = req.params.start;
       let ultimoDiaDoMes = req.params.end;
 
-      if (req.headers?.device === 'mobile') {
+      if (req.headers.device === 'mobile') {
         const now = new Date();
         const mouth = now.getMonth();
         inicioDoMes = getPrimeiroDoMes(now.getFullYear(), mouth - 1);
@@ -97,7 +97,7 @@ export class calendarioController {
           inicioDoMes,
           ultimoDiaDoMes,
           req.query,
-          req.headers?.device
+          req.headers.device
         );
         res.status(200).json(data);
       } else {
