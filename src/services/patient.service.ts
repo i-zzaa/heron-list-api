@@ -346,6 +346,11 @@ export const filterSinglePatients = async (body: any) => {
         [STATUS_PACIENT_COD.queue_therapy],
         body
       );
+    case STATUS_PACIENT_COD.crud_therapy:
+      return filterPatientsQueueTherapy(
+        [STATUS_PACIENT_COD.crud_therapy],
+        body
+      );
     default:
       break;
   }
