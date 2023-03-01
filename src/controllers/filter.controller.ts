@@ -26,17 +26,18 @@ const setFilterstatusPacienteCod = (statusPacienteCod: string) => {
         STATUS_PACIENT_COD.devolutiva,
       ];
     case STATUS_PACIENT_COD.therapy:
-    // case STATUS_PACIENT_COD.crud_therapy:
-    //   return [
-    //     STATUS_PACIENT_COD.therapy,
-    //     STATUS_PACIENT_COD.avaliation,
-    //     STATUS_PACIENT_COD.devolutiva,
-    //     STATUS_PACIENT_COD.crud_therapy,
-    //   ];
+      return [
+        STATUS_PACIENT_COD.therapy,
+        STATUS_PACIENT_COD.avaliation,
+        STATUS_PACIENT_COD.devolutiva,
+        STATUS_PACIENT_COD.crud_therapy,
+      ];
     case STATUS_PACIENT_COD.avaliation:
       return [STATUS_PACIENT_COD.avaliation];
+
     case STATUS_PACIENT_COD.crud_therapy:
       return [STATUS_PACIENT_COD.crud_therapy];
+
     case STATUS_PACIENT_COD.queue_devolutiva:
       return [
         STATUS_PACIENT_COD.queue_devolutiva,
