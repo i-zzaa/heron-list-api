@@ -3,7 +3,8 @@ import moment from 'moment';
 import momentBusinessDays from 'moment-business-days';
 import { FERIADOS, HOURS, weekDay } from '../utils/convert-hours';
 
-import { parseISO, format, addHours, isAfter, isBefore } from 'date-fns';
+import { parseISO, addHours, isAfter, isBefore } from 'date-fns';
+import { zonedTimeToUtc, utcToZonedTime, format } from 'date-fns-tz';
 import { formatEvents } from './calendario.service';
 
 momentBusinessDays.updateLocale('pt', {
@@ -72,12 +73,13 @@ const eventFree = {
   },
 };
 
-function horaEstaEntre(hora: string, horaInicio: string, horaFim: string) {
-  const horaObj = moment(hora, 'HH:mm');
-  const horaInicioObj = moment(horaInicio, 'HH:mm');
-  const horaFimObj = moment(horaFim, 'HH:mm');
+function horaEstaEntre(hora: string, horaInicio: string) {
+  const horaObj = moment(hora, 'HH:mm').subtract(30, 'minute');
+  const horaFimObj = moment(hora, 'HH:mm').add(1, 'hours');
 
-  return horaObj.isBetween(horaInicioObj, horaFimObj);
+  const horaInicioObj = moment(horaInicio, 'HH:mm');
+
+  return horaInicioObj.isBetween(horaObj, horaFimObj);
 }
 
 function obterDatas(
@@ -239,7 +241,7 @@ export async function getAvailableTimes(
       },
       where: {
         ...filter,
-        terapeutaId: 6,
+        terapeutaId: terapeutaId,
         dataInicio: {
           lte: endDate, // menor que o ultimo dia do mes
           // gte: inicioDoMes, // maior que o primeiro dia do mes
@@ -259,6 +261,10 @@ export async function getAvailableTimes(
     }),
     getDatesBetween(startDate, endDate),
   ]);
+
+  if (!Boolean(terapeuta)) {
+    throw new Error('Terapeuta não encontrado');
+  }
 
   const eventosFormat = await formatEvents(events);
 
@@ -291,6 +297,8 @@ export async function getAvailableTimes(
     });
   });
 
+  // console.log(eventosFormatados);
+
   let cargaHoraria: any =
     terapeuta?.cargaHoraria && typeof terapeuta.cargaHoraria === 'string'
       ? JSON.parse(terapeuta.cargaHoraria)
@@ -305,8 +313,14 @@ export async function getAvailableTimes(
     const horariosTerapeuta = cargaHoraria[dayOfWeek];
 
     HOURS.map((h) => {
-      const date = parseISO(`${day} ${h}`);
-      const hoursFinal = addHours(date, 1);
+      const datTimeUTC = zonedTimeToUtc(`${day} ${h}`, 'America/Sao_Paulo');
+      const date = utcToZonedTime(
+        datTimeUTC.toISOString(),
+        'America/Sao_Paulo'
+      );
+
+      const hoursFinal = addHours(date, 4);
+      const hoursFinalFormat = format(hoursFinal, 'HH:mm');
 
       const eventoAdd = {
         ...eventFree,
@@ -314,16 +328,21 @@ export async function getAvailableTimes(
         dataFim: day,
         start: h,
         startTime: h,
-        time: `${h} - ${format(hoursFinal, 'HH:mm')}`,
-        end: format(hoursFinal, 'HH:mm'),
-        endTime: format(hoursFinal, 'HH:mm'),
+        time: `${h} - ${hoursFinalFormat}`,
+        end: hoursFinalFormat,
+        endTime: hoursFinalFormat,
         date: day,
-        terapeuta: terapeuta,
+        terapeuta: {
+          nome: terapeuta?.usuario?.nome || '',
+          id: terapeuta?.usuario?.id || '',
+        },
+        localidade: { nome: 'Sem Localizacao', id: 0 },
+        statusEventos: { nome: 'Não criado', id: 0 },
         disabled: true,
         isDevolutiva: false,
         rrule: {
-          dtstart: format(date, ' yyyy-MM-dd HH:mm'),
-          until: format(hoursFinal, ' yyyy-MM-dd HH:mm'),
+          dtstart: format(date, 'yyyy-MM-dd HH:mm'),
+          until: format(hoursFinal, 'yyyy-MM-dd HH:mm'),
           freq: 'weekly',
         },
       };
@@ -346,7 +365,7 @@ export async function getAvailableTimes(
 
       if (eventosDoDia.length) {
         const sessao = eventosDoDia.filter((e: any) =>
-          horaEstaEntre(h, e.start, e.end)
+          horaEstaEntre(h, e.data.start)
         )[0];
 
         if (Boolean(sessao)) {
