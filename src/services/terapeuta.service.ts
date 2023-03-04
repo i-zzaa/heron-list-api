@@ -93,7 +93,9 @@ function obterDatas(
 
   // Defina a data de início e a data final como objetos moment
   const start = momentBusinessDays(startDate);
-  const end = momentBusinessDays(endDate);
+  const end = momentBusinessDays(endDate).nextBusinessDay();
+
+  console.log('inicio', start, end);
 
   // Defina um objeto moment para a próxima ocorrência do dia da semana especificado após a data de início
   let dataAtual = start;
@@ -280,7 +282,7 @@ export async function getAvailableTimes(
       return;
     }
 
-    const dataFim = ev.dataInicio || endDate;
+    const dataFim = ev.dataFim || endDate;
     const datasRecorrentes = obterDatas(
       ev.diasFrequencia,
       ev.dataInicio,
@@ -289,6 +291,7 @@ export async function getAvailableTimes(
     );
 
     datasRecorrentes.map((dataRecorrentes: string) => {
+      ev.date = moment(dataRecorrentes).format('YYYY-MM-DD');
       if (Boolean(eventosFormatados[dataRecorrentes])) {
         eventosFormatados[dataRecorrentes].push(ev);
       } else {
@@ -313,14 +316,10 @@ export async function getAvailableTimes(
     const horariosTerapeuta = cargaHoraria[dayOfWeek];
 
     HOURS.map((h) => {
-      const datTimeUTC = zonedTimeToUtc(`${day} ${h}`, 'America/Sao_Paulo');
-      const date = utcToZonedTime(
-        datTimeUTC.toISOString(),
-        'America/Sao_Paulo'
-      );
+      const date = moment(`${day}T${h}:00`);
 
-      const hoursFinal = addHours(date, 4);
-      const hoursFinalFormat = format(hoursFinal, 'HH:mm');
+      const hoursFinal = moment(`${day}T${h}:00`).add(1, 'hours');
+      const hoursFinalFormat = hoursFinal.format('HH:mm');
 
       const eventoAdd = {
         ...eventFree,
@@ -341,16 +340,18 @@ export async function getAvailableTimes(
         disabled: true,
         isDevolutiva: false,
         rrule: {
-          dtstart: format(date, 'yyyy-MM-dd HH:mm'),
-          until: format(hoursFinal, 'yyyy-MM-dd HH:mm'),
+          dtstart: date.format('YYYY-MM-DD HH:mm'),
+          until: hoursFinal.format('YYYY-MM-DD HH:mm'),
           freq: 'weekly',
         },
       };
 
       const eventosDoDia = eventosFormatados[day] || [];
 
+      // console.log(eventosDoDia);
+
       if (
-        isAfter(date, new Date()) &&
+        date.isAfter(new Date()) &&
         horariosTerapeuta[h] &&
         !eventosDoDia.length
       ) {
@@ -368,6 +369,8 @@ export async function getAvailableTimes(
           horaEstaEntre(h, e.data.start)
         )[0];
 
+        // console.log(h, sessao);
+
         if (Boolean(sessao)) {
           const isInPast = isBefore(
             parseISO(`${day} ${sessao.data.dataFim}`),
@@ -376,7 +379,6 @@ export async function getAvailableTimes(
 
           sessao.isDevolutiva = sessao.modalidade.nome === 'Devolutiva';
           sessao.time = `${sessao.data.start} - ${sessao.data.end}`;
-          sessao.date = format(date, ' yyyy-MM-dd');
           sessao.disabled =
             isInPast ||
             sessao.statusEventos.nome.includes('Cancelado') ||
@@ -389,7 +391,7 @@ export async function getAvailableTimes(
           }
 
           webArray.push(sessao);
-        } else if (horariosTerapeuta[h]) {
+        } else if (horariosTerapeuta[h] && date.isAfter(new Date())) {
           if (Boolean(mobileArray[day])) {
             mobileArray[day].push(eventoAdd);
           } else {
