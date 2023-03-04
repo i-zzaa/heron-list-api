@@ -348,8 +348,6 @@ export async function getAvailableTimes(
 
       const eventosDoDia = eventosFormatados[day] || [];
 
-      // console.log(eventosDoDia);
-
       if (
         date.isAfter(new Date()) &&
         horariosTerapeuta[h] &&
@@ -369,10 +367,8 @@ export async function getAvailableTimes(
           horaEstaEntre(h, e.data.start)
         )[0];
 
-        // console.log(h, sessao);
-
         if (Boolean(sessao)) {
-          const isInPast = isBefore(
+          const isInPast = isAfter(
             parseISO(`${day} ${sessao.data.dataFim}`),
             new Date()
           );
