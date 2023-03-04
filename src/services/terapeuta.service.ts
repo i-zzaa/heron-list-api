@@ -368,10 +368,8 @@ export async function getAvailableTimes(
         )[0];
 
         if (Boolean(sessao)) {
-          const isInPast = !isBefore(
-            parseISO(`${day} ${sessao.data.dataFim}`),
-            new Date()
-          );
+          const sessaoDataHoraFim = moment(`${day}T${sessao.data.dataFim}:00`);
+          const isInPast = sessaoDataHoraFim.isBefore(new Date());
 
           sessao.isDevolutiva = sessao.modalidade.nome === 'Devolutiva';
           sessao.time = `${sessao.data.start} - ${sessao.data.end}`;
