@@ -368,7 +368,7 @@ export async function getAvailableTimes(
         )[0];
 
         if (Boolean(sessao)) {
-          const isInPast = isBefore(
+          const isInPast = !isBefore(
             parseISO(`${day} ${sessao.data.dataFim}`),
             new Date()
           );
