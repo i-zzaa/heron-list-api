@@ -680,7 +680,7 @@ export const updateCalendario = async (body: any, login: string) => {
       await createCalendario(
         {
           ...body,
-          frequencia: '',
+          frequenciaId: 1,
           groupId: body.id,
         },
         login
@@ -700,7 +700,7 @@ export const updateCalendarioMobile = async (body: any, login: string) => {
     },
   });
 
-  if (Boolean(statusEventos)) {
+  if (body.frequencia.id === 1) {
     await prisma.calendario.update({
       data: {
         statusEventosId: statusEventos?.id,
@@ -709,11 +709,38 @@ export const updateCalendarioMobile = async (body: any, login: string) => {
         id: body.id,
       },
     });
+  } else {
+    const eventoUnico = await prisma.calendario.findFirstOrThrow({
+      where: {
+        id: body.id,
+      },
+    });
 
-    return true;
+    const exdate = eventoUnico?.exdate ? eventoUnico?.exdate.split(',') : [];
+    exdate.push(formatDateTime(body.start, body.dataAtual));
+
+    const format = exdate.join(',');
+
+    await prisma.calendario.updateMany({
+      data: {
+        exdate: format,
+      },
+      where: {
+        id: body.id,
+      },
+    });
+
+    await createCalendario(
+      {
+        ...body,
+        frequenciaId: 1,
+        groupId: body.id,
+      },
+      login
+    );
   }
 
-  return false;
+  return true;
 };
 
 export const deleteCalendario = async (id: number) => {
