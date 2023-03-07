@@ -95,8 +95,6 @@ function obterDatas(
   const start = momentBusinessDays(startDate);
   const end = momentBusinessDays(endDate).nextBusinessDay();
 
-  console.log('inicio', start, end);
-
   // Defina um objeto moment para a próxima ocorrência do dia da semana especificado após a data de início
   let dataAtual = start;
 
@@ -363,28 +361,45 @@ export async function getAvailableTimes(
       }
 
       if (eventosDoDia.length) {
-        const sessao = eventosDoDia.filter((e: any) =>
+        const sessoes = eventosDoDia.filter((e: any) =>
           horaEstaEntre(h, e.data.start)
-        )[0];
+        );
 
-        if (Boolean(sessao)) {
-          const sessaoDataHoraFim = moment(`${day}T${sessao.data.dataFim}:00`);
-          const isInPast = sessaoDataHoraFim.isBefore(new Date());
+        if (sessoes.length) {
+          sessoes.map((sessao: any) => {
+            const verificaSeJaFoiIncluido = webArray.filter((e: any) => {
+              if (
+                e.id === sessao.id &&
+                e.paciente.nome === sessao.paciente.nome &&
+                day === sessao.date &&
+                e.data.start === sessao.data.start
+              ) {
+                return e;
+              }
+            });
 
-          sessao.isDevolutiva = sessao.modalidade.nome === 'Devolutiva';
-          sessao.time = `${sessao.data.start} - ${sessao.data.end}`;
-          sessao.disabled =
-            isInPast ||
-            sessao.statusEventos.nome.includes('Cancelado') ||
-            sessao.statusEventos.nome == 'Atendido';
+            if (!verificaSeJaFoiIncluido.length) {
+              const sessaoDataHoraFim = moment(
+                `${day}T${sessao.data.dataFim}:00`
+              );
+              const isInPast = sessaoDataHoraFim.isBefore(new Date());
 
-          if (Boolean(mobileArray[day])) {
-            mobileArray[day].push(sessao);
-          } else {
-            mobileArray[day] = [sessao];
-          }
+              sessao.isDevolutiva = sessao.modalidade.nome === 'Devolutiva';
+              sessao.time = `${sessao.data.start} - ${sessao.data.end}`;
+              sessao.disabled =
+                isInPast ||
+                sessao.statusEventos.nome.includes('Cancelado') ||
+                sessao.statusEventos.nome == 'Atendido';
 
-          webArray.push(sessao);
+              if (Boolean(mobileArray[day])) {
+                mobileArray[day].push(sessao);
+              } else {
+                mobileArray[day] = [sessao];
+              }
+
+              webArray.push(sessao);
+            }
+          });
         } else if (horariosTerapeuta[h] && date.isAfter(new Date())) {
           if (Boolean(mobileArray[day])) {
             mobileArray[day].push(eventoAdd);

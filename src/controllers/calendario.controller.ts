@@ -89,7 +89,7 @@ export class calendarioController {
         ultimoDiaDoMes = getUltimoDoMes(now.getFullYear(), mouth + 2);
       }
 
-      if (req.query?.terapeutaId) {
+      if (Boolean(req.query?.terapeutaId)) {
         const data = await getAvailableTimes(
           inicioDoMes,
           ultimoDiaDoMes,
