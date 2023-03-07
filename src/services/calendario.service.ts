@@ -466,7 +466,7 @@ const createEventoDefault = async (
     data: {
       groupId: 0,
       dataInicio: body.dataInicio,
-      dataFim: body.dataFim,
+      dataFim: body?.dataFim || '',
       start: body.start,
       end: body.end,
       diasFrequencia: diasFrequencia,
