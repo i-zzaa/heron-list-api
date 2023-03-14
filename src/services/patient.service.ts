@@ -60,6 +60,8 @@ interface PatientQueueAvaliationPropsProps extends PatientProps {
 const formatPatients = (patients: any) => {
   const pacientes: any = [];
   patients.forEach(async (patient: any) => {
+    console.log('paciente', patient.id);
+
     const paciente = { ...patient };
     if (patient?.vaga) {
       pacientes.push({
@@ -85,7 +87,10 @@ const formatPatients = (patients: any) => {
       delete paciente.vagaTerapia;
 
       const sessao: any[] = [];
-      if (patient.statusPacienteCod === STATUS_PACIENT_COD.crud_therapy) {
+      if (
+        patient.statusPacienteCod === STATUS_PACIENT_COD.crud_therapy ||
+        patient.statusPacienteCod === STATUS_PACIENT_COD.therapy
+      ) {
         vaga.especialidades.map((especialidade: any) => {
           sessao.push({
             especialidade: especialidade.especialidade.nome,
@@ -128,6 +133,25 @@ export const getPatientId = async (id: number) => {
 };
 
 export const getPatientsQueueTherapy = async (statusPacienteCod: string[]) => {
+  console.log(statusPacienteCod);
+
+  let filter = {};
+
+  if (statusPacienteCod.includes(STATUS_PACIENT_COD.queue_therapy)) {
+    filter = {
+      OR: [
+        {
+          vagaTerapia: null,
+        },
+        {
+          vagaTerapia: {
+            naFila: true,
+          },
+        },
+      ],
+    };
+  }
+
   const patients = await prisma.paciente.findMany({
     select: {
       id: true,
@@ -156,16 +180,8 @@ export const getPatientsQueueTherapy = async (statusPacienteCod: string[]) => {
         in: statusPacienteCod,
       },
       disabled: false,
-      OR: [
-        {
-          vagaTerapia: null,
-        },
-        {
-          vagaTerapia: {
-            naFila: true,
-          },
-        },
-      ],
+
+      ...filter,
     },
     orderBy: {
       vagaTerapia: {
@@ -265,6 +281,8 @@ export const getPatients = async (query: any) => {
     case STATUS_PACIENT_COD.queue_therapy:
       return getPatientsQueueTherapy([STATUS_PACIENT_COD.queue_therapy]);
     case STATUS_PACIENT_COD.crud_therapy:
+      console.log('here');
+
       return getPatientsQueueTherapy([
         STATUS_PACIENT_COD.therapy,
         STATUS_PACIENT_COD.devolutiva,
