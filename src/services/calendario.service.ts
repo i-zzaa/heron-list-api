@@ -5,6 +5,7 @@ import { formatDateTime, getPrimeiroDoMes } from '../utils/convert-hours';
 import { getFrequenciaName } from './frequencia.service';
 import { formatLocalidade } from './localidade.service';
 import { getUser } from './user.service';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -36,7 +37,7 @@ export interface CalendarioCreateParam {
   intervalo: ObjProps;
   terapeuta: any;
   observacao: string;
-  groupId: number;
+  groupId: string;
   isExterno: boolean;
 }
 
@@ -54,7 +55,7 @@ export const getFilter = async (params: any, query: any) => {
   const eventos = await prisma.calendario.findMany({
     select: {
       id: true,
-      // groupId: true,
+      groupId: true,
       dataInicio: true,
       dataFim: true,
       start: true,
@@ -373,7 +374,7 @@ export const getRange = async (params: any, device: string) => {
   const eventos = await prisma.calendario.findMany({
     select: {
       id: true,
-      // groupId: true,
+      groupId: true,
       dataInicio: true,
       dataFim: true,
       start: true,
@@ -432,18 +433,22 @@ export const getRange = async (params: any, device: string) => {
       },
     },
     where: {
-      dataInicio: {
-        lte: ultimoDiaDoMes, // menor que o ultimo dia do mes
-        // gte: inicioDoMes, // maior que o primeiro dia do mes
-      },
-      OR: [
+      AND: [
         {
-          dataFim: '',
+          OR: [
+            {
+              dataFim: '',
+            },
+            {
+              dataFim: {
+                gte: inicioDoMes,
+              },
+            },
+          ],
         },
         {
-          dataFim: {
-            // lte: ultimoDiaDoMes, // menor que o ultimo dia do mes
-            gte: inicioDoMes, // maior que o primeiro dia do mes
+          dataInicio: {
+            lte: ultimoDiaDoMes,
           },
         },
       ],
@@ -454,6 +459,18 @@ export const getRange = async (params: any, device: string) => {
   return eventosFormat;
 };
 
+const getHashGroupId = async (
+  pacienteId: number,
+  modalidadeId: number,
+  especialidadeId: number,
+  funcaoId: number
+) => {
+  const plaintext = `${pacienteId} ${modalidadeId} ${especialidadeId} ${funcaoId}`;
+  const hash = await bcrypt.hash(plaintext, 10);
+
+  return hash;
+};
+
 const createEventoDefault = async (
   body: CalendarioCreateParam,
   login: string,
@@ -462,44 +479,43 @@ const createEventoDefault = async (
   user: any
 ) => {
   console.log('createEventoDefault');
-  const evento = await prisma.calendario.create({
-    data: {
-      groupId: 0,
-      dataInicio: body.dataInicio,
-      dataFim: body?.dataFim || '',
-      start: body.start,
-      end: body.end,
-      diasFrequencia: diasFrequencia,
 
-      ciclo: 'ativo',
-      observacao: body.observacao || '',
-      pacienteId: body.paciente.id,
-      modalidadeId: body.modalidade.id,
-      especialidadeId: body.especialidade.id,
-      terapeutaId: body.terapeuta.id,
-      funcaoId: body.funcao.id,
-      localidadeId: body.localidade.id,
-      statusEventosId: body.statusEventos.id,
-      frequenciaId: frequencia.id,
-      intervaloId: body.intervalo.id,
-      isExterno: !!body.isExterno,
+  const hash: string = await getHashGroupId(
+    body.paciente.id,
+    body.modalidade.id,
+    body.especialidade.id,
+    body.funcao.id
+  );
 
-      usuarioId: user.id,
-    },
-  });
+  const eventData = {
+    groupId: hash,
+    dataInicio: body.dataInicio,
+    dataFim: body.dataFim || '',
+    start: body.start,
+    end: body.end,
+    diasFrequencia: diasFrequencia,
+    ciclo: 'ativo',
+    observacao: body.observacao || '',
+    pacienteId: body.paciente.id,
+    modalidadeId: body.modalidade.id,
+    especialidadeId: body.especialidade.id,
+    terapeutaId: body.terapeuta.id,
+    funcaoId: body.funcao.id,
+    localidadeId: body.localidade.id,
+    statusEventosId: body.statusEventos.id,
+    frequenciaId: frequencia.id,
+    intervaloId: body.intervalo.id,
+    isExterno: !!body.isExterno,
+    usuarioId: user.id,
+  };
 
-  console.log(evento);
+  const evento = await prisma.$transaction([
+    prisma.calendario.create({
+      data: eventData,
+    }),
+  ]);
 
-  await prisma.calendario.update({
-    data: {
-      groupId: evento.id,
-    },
-    where: {
-      id: evento.id,
-    },
-  });
-
-  return evento;
+  return evento[0];
 };
 
 const createEventoDevolutiva = async (
@@ -513,24 +529,30 @@ const createEventoDevolutiva = async (
     (key: string) => key.includes('terapeuta') && Object.keys(body[key]).length
   );
 
-  const datas: any[] = filter.map((key: string) => {
-    if (key.includes('terapeuta')) {
+  const datas: any[] = await Promise.all(
+    filter.map(async (key: string) => {
       const index = key.split('terapeuta')[1];
 
-      const data = { ...body };
+      const hash: string = await getHashGroupId(
+        body.paciente.id,
+        body.modalidade.id,
+        body[`especialidade${index}`].id,
+        body[`funcao${index}`].id
+      );
 
-      data['terapeuta'] = { id: body[key].id };
-      data['especialidade'] = { id: body[`especialidade${index}`].id };
-      data['funcao'] = { id: body[`funcao${index}`].id };
+      const data = Object.assign({}, body, {
+        terapeuta: { id: body[key].id },
+        especialidade: { id: body[`especialidade${index}`].id },
+        funcao: { id: body[`funcao${index}`].id },
+      });
 
       return {
-        groupId: data.paciente.id,
+        groupId: hash,
         dataInicio: data.dataInicio,
         dataFim: data.dataFim,
         start: data.start,
         end: data.end,
         diasFrequencia: diasFrequencia,
-
         ciclo: 'ativo',
         observacao: data.observacao || '',
         pacienteId: data.paciente.id,
@@ -546,11 +568,11 @@ const createEventoDevolutiva = async (
 
         usuarioId: user.id,
       };
-    }
-  });
+    })
+  );
 
   return await prisma.calendario.createMany({
-    data: [...datas],
+    data: datas,
   });
 };
 
@@ -586,6 +608,188 @@ export const createCalendario = async (body: any, login: string) => {
 };
 
 export const updateCalendario = async (body: any, login: string) => {
+  const eventoSalvo: any[] = await prisma.calendario.findMany({
+    where: { groupId: body.groupId },
+  });
+
+  switch (eventoSalvo.length) {
+    case 0:
+      throw new Error('Não existe evento desse groupo!');
+    case 1:
+      return updateEventoUnicoGrupo(body, login);
+    default:
+      break;
+  }
+};
+
+const updateEventoUnicoGrupo = async (event: any, login: string) => {
+  let evento;
+  switch (event.frequencia.id) {
+    case 1: //se o evento for único
+      evento = await prisma.calendario.update({
+        data: {
+          dataInicio: event?.dataInicio,
+          dataFim: event?.dataFim,
+          start: event?.start,
+          end: event?.end,
+          ciclo: event?.ciclo,
+          observacao: event?.observacao,
+          pacienteId: event?.paciente?.id,
+          modalidadeId: event?.modalidade?.id,
+          especialidadeId: event?.especialidade?.id,
+          terapeutaId: event?.terapeuta?.id,
+          funcaoId: event?.funcao?.id,
+          localidadeId: event.localidade?.id,
+          statusEventosId: event?.statusEventos?.id,
+        },
+        where: {
+          id: event.id,
+        },
+      });
+      break;
+    case 2: // se o evento for recorrente
+      evento = await updateEventoRecorrentes(event, login);
+
+    default:
+      break;
+  }
+
+  return evento;
+};
+
+const updateEventoRecorrentes = async (event: any, login: string) => {
+  let dataFim = moment(event.dataAtual).add(1, 'days').format('YYYY-MM-DD');
+
+  // const dtInicio = moment(event.dataFim);
+  // const dtFim = moment(event.dataInicio);
+  // const dtAtual = moment(event.dataAtual);
+
+  // switch (true) {
+  //   case dtInicio === dtAtual:
+  //     dataFim = moment(event.dataAtual).format('YYYY-MM-DD');
+  //     break;
+  //   case dtFim === dtAtual:
+  //     dataFim = moment(event.dataAtual).add(1, 'days').format('YYYY-MM-DD');
+  //     break;
+  //   default:
+  //     dataFim = moment(event.dataAtual)
+  //       .subtract(1, 'days')
+  //       .format('YYYY-MM-DD');
+  //     break;
+  // }
+
+  const isCanceled = event.statusEventos.nome.includes('Cancelado');
+  if (isCanceled && !event?.dataFim) {
+    event.dataFim = dataFim;
+  }
+
+  const exdate: string[] = event?.exdate || [];
+  exdate.push(`${event.dataAtual} ${event.start}`);
+
+  const data = {
+    groupId: event?.groupId,
+    dataAtual: event?.dataAtual,
+    dataInicio: event?.dataInicio,
+    dataFim: event?.dataFim,
+    start: event?.start,
+    end: event?.end,
+    ciclo: event?.ciclo,
+    observacao: event?.observacao,
+    pacienteId: event?.paciente?.id,
+    modalidadeId: event?.modalidade?.id,
+    especialidadeId: event?.especialidade?.id,
+    terapeutaId: event?.terapeuta?.id,
+    funcaoId: event?.funcao?.id,
+    localidadeId: event.localidade?.id,
+    statusEventosId: event?.statusEventos?.id,
+    diasFrequencia: event?.diasFrequencia.join(),
+    isExterno: event?.isExterno,
+    frequenciaId: event?.frequencia?.id,
+    intervaloId: event?.intervalo?.id,
+  };
+
+  switch (true) {
+    case event.changeAll: // se for mudar todos
+      const eventosAll = await updateEventoRecorrentesAllChange(
+        data,
+        exdate.join(',')
+      );
+      return eventosAll;
+    case !event.changeAll: // se for mudar todos
+      try {
+        delete data.dataAtual;
+
+        const usuario = await getUser(login);
+
+        const [, eventos] = await Promise.all([
+          prisma.calendario.update({
+            data: {
+              exdate: exdate.join(),
+              // dataFim,
+            },
+            where: {
+              id: event.id,
+            },
+          }),
+          prisma.calendario.create({
+            data: {
+              ...data,
+              dataInicio: event.dataAtual,
+              groupId: event.groupId,
+              usuarioId: usuario.id,
+            },
+          }),
+        ]);
+
+        return eventos;
+      } catch (error) {
+        console.log(error);
+      }
+  }
+};
+
+const updateEventoRecorrentesAllChange = async (event: any, exdate: string) => {
+  const dataInicio = moment(event.dataInicio);
+  const dataAtual = moment(event.dataAtual);
+
+  if (dataInicio.isBefore(dataAtual)) {
+    const [, eventos] = await Promise.all([
+      createCalendario(
+        {
+          ...event,
+          groupId: event.groupId,
+          dataInicio: event.dataAtual,
+        },
+        event.usuario
+      ),
+      prisma.calendario.updateMany({
+        data: {
+          ...event,
+          dataFim: dataAtual.subtract(1, 'day').format('YYYY-MM-DD'),
+          exdate,
+        },
+        where: {
+          id: event.id,
+        },
+      }),
+    ]);
+
+    return eventos;
+  } else {
+    delete event.dataAtual;
+    const eventosAll = await prisma.calendario.updateMany({
+      data: {
+        ...event,
+      },
+      where: {
+        groupId: event.groupId,
+      },
+    });
+    return eventosAll;
+  }
+};
+
+export const updateCalendario_ = async (body: any, login: string) => {
   let dataFim = moment(body.dataAtual).subtract(2, 'days').format('YYYY-MM-DD');
   const isCanceled = body.statusEventos.nome.includes('Cancelado');
   if (isCanceled && !body?.dataFim) {
@@ -782,7 +986,7 @@ export const formatEvents = async (eventos: any) => {
             end: evento.end,
           },
           title: evento.paciente.nome,
-          groupId: evento.id,
+          groupId: evento.groupId,
           daysOfWeek: evento.diasFrequencia,
           startTime: evento.start,
           endTime: evento.end,
@@ -809,7 +1013,7 @@ export const formatEvents = async (eventos: any) => {
             end: evento.end,
           },
           title: evento.paciente.nome,
-          groupId: evento.id,
+          groupId: evento.groupId,
           borderColor: cor,
           backgroundColor: cor,
           exdate: evento.exdate,

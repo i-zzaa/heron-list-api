@@ -254,8 +254,8 @@ model TerapeutaOnFuncao {
 }
 
 model Calendario {
-  id      Int @id @default(autoincrement())
-  groupId Int
+  id      Int    @id @default(autoincrement())
+  groupId String
 
   dataInicio     String
   dataFim        String
