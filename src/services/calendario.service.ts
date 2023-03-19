@@ -62,6 +62,8 @@ export const getFilter = async (params: any, query: any) => {
       end: true,
       diasFrequencia: true,
       exdate: true,
+      isExterno: true,
+      isChildren: true,
 
       ciclo: true,
       observacao: true,
@@ -382,6 +384,8 @@ export const getRange = async (params: any, device: string) => {
       diasFrequencia: true,
       ciclo: true,
       observacao: true,
+      isChildren: true,
+      isExterno: true,
       exdate: true,
       paciente: {
         select: {
@@ -607,88 +611,9 @@ export const createCalendario = async (body: any, login: string) => {
   }
 };
 
-export const updateCalendario = async (body: any, login: string) => {
-  const eventoSalvo: any[] = await prisma.calendario.findMany({
-    where: { groupId: body.groupId },
-  });
-
-  switch (eventoSalvo.length) {
-    case 0:
-      throw new Error('Não existe evento desse groupo!');
-    case 1:
-      return updateEventoUnicoGrupo(body, login);
-    default:
-      break;
-  }
-};
-
-const updateEventoUnicoGrupo = async (event: any, login: string) => {
-  let evento;
-  switch (event.frequencia.id) {
-    case 1: //se o evento for único
-      evento = await prisma.calendario.update({
-        data: {
-          dataInicio: event?.dataInicio,
-          dataFim: event?.dataFim,
-          start: event?.start,
-          end: event?.end,
-          ciclo: event?.ciclo,
-          observacao: event?.observacao,
-          pacienteId: event?.paciente?.id,
-          modalidadeId: event?.modalidade?.id,
-          especialidadeId: event?.especialidade?.id,
-          terapeutaId: event?.terapeuta?.id,
-          funcaoId: event?.funcao?.id,
-          localidadeId: event.localidade?.id,
-          statusEventosId: event?.statusEventos?.id,
-        },
-        where: {
-          id: event.id,
-        },
-      });
-      break;
-    case 2: // se o evento for recorrente
-      evento = await updateEventoRecorrentes(event, login);
-
-    default:
-      break;
-  }
-
-  return evento;
-};
-
-const updateEventoRecorrentes = async (event: any, login: string) => {
-  let dataFim = moment(event.dataAtual).add(1, 'days').format('YYYY-MM-DD');
-
-  // const dtInicio = moment(event.dataFim);
-  // const dtFim = moment(event.dataInicio);
-  // const dtAtual = moment(event.dataAtual);
-
-  // switch (true) {
-  //   case dtInicio === dtAtual:
-  //     dataFim = moment(event.dataAtual).format('YYYY-MM-DD');
-  //     break;
-  //   case dtFim === dtAtual:
-  //     dataFim = moment(event.dataAtual).add(1, 'days').format('YYYY-MM-DD');
-  //     break;
-  //   default:
-  //     dataFim = moment(event.dataAtual)
-  //       .subtract(1, 'days')
-  //       .format('YYYY-MM-DD');
-  //     break;
-  // }
-
-  const isCanceled = event.statusEventos.nome.includes('Cancelado');
-  if (isCanceled && !event?.dataFim) {
-    event.dataFim = dataFim;
-  }
-
-  const exdate: string[] = event?.exdate || [];
-  exdate.push(`${event.dataAtual} ${event.start}`);
-
-  const data = {
+const formatEvent = (event: any) => {
+  return {
     groupId: event?.groupId,
-    dataAtual: event?.dataAtual,
     dataInicio: event?.dataInicio,
     dataFim: event?.dataFim,
     start: event?.start,
@@ -707,25 +632,118 @@ const updateEventoRecorrentes = async (event: any, login: string) => {
     frequenciaId: event?.frequencia?.id,
     intervaloId: event?.intervalo?.id,
   };
+};
+
+const getExDate = (event: any) => {
+  let _exdate =
+    typeof event?.exdate === 'string' ? event?.exdate.split() : event?.exdate;
+  const exdate: string[] = _exdate || [];
+  exdate.push(event.dataAtual);
+  return exdate;
+};
+
+export const updateCalendario = async (body: any, login: string) => {
+  const eventoSalvo: any[] = await prisma.calendario.findMany({
+    where: { groupId: body.groupId },
+  });
+
+  switch (true) {
+    case eventoSalvo.length === 0:
+      throw new Error('Não existe evento desse groupo!');
+    case eventoSalvo.length === 1:
+      return updateEventoUnicoGrupo(body, login);
+    case eventoSalvo.length >= 2:
+      const data = formatEvent(body);
+
+      if (body.changeAll) {
+        delete data.dataFim;
+
+        return await prisma.calendario.updateMany({
+          data: {
+            ...data,
+          },
+          where: {
+            groupId: data.groupId,
+          },
+        });
+      } else {
+        if (body.isChildren) {
+          try {
+            const eventos = prisma.calendario.update({
+              data,
+              where: {
+                id: body.id,
+              },
+            });
+
+            return eventos;
+          } catch (error) {
+            console.log(error);
+          }
+        } else {
+          const evento = eventoSalvo.filter(
+            (event: any) => event.id === body.id
+          )[0];
+          body.exdate = evento.exdate;
+
+          updateEventoRecorrentes(body, login);
+        }
+      }
+    default:
+      break;
+  }
+};
+
+const updateEventoUnicoGrupo = async (event: any, login: string) => {
+  let evento;
+  switch (event.frequencia.id) {
+    case 1: //se o evento for único
+      const data = formatEvent(event);
+      evento = await prisma.calendario.update({
+        data,
+        where: {
+          id: event.id,
+        },
+      });
+      break;
+    case 2: // se o evento for recorrente
+      evento = await updateEventoRecorrentes(event, login);
+
+    default:
+      break;
+  }
+
+  return evento;
+};
+
+const updateEventoRecorrentes = async (event: any, login: string) => {
+  const data = formatEvent(event);
+
+  let dataFim = moment(event.dataAtual).add(1, 'days').format('YYYY-MM-DD');
+
+  const isCanceled = event.statusEventos.nome.includes('Cancelado');
+  if (isCanceled && !event?.dataFim) {
+    event.dataFim = dataFim;
+  }
+
+  const exdate = getExDate(event);
 
   switch (true) {
     case event.changeAll: // se for mudar todos
       const eventosAll = await updateEventoRecorrentesAllChange(
-        data,
-        exdate.join(',')
+        event,
+        exdate.join(','),
+        login
       );
       return eventosAll;
     case !event.changeAll: // se for mudar todos
+      const usuario = await getUser(login);
+
       try {
-        delete data.dataAtual;
-
-        const usuario = await getUser(login);
-
         const [, eventos] = await Promise.all([
           prisma.calendario.update({
             data: {
               exdate: exdate.join(),
-              // dataFim,
             },
             where: {
               id: event.id,
@@ -735,8 +753,9 @@ const updateEventoRecorrentes = async (event: any, login: string) => {
             data: {
               ...data,
               dataInicio: event.dataAtual,
-              groupId: event.groupId,
+              dataFim,
               usuarioId: usuario.id,
+              isChildren: true,
             },
           }),
         ]);
@@ -748,25 +767,38 @@ const updateEventoRecorrentes = async (event: any, login: string) => {
   }
 };
 
-const updateEventoRecorrentesAllChange = async (event: any, exdate: string) => {
+const updateEventoRecorrentesAllChange = async (
+  event: any,
+  exdate: string,
+  login: string
+) => {
   const dataInicio = moment(event.dataInicio);
   const dataAtual = moment(event.dataAtual);
 
+  const data = formatEvent(event);
+
+  if (exdate !== '') {
+    event.exdate = exdate;
+  }
+
   if (dataInicio.isBefore(dataAtual)) {
+    const usuario = await getUser(login);
+    let dataFim = moment(event.dataAtual).add(1, 'days').format('YYYY-MM-DD');
+
     const [, eventos] = await Promise.all([
-      createCalendario(
-        {
-          ...event,
-          groupId: event.groupId,
+      prisma.calendario.create({
+        data: {
+          ...data,
           dataInicio: event.dataAtual,
+          usuarioId: usuario.id,
+          isChildren: true,
+          dataFim,
         },
-        event.usuario
-      ),
+      }),
       prisma.calendario.updateMany({
         data: {
-          ...event,
-          dataFim: dataAtual.subtract(1, 'day').format('YYYY-MM-DD'),
-          exdate,
+          ...data,
+          // dataFim: dataAtual.subtract(1, 'day').format('YYYY-MM-DD'),
         },
         where: {
           id: event.id,
@@ -779,10 +811,10 @@ const updateEventoRecorrentesAllChange = async (event: any, exdate: string) => {
     delete event.dataAtual;
     const eventosAll = await prisma.calendario.updateMany({
       data: {
-        ...event,
+        ...data,
       },
       where: {
-        groupId: event.groupId,
+        groupId: data.groupId,
       },
     });
     return eventosAll;
@@ -975,7 +1007,9 @@ export const formatEvents = async (eventos: any) => {
 
     evento.diasFrequencia =
       evento.diasFrequencia && evento.diasFrequencia.split(',');
+
     evento.exdate = evento?.exdate ? evento.exdate.split(',') : [];
+    evento.exdate = evento.exdate.map((ex: string) => `${ex} ${evento.start}`);
 
     switch (true) {
       case evento.frequencia.id !== 1 && evento.intervalo.id === 1: // com dias selecionados e todas semanas
@@ -988,6 +1022,7 @@ export const formatEvents = async (eventos: any) => {
           title: evento.paciente.nome,
           groupId: evento.groupId,
           daysOfWeek: evento.diasFrequencia,
+          isChildren: evento.isChildren,
           startTime: evento.start,
           endTime: evento.end,
           borderColor: cor,
@@ -1017,6 +1052,7 @@ export const formatEvents = async (eventos: any) => {
           borderColor: cor,
           backgroundColor: cor,
           exdate: evento.exdate,
+          isChildren: evento.isChildren,
           rrule: {
             freq: 'weekly',
             interval: evento.intervalo.id,
@@ -1046,6 +1082,7 @@ export const formatEvents = async (eventos: any) => {
           borderColor: cor,
           backgroundColor: cor,
           allDay: false,
+          isChildren: evento.isChildren,
         };
 
         delete formated.exdate;
@@ -1085,8 +1122,6 @@ export const removeEvents = async (
       nome: modalidade,
     },
   });
-
-  console.log(modalidadeDB);
 
   return await prisma.calendario.deleteMany({
     where: {

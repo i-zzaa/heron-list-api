@@ -264,6 +264,7 @@ model Calendario {
   diasFrequencia String
   exdate         String?
   isExterno      Boolean @default(false)
+  isChildren     Boolean @default(false)
 
   ciclo           String
   observacao      String?
