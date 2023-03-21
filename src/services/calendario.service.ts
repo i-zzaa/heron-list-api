@@ -1056,7 +1056,9 @@ export const formatEvents = async (eventos: any) => {
           rrule: {
             freq: 'weekly',
             interval: evento.intervalo.id,
-            byweekday: evento.diasFrequencia,
+            byweekday: evento.diasFrequencia.map((dia: string) =>
+              parseInt(dia)
+            ),
             dtstart: formatDateTime(evento.start, evento.dataInicio),
           },
         };
