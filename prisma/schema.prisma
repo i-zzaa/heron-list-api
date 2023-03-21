@@ -30,6 +30,7 @@ model Paciente {
   statusPacienteCod String
   tipoSessaoId      Int
   statusId          Int?
+  carteirinha       String @default("")
 
   emAtendimento Boolean @default(false)
   disabled      Boolean @default(false)

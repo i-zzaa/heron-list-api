@@ -125,6 +125,7 @@ export const getPatientId = async (id: number) => {
       convenioId: true,
       statusId: true,
       statusPacienteCod: true,
+      carteirinha: true,
     },
     where: {
       id,
@@ -164,6 +165,7 @@ export const getPatientsQueueTherapy = async (statusPacienteCod: string[]) => {
       tipoSessao: true,
       status: true,
       statusPacienteCod: true,
+      carteirinha: true,
       vagaTerapia: {
         include: {
           periodo: true,
@@ -212,6 +214,7 @@ export const getPatientsAvaliation = async (
       convenio: true,
       disabled: true,
       statusPacienteCod: true,
+      carteirinha: true,
       tipoSessao: true,
       status: true,
       vaga: {
@@ -388,6 +391,7 @@ export const createPatientAvaliation = async (
       statusPacienteCod: body.statusPacienteCod,
       statusId: body.statusId,
       tipoSessaoId: body.tipoSessaoId,
+      carteirinha: body.carteirinha,
       vaga: {
         create: {
           dataContato: body.dataContato,
@@ -427,6 +431,7 @@ export const createPatientQueueTherapy = async (
       dataNascimento: body.dataNascimento,
       statusPacienteCod: body.statusPacienteCod,
       statusId: body.statusId,
+      carteirinha: body.carteirinha,
       tipoSessaoId: 3, // Terapia ABA
       vagaTerapia: {
         create: {
@@ -480,6 +485,7 @@ const updatePatientAvaliation = async (body: any) => {
         dataNascimento: body.dataNascimento,
         tipoSessaoId: body.tipoSessaoId,
         statusId: body.statusId,
+        carteirinha: body.carteirinha,
         vaga: {
           update: {
             periodoId: body.periodoId,
@@ -548,6 +554,7 @@ const updatePatientQueueTherapy = async (body: any) => {
         dataNascimento: body.dataNascimento,
         tipoSessaoId: body.tipoSessaoId,
         statusId: body.statusId,
+        carteirinha: body.carteirinha,
         vagaTerapia: {
           update: {
             periodoId: body.periodoId,
@@ -683,6 +690,7 @@ export const filterPatientsQueueTherapy = async (
       disabled: true,
       tipoSessao: true,
       statusPacienteCod: true,
+      carteirinha: true,
       status: true,
       vagaTerapia: {
         include: {
@@ -738,6 +746,7 @@ export const filterPatientsAvaliaton = async (
       convenio: true,
       disabled: true,
       statusPacienteCod: true,
+      carteirinha: true,
       tipoSessao: true,
       status: true,
       vaga: {
