@@ -6,6 +6,7 @@ import { getFrequenciaName } from './frequencia.service';
 import { formatLocalidade } from './localidade.service';
 import { getUser } from './user.service';
 import bcrypt from 'bcryptjs';
+import { updateVaga } from './vaga.service';
 
 const prisma = new PrismaClient();
 
@@ -988,13 +989,66 @@ export const updateCalendarioMobile = async (body: any, login: string) => {
   return true;
 };
 
-export const deleteCalendario = async (groupId: string, login: string) => {
+export const deleteCalendario = async (eventId: number, login: string) => {
   try {
-    const usuario = await getUser(login);
+    const { id } = await getUser(login);
+    const evento = await prisma.calendario.findFirstOrThrow({
+      select: {
+        paciente: {
+          include: {
+            vaga: {
+              include: {
+                especialidades: true,
+              },
+            },
+            vagaTerapia: {
+              include: {
+                especialidades: true,
+              },
+            },
+          },
+        },
+        especialidadeId: true,
+        groupId: true,
+      },
+      where: { id: Number(eventId) },
+    });
+
+    switch (evento.paciente.statusPacienteCod) {
+      case STATUS_PACIENT_COD.queue_avaliation:
+      case STATUS_PACIENT_COD.avaliation:
+      case STATUS_PACIENT_COD.queue_devolutiva:
+      case STATUS_PACIENT_COD.devolutiva:
+        updateVaga({
+          desagendar: [evento.especialidadeId],
+          agendar: [],
+          vagaId: evento.paciente?.vaga?.id || 0,
+          pacienteId: evento.paciente.id,
+          statusPacienteCod: evento.paciente.statusPacienteCod,
+        });
+
+        break;
+
+      case STATUS_PACIENT_COD.queue_therapy:
+      case STATUS_PACIENT_COD.therapy:
+        updateVaga({
+          desagendar: [evento.especialidadeId],
+          agendar: [],
+          vagaId: evento.paciente?.vagaTerapia?.id || 0,
+          pacienteId: evento.paciente.id,
+          statusPacienteCod: evento.paciente.statusPacienteCod,
+        });
+
+        break;
+
+      default:
+        break;
+    }
+
     return await prisma.calendario.deleteMany({
       where: {
-        groupId,
-        usuarioId: usuario.id,
+        groupId: evento.groupId,
+        usuarioId: id,
       },
     });
   } catch (error) {

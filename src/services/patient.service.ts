@@ -479,72 +479,76 @@ export const createPatient = async (body: any) => {
 };
 
 const updatePatientAvaliation = async (body: any) => {
-  const [, , especialidades] = await prisma.$transaction([
-    prisma.paciente.update({
-      data: {
-        nome: body.nome.toUpperCase(),
-        telefone: body.telefone,
-        responsavel: body.responsavel.toUpperCase(),
-        convenioId: body.convenioId,
-        dataNascimento: body.dataNascimento,
-        tipoSessaoId: body.tipoSessaoId,
-        statusId: body.statusId,
-        carteirinha: body.carteirinha,
-        vaga: {
-          update: {
-            periodoId: body.periodoId,
-            observacao: body.observacao,
-            dataContato: body.dataContato ? body.dataContato : '',
+  try {
+    const [, , especialidades] = await prisma.$transaction([
+      prisma.paciente.update({
+        data: {
+          nome: body.nome.toUpperCase(),
+          telefone: body.telefone,
+          responsavel: body.responsavel.toUpperCase(),
+          convenioId: body.convenioId,
+          dataNascimento: body.dataNascimento,
+          tipoSessaoId: body.tipoSessaoId,
+          statusId: body.statusId,
+          carteirinha: body.carteirinha,
+          vaga: {
+            update: {
+              periodoId: body.periodoId,
+              observacao: body.observacao,
+              dataContato: body.dataContato ? body.dataContato : '',
+            },
           },
         },
-      },
-      where: {
-        id: body.id,
-      },
-    }),
-    prisma.vagaOnEspecialidade.deleteMany({
-      where: {
-        vagaId: body.id,
-        agendado: false,
-        NOT: {
-          especialidadeId: {
-            in: body.especialidades,
+        where: {
+          id: body.id,
+        },
+      }),
+      prisma.vagaOnEspecialidade.deleteMany({
+        where: {
+          vagaId: body.vagaId,
+          agendado: false,
+          NOT: {
+            especialidadeId: {
+              in: body.especialidades,
+            },
           },
         },
-      },
-    }),
-    prisma.vagaOnEspecialidade.findMany({
-      select: {
-        especialidadeId: true,
-      },
-      where: {
-        vagaId: body.id,
-      },
-    }),
-  ]);
+      }),
+      prisma.vagaOnEspecialidade.findMany({
+        select: {
+          especialidadeId: true,
+        },
+        where: {
+          vagaId: body.vagaId,
+        },
+      }),
+    ]);
 
-  const arrEspecialidade = especialidades.map(
-    (especialidade: any) => especialidade.especialidadeId
-  );
-  const createEspecialidade = body.especialidades.filter(
-    (especialidade: number) => !arrEspecialidade.includes(especialidade)
-  );
+    const arrEspecialidade = especialidades.map(
+      (especialidade: any) => especialidade.especialidadeId
+    );
+    const createEspecialidade = body.especialidades.filter(
+      (especialidade: number) => !arrEspecialidade.includes(especialidade)
+    );
 
-  if (createEspecialidade.length) {
-    const data = createEspecialidade.map((especialidadeId: any) => {
-      return {
-        vagaId: body.id,
-        agendado: false,
-        especialidadeId: especialidadeId,
-      };
-    });
+    if (createEspecialidade.length) {
+      const data = createEspecialidade.map((especialidadeId: any) => {
+        return {
+          vagaId: body.vagaId,
+          agendado: false,
+          especialidadeId: especialidadeId,
+        };
+      });
 
-    await prisma.vagaOnEspecialidade.createMany({
-      data,
-    });
+      await prisma.vagaOnEspecialidade.createMany({
+        data,
+      });
+    }
+
+    return [];
+  } catch (error) {
+    console.log(error);
   }
-
-  return [];
 };
 
 const updatePatientDevolutiva = async (body: any) => {
