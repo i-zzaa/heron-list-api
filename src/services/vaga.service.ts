@@ -219,7 +219,7 @@ export const updateVaga = async (body: VagaEspecialidadeProps) => {
           body.vagaId,
           body.pacienteId,
           STATUS_PACIENT_COD.queue_devolutiva,
-          STATUS_PACIENT_COD.queue_devolutiva,
+          STATUS_PACIENT_COD.devolutiva,
           STATUS_PACIENT_COD.devolutiva
         );
 

@@ -156,7 +156,8 @@ export async function getAvailableTimes(
   startDate: string,
   endDate: string,
   query: any,
-  device: string
+  device: string,
+  login: string
 ) {
   const filter: any = {};
   Object.keys(query).map((key: string) => (filter[key] = Number(query[key])));
@@ -266,7 +267,7 @@ export async function getAvailableTimes(
     throw new Error('Terapeuta não encontrado');
   }
 
-  const eventosFormat = await formatEvents(events);
+  const eventosFormat = await formatEvents(events, login);
 
   const eventosFormatados: any = {};
   eventosFormat.flatMap((ev: any) => {

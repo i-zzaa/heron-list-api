@@ -98,7 +98,8 @@ export class calendarioController {
           inicioDoMes,
           ultimoDiaDoMes,
           req.query,
-          req.headers.device
+          req.headers.device,
+          req.headers.login
         );
         res.status(200).json(data);
       } else {

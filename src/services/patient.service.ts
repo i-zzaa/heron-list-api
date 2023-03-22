@@ -61,7 +61,7 @@ interface PatientQueueAvaliationPropsProps extends PatientProps {
 const formatPatients = (patients: any) => {
   const pacientes: any = [];
   patients.forEach(async (patient: any) => {
-    console.log('paciente', patient.id);
+    // console.log('paciente', patient.id);
 
     const paciente = { ...patient };
     if (patient?.vaga) {
@@ -359,8 +359,11 @@ export const filterSinglePatients = async (body: any) => {
       );
     case STATUS_PACIENT_COD.queue_devolutiva:
     case STATUS_PACIENT_COD.devolutiva:
+      if (body?.isDevolutiva) {
+        return filterPatientsAvaliaton([STATUS_PACIENT_COD.devolutiva], body);
+      }
       return filterPatientsAvaliaton(
-        [STATUS_PACIENT_COD.queue_devolutiva, STATUS_PACIENT_COD.devolutiva],
+        [STATUS_PACIENT_COD.queue_devolutiva],
         body
       );
     case STATUS_PACIENT_COD.queue_therapy:
@@ -544,6 +547,55 @@ const updatePatientAvaliation = async (body: any) => {
   return [];
 };
 
+const updatePatientDevolutiva = async (body: any) => {
+  try {
+    const especialidadeIds = body.especialidades.map((especialidadeId: any) => {
+      return {
+        especialidadeId: especialidadeId,
+      };
+    });
+
+    const [updatepaciente] = await prisma.$transaction([
+      prisma.paciente.update({
+        select: {
+          vagaTerapia: true,
+        },
+        data: {
+          nome: body.nome.toUpperCase(),
+          telefone: body.telefone,
+          responsavel: body.responsavel.toUpperCase(),
+          convenioId: body.convenioId,
+          dataNascimento: body.dataNascimento,
+          tipoSessaoId: body.tipoSessaoId,
+          statusPacienteCod: STATUS_PACIENT_COD.queue_therapy,
+          statusId: body.statusId,
+          carteirinha: body.carteirinha,
+          vagaTerapia: {
+            create: {
+              periodoId: body.periodoId,
+              dataVoltouAba: body.dataContato,
+              observacao: body.observacao,
+              naFila: true,
+              especialidades: {
+                create: especialidadeIds.map(
+                  (especialidadeId: number) => especialidadeId
+                ),
+              },
+            },
+          },
+        },
+        where: {
+          id: body.id,
+        },
+      }),
+    ]);
+
+    return updatepaciente;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 const updatePatientQueueTherapy = async (body: any) => {
   const [, , especialidades] = await prisma.$transaction([
     prisma.paciente.update({
@@ -553,6 +605,7 @@ const updatePatientQueueTherapy = async (body: any) => {
         responsavel: body.responsavel.toUpperCase(),
         convenioId: body.convenioId,
         dataNascimento: body.dataNascimento,
+        statusPacienteCod: body.statusPacienteCod,
         tipoSessaoId: body.tipoSessaoId,
         statusId: body.statusId,
         carteirinha: body.carteirinha,
@@ -654,6 +707,8 @@ export const updatePatient = async (body: any) => {
   switch (body.statusPacienteCod) {
     case STATUS_PACIENT_COD.queue_avaliation:
       return updatePatientAvaliation(body);
+    case STATUS_PACIENT_COD.devolutiva:
+      return updatePatientDevolutiva(body);
     case STATUS_PACIENT_COD.queue_therapy:
     case STATUS_PACIENT_COD.crud_therapy:
       return updatePatientQueueTherapy(body);
