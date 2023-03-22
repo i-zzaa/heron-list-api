@@ -39,6 +39,7 @@ export interface CalendarioCreateParam {
   observacao: string;
   groupId: string;
   isExterno: boolean;
+  km?: string;
 }
 
 export const getCalendario = async () => {
@@ -65,6 +66,7 @@ export const getFilter = async (params: any, query: any, login: string) => {
       isExterno: true,
       isChildren: true,
       usuarioId: true,
+      km: true,
 
       ciclo: true,
       observacao: true,
@@ -388,6 +390,7 @@ export const getRange = async (params: any, device: string, login: string) => {
       isChildren: true,
       usuarioId: true,
       isExterno: true,
+      km: true,
       exdate: true,
       paciente: {
         select: {
@@ -496,6 +499,7 @@ const createEventoDefault = async (
   const eventData = {
     groupId: hash,
     dataInicio: body.dataInicio,
+    km: body?.km,
     dataFim: body.dataFim || '',
     start: body.start,
     end: body.end,
@@ -554,6 +558,7 @@ const createEventoDevolutiva = async (
 
       return {
         groupId: hash,
+        km: data?.km,
         dataInicio: data.dataInicio,
         dataFim: data.dataFim,
         start: data.start,
@@ -616,6 +621,7 @@ export const createCalendario = async (body: any, login: string) => {
 const formatEvent = (event: any) => {
   return {
     groupId: event?.groupId,
+    km: event?.km,
     dataInicio: event?.dataInicio,
     dataFim: event?.dataFim,
     start: event?.start,
@@ -842,6 +848,7 @@ export const updateCalendario_ = async (body: any, login: string) => {
       evento = await prisma.calendario.updateMany({
         data: {
           dataInicio: body?.dataInicio,
+          km: body?.km,
           dataFim: body?.dataFim,
           start: body?.start,
           end: body?.end,

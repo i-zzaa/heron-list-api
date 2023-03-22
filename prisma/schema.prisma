@@ -266,6 +266,7 @@ model Calendario {
   exdate         String?
   isExterno      Boolean @default(false)
   isChildren     Boolean @default(false)
+  km             String  @default("0")
 
   ciclo           String
   observacao      String?
