@@ -43,6 +43,7 @@ interface PatientQueueTherapyPropsProps extends PatientProps {
   pacienteId: number;
   especialidades: any;
   observacao: string;
+  carteirinha: string;
   naFila: boolean;
   sessao: any;
 }
@@ -54,6 +55,7 @@ interface PatientQueueAvaliationPropsProps extends PatientProps {
   especialidades: any;
   statusId: number;
   observacao: string;
+  carteirinha: string;
   naFila: boolean;
 }
 

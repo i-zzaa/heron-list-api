@@ -42,7 +42,7 @@ export class calendarioController {
   };
   static delete = async (req: any, res: any, next: any) => {
     try {
-      const data = await deleteCalendario(req.params.search);
+      const data = await deleteCalendario(req.query.id, req.headers.login);
       res.status(200).json({
         status: true,
         message: 'Sucesso!',
@@ -70,7 +70,11 @@ export class calendarioController {
       //   res.status(200).json(data);
       // }
 
-      const data = await getRange(req.params, req.headers?.device);
+      const data = await getRange(
+        req.params,
+        req.headers?.device,
+        req.headers?.login
+      );
       res.status(200).json(data);
     } catch (error: any) {
       res.status(401).json(error);
@@ -98,7 +102,7 @@ export class calendarioController {
         );
         res.status(200).json(data);
       } else {
-        const data = await getFilter(req.params, req.query);
+        const data = await getFilter(req.params, req.query, req.headers?.login);
         res.status(200).json(data);
       }
     } catch (error: any) {

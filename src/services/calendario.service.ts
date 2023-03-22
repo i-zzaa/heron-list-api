@@ -45,7 +45,7 @@ export const getCalendario = async () => {
   return [];
 };
 
-export const getFilter = async (params: any, query: any) => {
+export const getFilter = async (params: any, query: any, login: string) => {
   const inicioDoMes = params.start;
   const ultimoDiaDoMes = params.end;
 
@@ -138,7 +138,7 @@ export const getFilter = async (params: any, query: any) => {
     },
   });
 
-  const eventosFormat = await formatEvents(eventos);
+  const eventosFormat = await formatEvents(eventos, login);
   return eventosFormat;
 };
 
@@ -362,7 +362,7 @@ export const getFilterFinancialPaciente = async ({
   return eventos;
 };
 
-export const getRange = async (params: any, device: string) => {
+export const getRange = async (params: any, device: string, login: string) => {
   let inicioDoMes = params.start;
   let ultimoDiaDoMes = params.end;
 
@@ -459,7 +459,7 @@ export const getRange = async (params: any, device: string) => {
     },
   });
 
-  const eventosFormat = await formatEvents(eventos);
+  const eventosFormat = await formatEvents(eventos, login);
   return eventosFormat;
 };
 
@@ -979,12 +979,24 @@ export const updateCalendarioMobile = async (body: any, login: string) => {
   return true;
 };
 
-export const deleteCalendario = async (id: number) => {
-  return [];
+export const deleteCalendario = async (groupId: string, login: string) => {
+  try {
+    const usuario = await getUser(login);
+    return await prisma.calendario.deleteMany({
+      where: {
+        groupId,
+        usuarioId: usuario.id,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+  }
 };
 
-export const formatEvents = async (eventos: any) => {
+export const formatEvents = async (eventos: any, login: string) => {
   const eventosFormat: any = [];
+
+  const usuario = await getUser(login);
 
   eventos.map((evento: any) => {
     let formated: any = {};
@@ -1010,6 +1022,8 @@ export const formatEvents = async (eventos: any) => {
 
     evento.exdate = evento?.exdate ? evento.exdate.split(',') : [];
     evento.exdate = evento.exdate.map((ex: string) => `${ex} ${evento.start}`);
+
+    evento.canDelete = evento.usuarioId === usuario.id;
 
     switch (true) {
       case evento.frequencia.id !== 1 && evento.intervalo.id === 1: // com dias selecionados e todas semanas
