@@ -9,6 +9,7 @@ const prisma = new PrismaClient();
 export interface PatientProps {
   id: number;
   nome: string;
+  carteirinha: string;
   telefone: string;
   responsavel: string;
   dataNascimento: string;
@@ -43,7 +44,6 @@ interface PatientQueueTherapyPropsProps extends PatientProps {
   pacienteId: number;
   especialidades: any;
   observacao: string;
-  carteirinha: string;
   naFila: boolean;
   sessao: any;
 }
@@ -55,7 +55,6 @@ interface PatientQueueAvaliationPropsProps extends PatientProps {
   especialidades: any;
   statusId: number;
   observacao: string;
-  carteirinha: string;
   naFila: boolean;
 }
 

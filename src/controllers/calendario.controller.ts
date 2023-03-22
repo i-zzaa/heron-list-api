@@ -42,7 +42,7 @@ export class calendarioController {
   };
   static delete = async (req: any, res: any, next: any) => {
     try {
-      const data = await deleteCalendario(req.query.id, req.headers.login);
+      const data = await deleteCalendario(req.query.groupId, req.headers.login);
       res.status(200).json({
         status: true,
         message: 'Sucesso!',

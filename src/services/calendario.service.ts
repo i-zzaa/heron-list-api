@@ -64,6 +64,7 @@ export const getFilter = async (params: any, query: any, login: string) => {
       exdate: true,
       isExterno: true,
       isChildren: true,
+      usuarioId: true,
 
       ciclo: true,
       observacao: true,
@@ -385,6 +386,7 @@ export const getRange = async (params: any, device: string, login: string) => {
       ciclo: true,
       observacao: true,
       isChildren: true,
+      usuarioId: true,
       isExterno: true,
       exdate: true,
       paciente: {
