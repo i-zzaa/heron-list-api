@@ -135,7 +135,7 @@ export const getPatientId = async (id: number) => {
 };
 
 export const getPatientsQueueTherapy = async (statusPacienteCod: string[]) => {
-  console.log(statusPacienteCod);
+  // console.log(statusPacienteCod);
 
   let filter = {};
 

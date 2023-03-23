@@ -110,9 +110,6 @@ export const getFinancialPaciente = async (body: FinancialProps) => {
   };
 };
 export const getFinancial = async (body: FinancialProps) => {
-  // filtra eventos por terapeuta no peridodo
-  // filtra statusEventos cobrados
-  // agrupa por paciente
   const { terapeutaId, datatFim, dataInicio } = body;
 
   const eventos = await getFilterFinancialTerapeuta({
@@ -120,6 +117,8 @@ export const getFinancial = async (body: FinancialProps) => {
     datatFim,
     dataInicio,
   });
+
+  // console.table(eventos);
 
   if (!eventos.length)
     return {
@@ -164,7 +163,7 @@ export const getFinancial = async (body: FinancialProps) => {
       terapeuta: terapeuta,
       data: moment(evento.dataInicio).format('DD/MM/YYYY'),
       sessao: sessaoValor,
-      km: sessao.km,
+      km: evento.isExterno ? evento.km : 0,
       comissao: comissaoValor,
       tipo: comissao.tipo,
       status: evento.statusEventos.nome,
@@ -184,7 +183,7 @@ export const getFinancial = async (body: FinancialProps) => {
       return;
     }
 
-    const valorKmEvento = evento.isExterno ? sessao.km * 0.9 : 0;
+    const valorKmEvento = evento.isExterno ? evento.km * 0.9 : 0;
     let valorSessao = 0;
 
     switch (comissao.tipo.toLowerCase()) {

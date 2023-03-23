@@ -161,6 +161,7 @@ export const getFilterFinancialTerapeuta = async ({
       end: true,
       diasFrequencia: true,
       exdate: true,
+      km: true,
 
       ciclo: true,
       observacao: true,
@@ -1088,6 +1089,10 @@ export const formatEvents = async (eventos: any, login: string) => {
 
     evento.canDelete = evento.usuarioId === usuario.id;
 
+    const diasFrequencia: number[] = evento.diasFrequencia.map(
+      (dia: string) => Number(dia) - 1
+    );
+
     switch (true) {
       case evento.frequencia.id !== 1 && evento.intervalo.id === 1: // com dias selecionados e todas semanas
         formated = {
@@ -1098,7 +1103,7 @@ export const formatEvents = async (eventos: any, login: string) => {
           },
           title: evento.paciente.nome,
           groupId: evento.groupId,
-          daysOfWeek: evento.diasFrequencia,
+          daysOfWeek: diasFrequencia,
           isChildren: evento.isChildren,
           startTime: evento.start,
           endTime: evento.end,
@@ -1107,7 +1112,7 @@ export const formatEvents = async (eventos: any, login: string) => {
           exdate: evento.exdate,
           rrule: {
             freq: 'weekly',
-            // byweekday: evento.diasFrequencia,
+            // byweekday: diasFrequencia,
             dtstart: formatDateTime(evento.start, evento.dataInicio),
           },
         };
@@ -1133,15 +1138,13 @@ export const formatEvents = async (eventos: any, login: string) => {
           rrule: {
             freq: 'weekly',
             interval: evento.intervalo.id,
-            byweekday: evento.diasFrequencia.map((dia: string) =>
-              parseInt(dia)
-            ),
-            dtstart: formatDateTime(evento.start, evento.dataInicio),
+            byweekday: diasFrequencia,
+            dtstart: `${evento.dataInicio}T${evento.start}:00Z`,
           },
         };
 
         if (evento.dataFim) {
-          formated.rrule.until = formatDateTime(evento.start, evento.dataFim);
+          formated.rrule.until = `${evento.dataFim}T${evento.end}:00Z`; //formatDateTime(evento.end, evento.dataFim);
         }
 
         break;
