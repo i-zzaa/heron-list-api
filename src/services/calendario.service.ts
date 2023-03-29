@@ -1058,122 +1058,124 @@ export const deleteCalendario = async (eventId: number, login: string) => {
 };
 
 export const formatEvents = async (eventos: any, login: string) => {
-  const eventosFormat: any = [];
-
   const usuario = await getUser(login);
 
-  eventos.map((evento: any) => {
-    let formated: any = {};
-    const cor =
-      evento.statusEventos.nome.includes('Cancelado') ||
-      evento.statusEventos.nome.includes('cancelado')
-        ? '#f87171'
-        : evento.especialidade.cor;
-    delete evento.especialidade.cor;
+  const eventosFormat = await Promise.all(
+    eventos.map((evento: any) => {
+      let formated: any = {};
+      const cor =
+        evento.statusEventos.nome.includes('Cancelado') ||
+        evento.statusEventos.nome.includes('cancelado')
+          ? '#f87171'
+          : evento.especialidade.cor;
+      delete evento.especialidade.cor;
 
-    evento.localidade = {
-      nome: formatLocalidade(evento.localidade),
-      id: evento.localidade.id,
-    };
+      evento.localidade = {
+        nome: formatLocalidade(evento.localidade),
+        id: evento.localidade.id,
+      };
 
-    evento.terapeuta = {
-      nome: evento.terapeuta.usuario.nome,
-      id: evento.terapeuta.usuario.id,
-    };
+      evento.terapeuta = {
+        nome: evento.terapeuta.usuario.nome,
+        id: evento.terapeuta.usuario.id,
+      };
 
-    evento.diasFrequencia =
-      evento.diasFrequencia && evento.diasFrequencia.split(',');
+      evento.diasFrequencia =
+        evento.diasFrequencia && evento.diasFrequencia.split(',');
 
-    evento.exdate = evento?.exdate ? evento.exdate.split(',') : [];
-    evento.exdate = evento.exdate.map((ex: string) => `${ex} ${evento.start}`);
+      evento.exdate = evento?.exdate ? evento.exdate.split(',') : [];
+      evento.exdate = evento.exdate.map(
+        (ex: string) => `${ex} ${evento.start}`
+      );
 
-    evento.canDelete = evento.usuarioId === usuario.id;
+      evento.canDelete = evento.usuarioId === usuario.id;
 
-    const diasFrequencia: number[] = evento.diasFrequencia.map(
-      (dia: string) => Number(dia) - 1
-    );
+      const diasFrequencia: number[] = evento.diasFrequencia.map(
+        (dia: string) => Number(dia) - 1
+      );
 
-    switch (true) {
-      case evento.frequencia.id !== 1 && evento.intervalo.id === 1: // com dias selecionados e todas semanas
-        formated = {
-          ...evento,
-          data: {
-            start: evento.start,
-            end: evento.end,
-          },
-          title: evento.paciente.nome,
-          groupId: evento.groupId,
-          daysOfWeek: diasFrequencia,
-          isChildren: evento.isChildren,
-          startTime: evento.start,
-          endTime: evento.end,
-          borderColor: cor,
-          backgroundColor: cor,
-          exdate: evento.exdate,
-          rrule: {
-            freq: 'weekly',
-            // byweekday: diasFrequencia,
-            dtstart: formatDateTime(evento.start, evento.dataInicio),
-          },
-        };
+      switch (true) {
+        case evento.frequencia.id !== 1 && evento.intervalo.id === 1: // com dias selecionados e todas semanas
+          formated = {
+            ...evento,
+            data: {
+              start: evento.start,
+              end: evento.end,
+            },
+            title: evento.paciente.nome,
+            groupId: evento.groupId,
+            daysOfWeek: diasFrequencia,
+            isChildren: evento.isChildren,
+            startTime: evento.start,
+            endTime: evento.end,
+            borderColor: cor,
+            backgroundColor: cor,
+            exdate: evento.exdate,
+            rrule: {
+              freq: 'weekly',
+              // byweekday: diasFrequencia,
+              dtstart: formatDateTime(evento.start, evento.dataInicio),
+            },
+          };
 
-        if (evento.dataFim) {
-          formated.rrule.until = formatDateTime(evento.start, evento.dataFim);
-        }
+          if (evento.dataFim) {
+            formated.rrule.until = formatDateTime(evento.start, evento.dataFim);
+          }
 
-        break;
-      case evento.frequencia.id !== 1 && evento.intervalo.id !== 1: // com dias selecionados e intervalos
-        formated = {
-          ...evento,
-          data: {
-            start: evento.start,
-            end: evento.end,
-          },
-          title: evento.paciente.nome,
-          groupId: evento.groupId,
-          borderColor: cor,
-          backgroundColor: cor,
-          exdate: evento.exdate,
-          isChildren: evento.isChildren,
-          rrule: {
-            freq: 'weekly',
-            interval: evento.intervalo.id,
-            byweekday: diasFrequencia,
-            dtstart: `${evento.dataInicio}T${evento.start}:00Z`,
-          },
-        };
+          break;
+        case evento.frequencia.id !== 1 && evento.intervalo.id !== 1: // com dias selecionados e intervalos
+          formated = {
+            ...evento,
+            data: {
+              start: evento.start,
+              end: evento.end,
+            },
+            title: evento.paciente.nome,
+            groupId: evento.groupId,
+            borderColor: cor,
+            backgroundColor: cor,
+            exdate: evento.exdate,
+            isChildren: evento.isChildren,
+            rrule: {
+              freq: 'weekly',
+              interval: evento.intervalo.id,
+              byweekday: diasFrequencia,
+              dtstart: `${evento.dataInicio}T${evento.start}:00Z`,
+            },
+          };
 
-        if (evento.dataFim) {
-          formated.rrule.until = `${evento.dataFim}T${evento.end}:00Z`; //formatDateTime(evento.end, evento.dataFim);
-        }
+          if (evento.dataFim) {
+            formated.rrule.until = `${evento.dataFim}T${evento.end}:00Z`; //formatDateTime(evento.end, evento.dataFim);
+          }
 
-        break;
+          break;
 
-      default: // evento unico
-        formated = {
-          ...evento,
-          groupId: evento.groupId,
-          data: {
-            start: evento.start,
-            end: evento.end,
-          },
-          title: evento.paciente.nome,
-          date: evento.dataInicio,
-          start: formatDateTime(evento.start, evento.dataInicio),
-          end: formatDateTime(evento.end, evento.dataInicio),
-          borderColor: cor,
-          backgroundColor: cor,
-          allDay: false,
-          isChildren: evento.isChildren,
-        };
+        default: // evento unico
+          formated = {
+            ...evento,
+            groupId: evento.groupId,
+            data: {
+              start: evento.start,
+              end: evento.end,
+            },
+            title: evento.paciente.nome,
+            date: evento.dataInicio,
+            start: formatDateTime(evento.start, evento.dataInicio),
+            end: formatDateTime(evento.end, evento.dataInicio),
+            borderColor: cor,
+            backgroundColor: cor,
+            allDay: false,
+            isChildren: evento.isChildren,
+          };
 
-        delete formated.exdate;
-        delete formated.diasFrequencia;
-        break;
-    }
+          delete formated.exdate;
+          delete formated.diasFrequencia;
+          break;
+      }
 
-    eventosFormat.push(formated);
-  });
+      return formated;
+    })
+  );
 
   return eventosFormat;
 };

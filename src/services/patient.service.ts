@@ -657,46 +657,50 @@ const updatePatientQueueTherapy = async (body: any) => {
   );
 
   if (STATUS_PACIENT_COD.crud_therapy === body.statusPacienteCod) {
-    body.sessao.map(async (especialidade: Sessao) => {
-      const formatSessao =
-        typeof especialidade.valor === 'string'
-          ? especialidade.valor.split('R$')[1]
-          : especialidade.valor;
+    await Promise.all(
+      body.sessao.map(async (especialidade: Sessao) => {
+        const formatSessao =
+          typeof especialidade.valor === 'string'
+            ? especialidade.valor.split('R$')[1]
+            : especialidade.valor;
 
-      if (!arrEspecialidade.includes(especialidade.especialidadeId)) {
-        await prisma.vagaTerapiaOnEspecialidade.create({
-          data: {
-            vagaId: body.vagaId,
-            agendado: false,
-            especialidadeId: especialidade.especialidadeId,
-            valor: formatSessao,
-            km: especialidade.km.toString(),
-          },
-        });
-      } else {
-        await prisma.vagaTerapiaOnEspecialidade.updateMany({
-          data: {
-            vagaId: body.vagaId,
-            agendado: false,
-            valor: formatSessao,
-            km: especialidade.km.toString(),
-          },
-          where: {
-            vagaId: body.vagaId,
-            especialidadeId: especialidade.especialidadeId,
-          },
-        });
-      }
-    });
+        if (!arrEspecialidade.includes(especialidade.especialidadeId)) {
+          await prisma.vagaTerapiaOnEspecialidade.create({
+            data: {
+              vagaId: body.vagaId,
+              agendado: false,
+              especialidadeId: especialidade.especialidadeId,
+              valor: formatSessao,
+              km: especialidade.km.toString(),
+            },
+          });
+        } else {
+          await prisma.vagaTerapiaOnEspecialidade.updateMany({
+            data: {
+              vagaId: body.vagaId,
+              agendado: false,
+              valor: formatSessao,
+              km: especialidade.km.toString(),
+            },
+            where: {
+              vagaId: body.vagaId,
+              especialidadeId: especialidade.especialidadeId,
+            },
+          });
+        }
+      })
+    );
   } else {
     if (createEspecialidade.length) {
-      const data = createEspecialidade.map((especialidade: any) => {
-        return {
-          vagaId: body.id,
-          agendado: false,
-          especialidadeId: especialidade.especialidadeId,
-        };
-      });
+      const data = await Promise.all(
+        createEspecialidade.map((especialidade: any) => {
+          return {
+            vagaId: body.id,
+            agendado: false,
+            especialidadeId: especialidade.especialidadeId,
+          };
+        })
+      );
 
       await prisma.vagaTerapiaOnEspecialidade.createMany({
         data,
@@ -852,23 +856,25 @@ export const filterPatientsAvaliaton = async (
 };
 
 export const deletePatient = async (id: number) => {
-  await prisma.vagaOnEspecialidade.deleteMany({
-    where: {
-      vagaId: id,
-    },
-  });
+  await Promise.all([
+    prisma.vagaOnEspecialidade.deleteMany({
+      where: {
+        vagaId: id,
+      },
+    }),
 
-  await prisma.vaga.deleteMany({
-    where: {
-      id: id,
-    },
-  });
+    prisma.vaga.deleteMany({
+      where: {
+        id: id,
+      },
+    }),
 
-  await prisma.paciente.delete({
-    where: {
-      id: id,
-    },
-  });
+    prisma.paciente.delete({
+      where: {
+        id: id,
+      },
+    }),
+  ]);
 };
 export const updateDisabled = async ({ id, disabled }: any) => {
   await prisma.paciente.update({
