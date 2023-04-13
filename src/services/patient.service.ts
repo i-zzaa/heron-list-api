@@ -269,6 +269,19 @@ export const setStatusPaciente = async (
   return paciente;
 };
 
+export const setTipoSessaoTeprapia = async (pacienteId: number) => {
+  const paciente: any = await prisma.paciente.update({
+    data: {
+      tipoSessaoId: 3,
+    },
+    where: {
+      id: pacienteId,
+    },
+  });
+
+  return paciente;
+};
+
 export const getPatients = async (query: any) => {
   const statusPacienteCod = query.statusPacienteCod;
   switch (statusPacienteCod) {

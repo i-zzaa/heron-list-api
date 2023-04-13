@@ -6,7 +6,11 @@ import {
   getFormat,
 } from '../utils/convert-hours';
 import { removeEvents } from './calendario.service';
-import { getPatientId, setStatusPaciente } from './patient.service';
+import {
+  getPatientId,
+  setStatusPaciente,
+  setTipoSessaoTeprapia,
+} from './patient.service';
 
 const prisma = new PrismaClient();
 
@@ -168,6 +172,13 @@ const setQueueStatus = async (
   const isQueue = await verifyInFila(vagaId, dataAgendado, statusPacienteCod);
 
   await setStatusPaciente(isQueue ? statusOne : statusTwo, pacienteId);
+
+  if (
+    (isQueue && statusTwo !== STATUS_PACIENT_COD.avaliation) ||
+    statusTwo !== STATUS_PACIENT_COD.queue_avaliation
+  ) {
+    await setTipoSessaoTeprapia(pacienteId);
+  }
 
   return isQueue;
 };
