@@ -136,106 +136,110 @@ export const getFinancial = async (body: FinancialProps) => {
   let horas = moment.duration(0);
   let especialidade = '';
 
-  eventos.map((evento: any) => {
-    // console.log(evento);
+  await Promise.all(
+    eventos.map((evento: any) => {
+      // console.log(evento);
 
-    let sessao = [];
-    switch (evento.modalidade.nome) {
-      case 'Avaliação':
-      case 'Devolutiva':
-        sessao = evento.paciente.vaga.especialidades.filter(
-          (especialidadePaciente: any) =>
-            especialidadePaciente.especialidadeId === evento.especialidade.id
-        )[0];
-        break;
+      let sessao = [];
+      switch (evento.modalidade.nome) {
+        case 'Avaliação':
+        case 'Devolutiva':
+          sessao = evento.paciente.vaga.especialidades.filter(
+            (especialidadePaciente: any) =>
+              especialidadePaciente.especialidadeId === evento.especialidade.id
+          )[0];
+          break;
 
-      default:
-        sessao = evento.paciente.vagaTerapia.especialidades.filter(
-          (especialidadePaciente: any) =>
-            especialidadePaciente.especialidadeId === evento.especialidade.id
-        )[0];
-        break;
-    }
+        default:
+          sessao = evento.paciente.vagaTerapia.especialidades.filter(
+            (especialidadePaciente: any) =>
+              especialidadePaciente.especialidadeId === evento.especialidade.id
+          )[0];
+          break;
+      }
 
-    console.log(sessao);
+      console.log(sessao);
 
-    const comissao = evento.terapeuta.funcoes.filter(
-      (funcao: any) => funcao.funcaoId === evento.funcao.id
-    )[0];
+      const comissao = evento.terapeuta.funcoes.filter(
+        (funcao: any) => funcao.funcaoId === evento.funcao.id
+      )[0];
 
-    const sessaoValor = parseFloat(sessao.valor);
-    const comissaoValor = parseFloat(comissao.comissao);
+      const sessaoValor = parseFloat(sessao.valor);
+      const comissaoValor = parseFloat(comissao.comissao);
 
-    const isDevolutiva = evento.modalidade.nome === 'Devolutiva';
+      const isDevolutiva = evento.modalidade.nome === 'Devolutiva';
 
-    const start = formatDateTime(evento.start, evento.dataInicio);
-    const end = formatDateTime(evento.end, evento.dataInicio);
+      const start = formatDateTime(evento.start, evento.dataInicio);
+      const end = formatDateTime(evento.end, evento.dataInicio);
 
-    var diff = moment(end, 'YYYY-MM-DD HH:mm').diff(
-      moment(start, 'YYYY-MM-DD HH:mm')
-    );
+      var diff = moment(end, 'YYYY-MM-DD HH:mm').diff(
+        moment(start, 'YYYY-MM-DD HH:mm')
+      );
 
-    terapeuta = evento.terapeuta.usuario.nome;
-    especialidade = evento.especialidade.nome;
-    const financeiro = new FinancialTerapeuta({
-      paciente: evento.paciente.nome,
-      terapeuta: terapeuta,
-      data: moment(evento.dataInicio).format('DD/MM/YYYY'),
-      sessao: sessaoValor,
-      km: evento.isExterno ? Number(evento.km) : 0,
-      comissao: comissaoValor,
-      tipo: comissao.tipo,
-      status: evento.statusEventos.nome,
-      devolutiva: isDevolutiva,
-      horas: formaTime(moment.duration(diff)),
-    });
+      const isExterno = Boolean(evento.isExterno);
 
-    if (!evento.statusEventos.cobrar) {
-      financeiro.comissao = 0;
-      financeiro.valorSessao = 0;
-      financeiro.valorTotal = 0;
-      financeiro.km = 0;
+      terapeuta = evento.terapeuta.usuario.nome;
+      especialidade = evento.especialidade.nome;
+      const financeiro = new FinancialTerapeuta({
+        paciente: evento.paciente.nome,
+        terapeuta: terapeuta,
+        data: moment(evento.dataInicio).format('DD/MM/YYYY'),
+        sessao: sessaoValor,
+        km: Number(evento.km),
+        comissao: comissaoValor,
+        tipo: comissao.tipo,
+        status: evento.statusEventos.nome,
+        devolutiva: isDevolutiva,
+        horas: formaTime(moment.duration(diff)),
+      });
 
-      relatorio.push(financeiro);
-      return;
-    }
+      if (!evento.statusEventos.cobrar) {
+        financeiro.comissao = 0;
+        financeiro.valorSessao = 0;
+        financeiro.valorTotal = 0;
+        financeiro.km = 0;
 
-    if (isDevolutiva) {
-      financeiro.valorSessao = 50;
-      financeiro.valorTotal = 50;
+        relatorio.push(financeiro);
+        return;
+      }
+
+      if (isDevolutiva) {
+        financeiro.valorSessao = 50;
+        financeiro.valorTotal = 50;
+
+        valorTotal += financeiro.valorTotal;
+        horas = horas.add(financeiro.horas);
+
+        relatorio.push(financeiro);
+
+        return;
+      }
+
+      const valorKmEvento = Number(evento.km) * 0.9;
+      let valorSessao = 0;
+
+      switch (comissao.tipo.toLowerCase()) {
+        case 'fixo':
+          valorSessao = comissaoValor;
+          break;
+        default:
+          valorSessao = sessaoValor * (comissaoValor / 100);
+          break;
+      }
+
+      financeiro.valorKm = valorKmEvento;
+      financeiro.valorSessao = valorSessao;
+      financeiro.valorTotal = valorSessao + valorKmEvento;
 
       valorTotal += financeiro.valorTotal;
+      valorKm += financeiro.valorKm;
       horas = horas.add(financeiro.horas);
 
-      relatorio.push(financeiro);
+      relatorio.push({ ...financeiro });
 
       return;
-    }
-
-    const valorKmEvento = evento.isExterno ? Number(evento.km) * 0.9 : 0;
-    let valorSessao = 0;
-
-    switch (comissao.tipo.toLowerCase()) {
-      case 'fixo':
-        valorSessao = comissaoValor;
-        break;
-      default:
-        valorSessao = sessaoValor * (comissaoValor / 100);
-        break;
-    }
-
-    financeiro.valorKm = valorKmEvento;
-    financeiro.valorSessao = valorSessao;
-    financeiro.valorTotal = valorSessao + valorKmEvento;
-
-    valorTotal += financeiro.valorTotal;
-    valorKm += financeiro.valorKm;
-    horas = horas.add(financeiro.horas);
-
-    relatorio.push({ ...financeiro });
-
-    return;
-  });
+    })
+  );
 
   return {
     data: relatorio,
