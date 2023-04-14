@@ -60,42 +60,46 @@ interface PatientQueueAvaliationPropsProps extends PatientProps {
 }
 
 const formatPatients = async (patients: any) => {
-  const pacientes = await Promise.all(
-    patients.map(async (patient: any) => {
-      const paciente = { ...patient };
+  try {
+    const pacientes = await Promise.all(
+      patients.map(async (patient: any) => {
+        const paciente = { ...patient };
 
-      const vaga = patient.hasOwnProperty('vaga')
-        ? { ...paciente.vaga }
-        : { ...paciente.vagaTerapia };
+        const vaga = patient.hasOwnProperty('vaga')
+          ? { ...paciente.vaga }
+          : { ...paciente.vagaTerapia };
 
-      const sessao = await Promise.all(
-        vaga.especialidades.map((especialidade: any) => {
-          return {
-            especialidade: especialidade.especialidade.nome,
-            especialidadeId: especialidade.especialidadeId,
-            // km: especialidade.km,
-            valor: moneyFormat.format(parseFloat(especialidade.valor)),
-          };
-        })
-      );
+        const sessao = await Promise.all(
+          vaga?.especialidades?.map((especialidade: any) => {
+            return {
+              especialidade: especialidade.especialidade.nome,
+              especialidadeId: especialidade.especialidadeId,
+              // km: especialidade.km,
+              valor: moneyFormat.format(parseFloat(especialidade.valor)),
+            };
+          })
+        );
 
-      if (patient.hasOwnProperty('vaga')) {
-        delete paciente?.vaga;
-      } else {
-        delete paciente?.vagaTerapia;
-      }
+        if (patient.hasOwnProperty('vaga')) {
+          delete paciente?.vaga;
+        } else {
+          delete paciente?.vagaTerapia;
+        }
 
-      return {
-        ...paciente,
-        // dataContato: formatdate(patient.vaga.dataContato),
-        idade: calculaIdade(patient.dataNascimento),
-        vaga: vaga,
-        sessao,
-      };
-    })
-  );
+        return {
+          ...paciente,
+          // dataContato: formatdate(patient.vaga.dataContato),
+          idade: calculaIdade(patient.dataNascimento),
+          vaga: vaga,
+          sessao,
+        };
+      })
+    );
 
-  return pacientes;
+    return pacientes;
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 export const getPatientId = async (id: number) => {
@@ -175,6 +179,8 @@ export const getPatientsQueueTherapy = async (statusPacienteCod: string[]) => {
       },
     },
   });
+
+  // console.log(patients);
 
   if (patients) {
     const pacientes: any = await formatPatients(patients);
