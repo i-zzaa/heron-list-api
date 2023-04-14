@@ -81,6 +81,9 @@ model VagaOnEspecialidade {
   vagaId          Int
   especialidadeId Int
 
+  valor String @default("200")
+  km    String @default("0")
+
   especialidade Especialidade @relation(fields: [especialidadeId], references: [id])
   vaga          Vaga          @relation(fields: [vagaId], references: [id], onDelete: Cascade)
 

@@ -169,6 +169,11 @@ export const getFilterFinancialTerapeuta = async ({
         select: {
           nome: true,
           id: true,
+          vaga: {
+            select: {
+              especialidades: true,
+            },
+          },
           vagaTerapia: {
             select: {
               especialidades: true,
@@ -242,9 +247,9 @@ export const getFilterFinancialTerapeuta = async ({
         },
       ],
       terapeutaId: terapeutaId,
-      statusEventos: {
-        cobrar: true,
-      },
+      // statusEventos: {
+      //   cobrar: true,
+      // },
     },
     orderBy: {
       paciente: {

@@ -112,6 +112,8 @@ export const getFinancialPaciente = async (body: FinancialProps) => {
 export const getFinancial = async (body: FinancialProps) => {
   const { terapeutaId, datatFim, dataInicio } = body;
 
+  // console.log(body);
+
   const eventos = await getFilterFinancialTerapeuta({
     terapeutaId,
     datatFim,
@@ -135,10 +137,27 @@ export const getFinancial = async (body: FinancialProps) => {
   let especialidade = '';
 
   eventos.map((evento: any) => {
-    const sessao = evento.paciente.vagaTerapia.especialidades.filter(
-      (especialidade: any) =>
-        especialidade.especialidadeId === evento.especialidade.id
-    )[0];
+    // console.log(evento);
+
+    let sessao = [];
+    switch (evento.modalidade.nome) {
+      case 'Avaliação':
+      case 'Devolutiva':
+        sessao = evento.paciente.vaga.especialidades.filter(
+          (especialidadePaciente: any) =>
+            especialidadePaciente.especialidadeId === evento.especialidade.id
+        )[0];
+        break;
+
+      default:
+        sessao = evento.paciente.vagaTerapia.especialidades.filter(
+          (especialidadePaciente: any) =>
+            especialidadePaciente.especialidadeId === evento.especialidade.id
+        )[0];
+        break;
+    }
+
+    console.log(sessao);
 
     const comissao = evento.terapeuta.funcoes.filter(
       (funcao: any) => funcao.funcaoId === evento.funcao.id
@@ -163,13 +182,23 @@ export const getFinancial = async (body: FinancialProps) => {
       terapeuta: terapeuta,
       data: moment(evento.dataInicio).format('DD/MM/YYYY'),
       sessao: sessaoValor,
-      km: evento.isExterno ? evento.km : 0,
+      km: evento.isExterno ? Number(evento.km) : 0,
       comissao: comissaoValor,
       tipo: comissao.tipo,
       status: evento.statusEventos.nome,
       devolutiva: isDevolutiva,
       horas: formaTime(moment.duration(diff)),
     });
+
+    if (!evento.statusEventos.cobrar) {
+      financeiro.comissao = 0;
+      financeiro.valorSessao = 0;
+      financeiro.valorTotal = 0;
+      financeiro.km = 0;
+
+      relatorio.push(financeiro);
+      return;
+    }
 
     if (isDevolutiva) {
       financeiro.valorSessao = 50;
@@ -183,7 +212,7 @@ export const getFinancial = async (body: FinancialProps) => {
       return;
     }
 
-    const valorKmEvento = evento.isExterno ? evento.km * 0.9 : 0;
+    const valorKmEvento = evento.isExterno ? Number(evento.km) * 0.9 : 0;
     let valorSessao = 0;
 
     switch (comissao.tipo.toLowerCase()) {
