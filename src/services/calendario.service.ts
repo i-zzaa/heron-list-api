@@ -356,9 +356,9 @@ export const getFilterFinancialPaciente = async ({
         },
       ],
       pacienteId: pacienteId,
-      statusEventos: {
-        cobrar: true,
-      },
+      // statusEventos: {
+      //   cobrar: true,
+      // },
     },
     orderBy: {
       terapeuta: {

@@ -47,55 +47,62 @@ export const getFinancialPaciente = async (body: FinancialProps) => {
   let horas = moment.duration(0);
   const especialidadeTimeSessions: any = {};
 
-  eventos.map((evento: any) => {
-    const sessao = evento.paciente.vagaTerapia.especialidades.filter(
-      (especialidade: any) =>
-        especialidade.especialidadeId === evento.especialidade.id
-    )[0];
+  await Promise.all(
+    eventos.map((evento: any) => {
+      const sessao = evento.paciente.vagaTerapia.especialidades.filter(
+        (especialidade: any) =>
+          especialidade.especialidadeId === evento.especialidade.id
+      )[0];
 
-    paciente = evento.paciente.nome;
+      paciente = evento.paciente.nome;
 
-    const start = formatDateTime(evento.start, evento.dataInicio);
-    const end = formatDateTime(evento.end, evento.dataInicio);
+      const start = formatDateTime(evento.start, evento.dataInicio);
+      const end = formatDateTime(evento.end, evento.dataInicio);
 
-    let diff = moment(end, 'YYYY-MM-DD HH:mm').diff(
-      moment(start, 'YYYY-MM-DD HH:mm')
-    );
+      let diff = moment(end, 'YYYY-MM-DD HH:mm').diff(
+        moment(start, 'YYYY-MM-DD HH:mm')
+      );
 
-    let duracaoTotal = moment.duration(
-      especialidadeTimeSessions[evento.especialidade.nome] || 0
-    );
-    const duracaoEspecialidadeSessaoTotal = duracaoTotal.add(
-      moment.duration(diff)
-    );
+      let duracaoTotal = moment.duration(
+        especialidadeTimeSessions[evento.especialidade.nome] || 0
+      );
+      const duracaoEspecialidadeSessaoTotal = duracaoTotal.add(
+        moment.duration(diff)
+      );
 
-    especialidadeTimeSessions[evento.especialidade.nome] = formaTime(
-      duracaoEspecialidadeSessaoTotal
-    );
+      especialidadeTimeSessions[evento.especialidade.nome] =
+        evento.statusEventos.cobrar &&
+        formaTime(duracaoEspecialidadeSessaoTotal);
 
-    const financeiro = new FinancialPaciente({
-      paciente: evento.paciente.nome,
-      terapeuta: evento.terapeuta.usuario.nome,
-      data: moment(evento.dataInicio).format('DD/MM/YYYY'),
-      sessao: parseFloat(sessao.valor),
-      km: sessao.km,
-      status: evento.statusEventos.nome,
-      valorSessao: parseFloat(sessao.valor),
-      funcao: evento.funcao.nome,
-      valorTotal: parseFloat(sessao.valor),
-      horas: formaTime(moment.duration(diff)),
-      especialidade: evento.especialidade.nome,
-    });
+      const financeiro = new FinancialPaciente({
+        paciente: evento.paciente.nome,
+        terapeuta: evento.terapeuta.usuario.nome,
+        data: moment(evento.dataInicio).format('DD/MM/YYYY'),
+        sessao: evento.statusEventos.cobrar ? parseFloat(sessao.valor) : 0,
+        km: sessao.km,
+        status: evento.statusEventos.nome,
+        valorSessao: evento.statusEventos.cobrar ? parseFloat(sessao.valor) : 0,
+        funcao: evento.funcao.nome,
+        valorTotal: evento.statusEventos.cobrar ? parseFloat(sessao.valor) : 0,
+        horas: formaTime(moment.duration(diff)),
+        especialidade: evento.especialidade.nome,
+      });
 
-    relatorio.push({ ...financeiro });
+      if (!evento.statusEventos.cobrar) {
+        relatorio.push(financeiro);
+        return;
+      }
 
-    valorTotal += parseFloat(sessao.valor);
+      relatorio.push({ ...financeiro });
 
-    valorTotal += financeiro.valorTotal;
-    horas = horas.add(financeiro.horas);
+      valorTotal += parseFloat(sessao.valor);
 
-    return;
-  });
+      valorTotal += financeiro.valorTotal;
+      horas = horas.add(financeiro.horas);
+
+      return;
+    })
+  );
 
   return {
     data: relatorio,
@@ -175,8 +182,6 @@ export const getFinancial = async (body: FinancialProps) => {
       var diff = moment(end, 'YYYY-MM-DD HH:mm').diff(
         moment(start, 'YYYY-MM-DD HH:mm')
       );
-
-      const isExterno = Boolean(evento.isExterno);
 
       terapeuta = evento.terapeuta.usuario.nome;
       especialidade = evento.especialidade.nome;
