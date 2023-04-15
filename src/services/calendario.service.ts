@@ -736,7 +736,8 @@ const updateEventoRecorrentes = async (event: any, login: string) => {
 
   let dataFim = moment(event.dataAtual).add(1, 'days').format('YYYY-MM-DD');
 
-  const isCanceled = event.statusEventos.nome.includes('Cancelado');
+  const statusEventos = event.statusEventos.nome.toLowerCase();
+  const isCanceled = statusEventos.includes('cancelado');
   if (isCanceled && !event?.dataFim) {
     event.dataFim = dataFim;
   }
@@ -748,7 +749,8 @@ const updateEventoRecorrentes = async (event: any, login: string) => {
       const eventosAll = await updateEventoRecorrentesAllChange(
         event,
         exdate.join(','),
-        login
+        login,
+        isCanceled
       );
       return eventosAll;
     case !event.changeAll: // se for mudar todos
@@ -778,6 +780,7 @@ const updateEventoRecorrentes = async (event: any, login: string) => {
         return eventos;
       } catch (error) {
         console.log(error);
+        return;
       }
   }
 };
@@ -785,9 +788,14 @@ const updateEventoRecorrentes = async (event: any, login: string) => {
 const updateEventoRecorrentesAllChange = async (
   event: any,
   exdate: string,
-  login: string
+  login: string,
+  isCanceled?: boolean
 ) => {
-  const dataInicio = moment(event.dataInicio);
+  const evento: any = await prisma.calendario.findFirst({
+    where: { id: event.id },
+  });
+
+  const dataInicio = moment(evento.dataInicio);
   const dataAtual = moment(event.dataAtual);
 
   const data = formatEvent(event);
@@ -796,10 +804,14 @@ const updateEventoRecorrentesAllChange = async (
     event.exdate = exdate;
   }
 
+  // console.log('inicio', dataInicio);
+  // console.log('dataAtual', dataAtual);
+
   if (dataInicio.isBefore(dataAtual)) {
     const usuario = await getUser(login);
     let dataFim = moment(event.dataAtual).add(1, 'days').format('YYYY-MM-DD');
 
+    // se data de inicio já passou, for recorrente e mudar todos
     const [, eventos] = await Promise.all([
       prisma.calendario.create({
         data: {
@@ -812,8 +824,9 @@ const updateEventoRecorrentesAllChange = async (
       }),
       prisma.calendario.updateMany({
         data: {
-          ...data,
+          // ...data,
           // dataFim: dataAtual.subtract(1, 'day').format('YYYY-MM-DD'),
+          dataFim: dataAtual.subtract(1, 'day').format('YYYY-MM-DD'),
         },
         where: {
           id: event.id,
@@ -823,10 +836,13 @@ const updateEventoRecorrentesAllChange = async (
 
     return eventos;
   } else {
+    // console.log('updateEventoRecorrentesAllChange change all after');
+
     delete event.dataAtual;
     const eventosAll = await prisma.calendario.updateMany({
       data: {
         ...data,
+        statusEventosId: evento.statusEventosId,
       },
       where: {
         groupId: data.groupId,
