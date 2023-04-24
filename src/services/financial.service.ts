@@ -20,11 +20,15 @@ interface FinancialProps {
   dataInicio: string;
 }
 
-const dateBetween = (dateAtual: string) => {
+const dateBetween = (
+  dateAtual: string,
+  datatPesquisaFim: string,
+  dataPesquisaInicio: string
+) => {
   const date = moment(dateAtual).format('YYYY-MM-DD');
 
-  const inicioDoMes = moment().startOf('month').format('YYYY-MM-DD');
-  const fimDoMes = moment().endOf('month').format('YYYY-MM-DD');
+  const inicioDoMes = moment(dataPesquisaInicio).format('YYYY-MM-DD');
+  const fimDoMes = moment(datatPesquisaFim).format('YYYY-MM-DD');
 
   return date >= inicioDoMes && date <= fimDoMes;
 };
@@ -65,7 +69,7 @@ export const getFinancialPaciente = async (body: FinancialProps) => {
 
         if (
           exdate.includes(evento.dataInicio) ||
-          !dateBetween(evento.dataInicio)
+          !dateBetween(evento.dataInicio, datatFim, dataInicio)
         ) {
           return;
         }
@@ -202,7 +206,7 @@ export const getFinancial = async (body: FinancialProps) => {
       const exdate = evento?.exdate ? evento.exdate.split(',') : [];
       if (
         exdate.includes(evento.dataInicio) ||
-        !dateBetween(evento.dataInicio)
+        !dateBetween(evento.dataInicio, datatFim, dataInicio)
       ) {
         return;
       }
