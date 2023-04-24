@@ -283,6 +283,11 @@ export const getFilterFinancialPaciente = async ({
         select: {
           nome: true,
           id: true,
+          vaga: {
+            select: {
+              especialidades: true,
+            },
+          },
           vagaTerapia: {
             select: {
               especialidades: true,
