@@ -1111,9 +1111,9 @@ export const formatEvents = async (eventos: any, login: string) => {
 
       evento.canDelete = evento.usuarioId === usuario.id;
 
-      const diasFrequencia: number[] = evento.diasFrequencia.map(
-        (dia: string) => Number(dia) - 1
-      );
+      const diasFrequencia: number[] =
+        evento.diasFrequencia &&
+        evento.diasFrequencia.map((dia: string) => Number(dia) - 1);
 
       switch (true) {
         case evento.frequencia.id !== 1 && evento.intervalo.id === 1: // com dias selecionados e todas semanas

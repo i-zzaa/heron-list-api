@@ -49,6 +49,12 @@ export const getFinancialPaciente = async (body: FinancialProps) => {
 
   await Promise.all(
     eventos.map((evento: any) => {
+      const exdate = evento?.exdate ? evento.exdate.split(',') : [];
+
+      if (exdate.includes(evento.dataInicio)) {
+        return;
+      }
+
       const sessao = evento.paciente.vagaTerapia.especialidades.filter(
         (especialidade: any) =>
           especialidade.especialidadeId === evento.especialidade.id
@@ -95,7 +101,7 @@ export const getFinancialPaciente = async (body: FinancialProps) => {
 
       relatorio.push({ ...financeiro });
 
-      valorTotal += parseFloat(sessao.valor);
+      // valorTotal += parseFloat(sessao.valor);
 
       valorTotal += financeiro.valorTotal;
       horas = horas.add(financeiro.horas);
@@ -145,7 +151,10 @@ export const getFinancial = async (body: FinancialProps) => {
 
   await Promise.all(
     eventos.map((evento: any) => {
-      // console.log(evento);
+      const exdate = evento?.exdate ? evento.exdate.split(',') : [];
+      if (exdate.includes(evento.dataInicio)) {
+        return;
+      }
 
       let sessao = [];
       switch (evento.modalidade.nome) {
@@ -164,8 +173,6 @@ export const getFinancial = async (body: FinancialProps) => {
           )[0];
           break;
       }
-
-      console.log(sessao);
 
       const comissao = evento.terapeuta.funcoes.filter(
         (funcao: any) => funcao.funcaoId === evento.funcao.id
