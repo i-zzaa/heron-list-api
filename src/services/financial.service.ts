@@ -88,7 +88,11 @@ export const getFinancialPaciente = async (body: FinancialProps) => {
             break;
 
           default:
-            sessao = evento.paciente.vagaTerapia.especialidades.filter(
+            const especialidades = evento.paciente?.vagaTerapia
+              ? evento.paciente?.vagaTerapia.especialidades
+              : evento.paciente?.vaga.especialidades;
+
+            sessao = especialidades.filter(
               (especialidadePaciente: any) =>
                 especialidadePaciente.especialidadeId ===
                 evento.especialidade.id
@@ -222,7 +226,11 @@ export const getFinancial = async (body: FinancialProps) => {
           break;
 
         default:
-          sessao = evento.paciente.vagaTerapia.especialidades.filter(
+          const especialidades = evento.paciente?.vagaTerapia
+            ? evento.paciente?.vagaTerapia.especialidades
+            : evento.paciente?.vaga.especialidades;
+
+          sessao = especialidades.filter(
             (especialidadePaciente: any) =>
               especialidadePaciente.especialidadeId === evento.especialidade.id
           )[0];
