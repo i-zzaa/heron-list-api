@@ -742,7 +742,9 @@ const updateEventoRecorrentes = async (event: any, login: string) => {
   let dataFim = moment(event.dataAtual).add(1, 'days').format('YYYY-MM-DD');
 
   const statusEventos = event.statusEventos.nome.toLowerCase();
-  const isCanceled = statusEventos.includes('cancelado');
+  const isCanceled =
+    statusEventos.includes('cancelado') ||
+    statusEventos.includes('cancelamento');
   if (isCanceled && !event?.dataFim) {
     event.dataFim = dataFim;
   }
@@ -832,6 +834,7 @@ const updateEventoRecorrentesAllChange = async (
           // ...data,
           // dataFim: dataAtual.subtract(1, 'day').format('YYYY-MM-DD'),
           dataFim: dataAtual.subtract(1, 'day').format('YYYY-MM-DD'),
+          statusEventosId: evento.statusEventosId,
         },
         where: {
           id: event.id,
