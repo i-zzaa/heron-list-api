@@ -811,9 +811,6 @@ const updateEventoRecorrentesAllChange = async (
     event.exdate = exdate;
   }
 
-  // console.log('inicio', dataInicio);
-  // console.log('dataAtual', dataAtual);
-
   if (dataInicio.isBefore(dataAtual)) {
     const usuario = await getUser(login);
     let dataFim = moment(event.dataAtual).add(1, 'days').format('YYYY-MM-DD');

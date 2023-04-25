@@ -7,7 +7,11 @@ import {
   FinancialTerapeuta,
   FinancialTerapeutaProps,
 } from '../model/financial.model';
-import { formatDateTime, formaTime } from '../utils/convert-hours';
+import {
+  formatDateTime,
+  formaTime,
+  getDatesWhiteEvents,
+} from '../utils/convert-hours';
 import {
   getFilterFinancialPaciente,
   getFilterFinancialTerapeuta,
@@ -41,11 +45,35 @@ export const getFinancialPaciente = async (body: FinancialProps) => {
   try {
     const { pacienteId, datatFim, dataInicio } = body;
 
-    const eventos = await getFilterFinancialPaciente({
+    const eventosBrutos = await getFilterFinancialPaciente({
       pacienteId,
       datatFim,
       dataInicio,
     });
+
+    if (!eventosBrutos.length)
+      return {
+        data: [],
+        valorTotal: 0,
+        paciente: '',
+      };
+
+    const eventos: any = [];
+    await Promise.all(
+      eventosBrutos.map((event: any) => {
+        const dataFimParam = event?.dataFim || datatFim;
+
+        const newEvents = getDatesWhiteEvents(
+          event?.diasFrequencia.split(','),
+          event.dataInicio,
+          dataFimParam,
+          event.intervalo.id,
+          event
+        );
+
+        eventos.push(...newEvents);
+      })
+    );
 
     if (!eventos.length)
       return {
@@ -183,13 +211,39 @@ export const getFinancialPaciente = async (body: FinancialProps) => {
 export const getFinancial = async (body: FinancialProps) => {
   const { terapeutaId, datatFim, dataInicio } = body;
 
-  const eventos = await getFilterFinancialTerapeuta({
+  const eventosBrutos = await getFilterFinancialTerapeuta({
     terapeutaId,
     datatFim,
     dataInicio,
   });
 
-  // console.table(eventos);
+  if (!eventosBrutos.length)
+    return {
+      data: [],
+      valorTotal: 0,
+      terapeuta: '',
+    };
+
+  // console.log(eventosBrutos);
+
+  const eventos: any = [];
+  await Promise.all(
+    eventosBrutos.map((event: any) => {
+      const dataFimParam = event?.dataFim || datatFim;
+
+      const newEvents = getDatesWhiteEvents(
+        event?.diasFrequencia.split(','),
+        event.dataInicio,
+        dataFimParam,
+        event.intervalo.id,
+        event
+      );
+
+      eventos.push(...newEvents);
+    })
+  );
+
+  // console.log(eventos);
 
   if (!eventos.length)
     return {
