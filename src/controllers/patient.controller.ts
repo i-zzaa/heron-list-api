@@ -2,6 +2,7 @@ import {
   createPatient,
   deletePatient,
   getPatients,
+  getPatientsActived,
   getPatientsEspcialidades,
   updateDisabled,
   updatePatient,
@@ -61,6 +62,15 @@ export class patientController {
   static getEspecialidades = async (req: any, res: any, next: any) => {
     try {
       const data = await getPatientsEspcialidades(req.query);
+      res.status(200).json(data);
+    } catch (error: any) {
+      res.status(401).json(error);
+      next();
+    }
+  };
+  static getPatientsActived = async (req: any, res: any, next: any) => {
+    try {
+      const data = await getPatientsActived();
       res.status(200).json(data);
     } catch (error: any) {
       res.status(401).json(error);

@@ -270,6 +270,26 @@ export const setTipoSessaoTeprapia = async (pacienteId: number) => {
 
   return paciente;
 };
+export const getPatientsActived = async () => {
+  return await prisma.paciente.findMany({
+    select: {
+      nome: true,
+      telefone: true,
+      responsavel: true,
+      statusPaciente: {
+        select: {
+          nome: true,
+        },
+      },
+    },
+    where: {
+      disabled: false,
+    },
+    orderBy: {
+      nome: 'asc',
+    },
+  });
+};
 
 export const getPatients = async (query: any) => {
   const statusPacienteCod = query.statusPacienteCod;

@@ -52,6 +52,7 @@ app.post('/login', authController.login);
 
 // Paciente
 app.get('/pacientes', auth, patientController.get);
+app.get('/pacientes/dashboard', auth, patientController.getPatientsActived);
 app.post('/pacientes', auth, patientController.create);
 app.put('/pacientes', auth, patientController.update);
 app.get('/pacientes/especialidades', auth, patientController.getEspecialidades);
