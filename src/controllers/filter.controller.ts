@@ -90,6 +90,9 @@ export class filterController {
                 },
               },
             },
+            orderBy: {
+              nome: 'asc',
+            },
           });
           break;
         case 'permissao':
@@ -98,6 +101,9 @@ export class filterController {
               id: true,
               cod: true,
               descricao: true,
+            },
+            orderBy: {
+              cod: 'asc',
             },
           });
           break;
@@ -112,6 +118,9 @@ export class filterController {
                 nome: 'Terapeuta',
               },
               ativo: true,
+            },
+            orderBy: {
+              nome: 'asc',
             },
           });
           break;
@@ -130,6 +139,9 @@ export class filterController {
                 },
               },
             },
+            orderBy: {
+              nome: 'asc',
+            },
           });
           break;
         case 'tipo-sessao':
@@ -142,6 +154,9 @@ export class filterController {
               NOT: {
                 nome: 'Terapia',
               },
+            },
+            orderBy: {
+              nome: 'asc',
             },
           });
           break;
@@ -160,6 +175,9 @@ export class filterController {
                     : '',
               },
             },
+            orderBy: {
+              nome: 'asc',
+            },
           });
           break;
         case 'especialidade':
@@ -167,6 +185,9 @@ export class filterController {
             select: {
               id: true,
               nome: true,
+            },
+            orderBy: {
+              nome: 'asc',
             },
           });
           break;
@@ -216,6 +237,11 @@ export class filterController {
             where: {
               terapeutaId: Number(query.terapeutaId),
             },
+            orderBy: {
+              paciente: {
+                nome: 'asc',
+              },
+            },
           });
 
           dropdrown = help.map((evento: any) => {
@@ -237,6 +263,9 @@ export class filterController {
                 nome: query.especialidade,
               },
             },
+            orderBy: {
+              nome: 'asc',
+            },
           });
           break;
         case 'especialidade-terapeuta':
@@ -248,6 +277,11 @@ export class filterController {
             where: {
               especialidade: {
                 nome: query.especialidade,
+              },
+            },
+            orderBy: {
+              usuario: {
+                nome: 'asc',
               },
             },
           });
@@ -268,6 +302,11 @@ export class filterController {
             where: {
               terapeutaId: Number(query.terapeutaId),
             },
+            orderBy: {
+              funcao: {
+                nome: 'asc',
+              },
+            },
           });
 
           dropdrown = help.map(({ funcao }: any) => {
@@ -284,6 +323,9 @@ export class filterController {
               id: true,
               nome: true,
             },
+            orderBy: {
+              nome: 'asc',
+            },
           });
           break;
         case 'convenio':
@@ -291,6 +333,9 @@ export class filterController {
             select: {
               id: true,
               nome: true,
+            },
+            orderBy: {
+              nome: 'asc',
             },
           });
           break;
@@ -305,6 +350,9 @@ export class filterController {
               statusPacienteCod: {
                 in: help,
               },
+            },
+            orderBy: {
+              nome: 'asc',
             },
           });
           break;
@@ -336,6 +384,9 @@ export class filterController {
                 in: help,
               },
             },
+            orderBy: {
+              nome: 'asc',
+            },
           });
           break;
         case 'statusEventos':
@@ -343,6 +394,9 @@ export class filterController {
             select: {
               id: true,
               nome: true,
+            },
+            orderBy: {
+              nome: 'asc',
             },
           });
           break;
@@ -352,6 +406,9 @@ export class filterController {
               id: true,
               nome: true,
             },
+            orderBy: {
+              nome: 'asc',
+            },
           });
           break;
         case 'funcao':
@@ -359,6 +416,9 @@ export class filterController {
             select: {
               id: true,
               nome: true,
+            },
+            orderBy: {
+              nome: 'asc',
             },
           });
           break;
@@ -368,6 +428,9 @@ export class filterController {
               id: true,
               nome: true,
             },
+            orderBy: {
+              nome: 'asc',
+            },
           });
           break;
         case 'localidade':
@@ -376,6 +439,9 @@ export class filterController {
               id: true,
               casa: true,
               sala: true,
+            },
+            orderBy: {
+              sala: 'asc',
             },
           });
 
