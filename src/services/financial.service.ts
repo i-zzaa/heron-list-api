@@ -50,7 +50,6 @@ export const getFinancialPaciente = async (body: FinancialProps) => {
       pacienteId,
       datatFim,
       dataInicio,
-      statusEventosId,
     });
 
     if (!eventosBrutos.length)
@@ -99,7 +98,8 @@ export const getFinancialPaciente = async (body: FinancialProps) => {
 
         if (
           exdate.includes(evento.dataInicio) ||
-          !dateBetween(evento.dataInicio, datatFim, dataInicio)
+          !dateBetween(evento.dataInicio, datatFim, dataInicio) ||
+          (statusEventosId && evento.statusEventos.id != statusEventosId)
         ) {
           return;
         }
@@ -212,7 +212,7 @@ export const getFinancialPaciente = async (body: FinancialProps) => {
 
 export const getFinancial = async (body: FinancialProps) => {
   try {
-    const { terapeutaId, datatFim, dataInicio } = body;
+    const { terapeutaId, datatFim, dataInicio, statusEventosId } = body;
 
     const eventosBrutos = await getFilterFinancialTerapeuta({
       terapeutaId,
@@ -267,7 +267,8 @@ export const getFinancial = async (body: FinancialProps) => {
         const exdate = evento?.exdate ? evento.exdate.split(',') : [];
         if (
           exdate.includes(evento.dataInicio) ||
-          !dateBetween(evento.dataInicio, datatFim, dataInicio)
+          !dateBetween(evento.dataInicio, datatFim, dataInicio) ||
+          (statusEventosId && evento.statusEventos.id != statusEventosId)
         ) {
           return;
         }

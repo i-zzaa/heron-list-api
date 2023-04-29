@@ -150,7 +150,6 @@ export const getFilterFinancialTerapeuta = async ({
   dataInicio,
   dataFim,
   terapeutaId,
-  statusEventosId,
 }: any) => {
   const eventos = await prisma.calendario.findMany({
     select: {
@@ -234,6 +233,7 @@ export const getFilterFinancialTerapeuta = async ({
       },
     },
     where: {
+      terapeutaId: terapeutaId,
       dataInicio: {
         lte: dataFim, // menor que o ultimo dia do mes
       },
@@ -247,8 +247,7 @@ export const getFilterFinancialTerapeuta = async ({
           },
         },
       ],
-      terapeutaId: terapeutaId,
-      statusEventosId: statusEventosId,
+
       // statusEventos: {
       //   cobrar: true,
       // },
