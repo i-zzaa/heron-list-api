@@ -42,9 +42,8 @@ model Paciente {
   tipoSessao     TipoSessao?    @relation(fields: [tipoSessaoId], references: [id])
   status         Status?        @relation(fields: [statusId], references: [id])
 
-  createdAt   DateTime     @default(now())
-  updateAt    DateTime     @default(now())
-  vagaTerapia VagaTerapia?
+  createdAt DateTime @default(now())
+  updateAt  DateTime @default(now())
 }
 
 model StatusPaciente {
@@ -65,6 +64,7 @@ model Vaga {
   dataSaiuFila   String?
   devolutiva     Boolean @default(false)
   dataDevolutiva String?
+  dataVoltouAba  String?
   diff           String?
   dataRetorno    String?
 
@@ -90,52 +90,20 @@ model VagaOnEspecialidade {
   @@id([vagaId, especialidadeId])
 }
 
-model VagaTerapia {
-  id         Int @id @default(autoincrement())
-  pacienteId Int @unique
-  periodoId  Int
-
-  dataVoltouAba String
-  observacao    String?
-  naFila        Boolean @default(true)
-  dataSaiuFila  String?
-  diff          String?
-
-  periodo        Periodo                      @relation(fields: [periodoId], references: [id])
-  especialidades VagaTerapiaOnEspecialidade[]
-  paciente       Paciente?                    @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
-}
-
-model VagaTerapiaOnEspecialidade {
-  especialidadeId Int
-  vagaId          Int
-  agendado        Boolean @default(false)
-  dataAgendado    String?
-  valor           String  @default("200")
-  km              String  @default("0")
-
-  vaga          VagaTerapia   @relation(fields: [vagaId], references: [id], onDelete: Cascade)
-  especialidade Especialidade @relation(fields: [especialidadeId], references: [id])
-
-  @@id([vagaId, especialidadeId])
-}
-
 model Periodo {
-  id          Int           @id @default(autoincrement())
-  nome        String
-  vaga        Vaga[]
-  vagaTerapia VagaTerapia[]
+  id   Int    @id @default(autoincrement())
+  nome String
+  vaga Vaga[]
 }
 
 model Especialidade {
-  id                         Int                          @id @default(autoincrement())
-  nome                       String
-  cor                        String                       @default("#000000")
-  vagas                      VagaOnEspecialidade[]
-  Funcao                     Funcao[]
-  calendario                 Calendario[]
-  terapeuta                  Terapeuta[]
-  vagaTerapiaOnEspecialidade VagaTerapiaOnEspecialidade[]
+  id         Int                   @id @default(autoincrement())
+  nome       String
+  cor        String                @default("#000000")
+  Funcao     Funcao[]
+  calendario Calendario[]
+  terapeuta  Terapeuta[]
+  vagas      VagaOnEspecialidade[]
 }
 
 model Status {

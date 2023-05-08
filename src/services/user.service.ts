@@ -179,20 +179,17 @@ export const getTerapeutaEspecialidade = async () => {
       usuario: true,
       especialidade: true,
     },
-    // where: {
-    //   especialidade: {
-    //     id: especialidadeId,
-    //   },
-    // },
   });
 
-  const list = user.map((terapeuta: any) => {
-    return {
-      id: terapeuta.usuario.id,
-      nome: terapeuta.usuario.nome,
-      especialidadeId: terapeuta.especialidade.id,
-    };
-  });
+  const list = await Promise.all(
+    user.map((terapeuta: any) => {
+      return {
+        id: terapeuta.usuario.id,
+        nome: terapeuta.usuario.nome,
+        especialidadeId: terapeuta.especialidade.id,
+      };
+    })
+  );
 
   return list;
 };

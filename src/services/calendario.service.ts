@@ -174,11 +174,6 @@ export const getFilterFinancialTerapeuta = async ({
               especialidades: true,
             },
           },
-          vagaTerapia: {
-            select: {
-              especialidades: true,
-            },
-          },
         },
       },
       modalidade: {
@@ -286,11 +281,6 @@ export const getFilterFinancialPaciente = async ({
           nome: true,
           id: true,
           vaga: {
-            select: {
-              especialidades: true,
-            },
-          },
-          vagaTerapia: {
             select: {
               especialidades: true,
             },
@@ -1031,11 +1021,6 @@ export const deleteCalendario = async (eventId: number, login: string) => {
                 especialidades: true,
               },
             },
-            vagaTerapia: {
-              include: {
-                especialidades: true,
-              },
-            },
           },
         },
         especialidadeId: true,
@@ -1044,36 +1029,13 @@ export const deleteCalendario = async (eventId: number, login: string) => {
       where: { id: Number(eventId) },
     });
 
-    switch (evento.paciente.statusPacienteCod) {
-      case STATUS_PACIENT_COD.queue_avaliation:
-      case STATUS_PACIENT_COD.avaliation:
-      case STATUS_PACIENT_COD.queue_devolutiva:
-      case STATUS_PACIENT_COD.devolutiva:
-        updateVaga({
-          desagendar: [evento.especialidadeId],
-          agendar: [],
-          vagaId: evento.paciente?.vaga?.id || 0,
-          pacienteId: evento.paciente.id,
-          statusPacienteCod: evento.paciente.statusPacienteCod,
-        });
-
-        break;
-
-      case STATUS_PACIENT_COD.queue_therapy:
-      case STATUS_PACIENT_COD.therapy:
-        updateVaga({
-          desagendar: [evento.especialidadeId],
-          agendar: [],
-          vagaId: evento.paciente?.vagaTerapia?.id || 0,
-          pacienteId: evento.paciente.id,
-          statusPacienteCod: evento.paciente.statusPacienteCod,
-        });
-
-        break;
-
-      default:
-        break;
-    }
+    updateVaga({
+      desagendar: [evento.especialidadeId],
+      agendar: [],
+      vagaId: evento.paciente?.vaga?.id || 0,
+      pacienteId: evento.paciente.id,
+      statusPacienteCod: evento.paciente.statusPacienteCod,
+    });
 
     return await prisma.calendario.deleteMany({
       where: {
