@@ -288,25 +288,25 @@ export const filterSinglePatients = async (body: any) => {
 export const createPatient = async (body: PatientQueueAvaliationPropsProps) => {
   const paciente: any = await prisma.paciente.create({
     data: {
-      nome: body.nome.toUpperCase(),
-      telefone: body.telefone,
-      responsavel: body.responsavel.toUpperCase(),
+      nome: body?.nome.toUpperCase(),
+      telefone: body?.telefone,
+      responsavel: body?.responsavel.toUpperCase(),
       disabled: false,
-      convenioId: body.convenioId,
-      dataNascimento: body.dataNascimento,
-      statusPacienteCod: body.statusPacienteCod,
-      statusId: body.statusId,
-      tipoSessaoId: body.tipoSessaoId,
-      carteirinha: body.carteirinha,
+      convenioId: body?.convenioId,
+      dataNascimento: body?.dataNascimento,
+      statusPacienteCod: body?.statusPacienteCod,
+      statusId: body?.statusId,
+      tipoSessaoId: body?.tipoSessaoId,
+      carteirinha: body?.carteirinha,
       vaga: {
         create: {
-          dataContato: body.dataContato,
-          observacao: body.observacao,
-          naFila: body.naFila,
-          periodoId: body.periodoId,
+          dataContato: body?.dataContato,
+          observacao: body?.observacao,
+          naFila: body?.naFila,
+          periodoId: body?.periodoId,
           especialidades: {
             create: [
-              ...body.sessao.map((sessao: any) => {
+              ...body?.sessao.map((sessao: any) => {
                 return {
                   especialidadeId: sessao.especialidadeId,
                   valor: sessao.valor.split('R$ ')[1],
