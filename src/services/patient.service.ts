@@ -3,6 +3,7 @@ import { STATUS_PACIENT_COD } from '../constants/patient';
 import { calculaIdade } from '../utils/convert-hours';
 import { moneyFormat } from '../utils/util';
 import { getTerapeutaEspecialidade } from './user.service';
+import moment from 'moment';
 
 const prisma = new PrismaClient();
 export interface PatientProps {
@@ -22,10 +23,11 @@ interface Sessao {
   vagaId: number;
 }
 interface PatientQueueAvaliationPropsProps extends PatientProps {
-  dataContato: string;
+  dataContato?: string;
+  dataVoltouAba?: string;
   periodoId: number;
   pacienteId: number;
-  tipoSessaoId: number;
+  tipoSessaoId?: number;
   especialidades: any;
   statusId: number;
   observacao: string;
@@ -115,20 +117,10 @@ export const getPatientsQueue = async (
       statusPacienteCod: {
         in: statusPacienteCod,
       },
-      vaga: {
-        naFila: naFila,
-      },
-      disabled: false,
-      OR: [
-        {
-          vaga: null,
-        },
-        {
-          vaga: {
-            naFila: true,
-          },
-        },
-      ],
+      // vaga: {
+      //   naFila: naFila,
+      // },
+      // disabled: false,
     },
   });
 
@@ -204,8 +196,8 @@ export const getPatients = async (query: any) => {
       return getPatientsQueue([STATUS_PACIENT_COD.queue_therapy]);
     case STATUS_PACIENT_COD.crud_therapy:
       return getPatientsQueue([
-        STATUS_PACIENT_COD.therapy,
-        STATUS_PACIENT_COD.devolutiva,
+        // STATUS_PACIENT_COD.therapy,
+        // STATUS_PACIENT_COD.devolutiva,
         STATUS_PACIENT_COD.crud_therapy,
       ]);
     default:
@@ -286,44 +278,54 @@ export const filterSinglePatients = async (body: any) => {
 };
 
 export const createPatient = async (body: PatientQueueAvaliationPropsProps) => {
-  const paciente: any = await prisma.paciente.create({
-    data: {
-      nome: body?.nome.toUpperCase(),
-      telefone: body?.telefone,
-      responsavel: body?.responsavel.toUpperCase(),
-      disabled: false,
-      convenioId: body?.convenioId,
-      dataNascimento: body?.dataNascimento,
-      statusPacienteCod: body?.statusPacienteCod,
-      statusId: body?.statusId,
-      tipoSessaoId: body?.tipoSessaoId,
-      carteirinha: body?.carteirinha,
-      vaga: {
-        create: {
-          dataContato: body?.dataContato,
-          observacao: body?.observacao,
-          naFila: body?.naFila,
-          periodoId: body?.periodoId,
-          especialidades: {
-            create: [
-              ...body?.sessao.map((sessao: any) => {
-                return {
-                  especialidadeId: sessao.especialidadeId,
-                  valor: sessao.valor.split('R$ ')[1],
-                  km: sessao.km.toString(),
-                  agendado: false, // se for 2, é para cadastrar como nao agendado
-                  dataAgendado: sessao.dataContato
-                    ? sessao.dataContato
-                    : new Date(),
-                };
-              }),
-            ],
+  try {
+    const dataContato =
+      body?.dataContato ||
+      body?.dataVoltouAba ||
+      moment(new Date()).format('YYYY-MM-DD');
+
+    const tipoSessaoId = body?.tipoSessaoId || 2;
+    const naFila = body.statusPacienteCod !== STATUS_PACIENT_COD.crud_therapy; // CRIAR NA FILA TRUE SEMPRE QUE NAO FOR DA TELA  CADASTRO DO PACIENTE
+
+    const paciente: any = await prisma.paciente.create({
+      data: {
+        nome: body.nome.toUpperCase(),
+        telefone: body.telefone,
+        responsavel: body.responsavel.toUpperCase(),
+        disabled: false,
+        convenioId: body.convenioId,
+        dataNascimento: body.dataNascimento,
+        statusPacienteCod: body.statusPacienteCod,
+        statusId: body?.statusId,
+        tipoSessaoId: tipoSessaoId,
+        carteirinha: body.carteirinha,
+        vaga: {
+          create: {
+            dataContato: dataContato,
+            observacao: body?.observacao,
+            naFila: naFila,
+            periodoId: body.periodoId,
+            especialidades: {
+              create: [
+                ...body.sessao.map((sessao: any) => {
+                  return {
+                    especialidadeId: sessao.especialidadeId,
+                    valor: sessao.valor.split('R$ ')[1],
+                    km: sessao.km.toString(),
+                    agendado: false, // se for 2, é para cadastrar como nao agendado
+                    dataAgendado: '',
+                  };
+                }),
+              ],
+            },
           },
         },
       },
-    },
-  });
-  return paciente;
+    });
+    return paciente;
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 const updatePatientAvaliation = async (body: any) => {

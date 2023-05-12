@@ -4,6 +4,7 @@ import createError from 'http-errors';
 import { ERROR_CREATE } from '../utils/message.response';
 import { moneyFormat } from '../utils/util';
 import { PerfilProps } from './perfil.service';
+import { PerfilTerapeuta } from '../constants/terapeuta';
 
 const prisma = new PrismaClient();
 
@@ -270,7 +271,7 @@ export const createUser = async (body: any) => {
   //   ],
   // });
 
-  if (user.perfil?.id === 6) {
+  if (body.perfilId === PerfilTerapeuta.id) {
     await prisma.terapeuta.create({
       data: {
         usuarioId: user.id,
@@ -347,7 +348,7 @@ export const updateUser = async (body: any) => {
     });
   }
 
-  if (body.perfilId === 6) {
+  if (body.perfilId === PerfilTerapeuta.id) {
     //Terapeuta
 
     if (body?.comissao?.length) {
