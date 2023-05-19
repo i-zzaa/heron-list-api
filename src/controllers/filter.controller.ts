@@ -192,16 +192,10 @@ export class filterController {
           });
           break;
         case 'paciente-especialidade':
-          const vaga =
-            query.statusPacienteCod === STATUS_PACIENT_COD.queue_avaliation ||
-            query.statusPacienteCod === STATUS_PACIENT_COD.queue_devolutiva
-              ? 'vaga'
-              : 'vagaTerapia';
-
           help = await prisma.paciente.findUniqueOrThrow({
             select: {
               emAtendimento: true,
-              [vaga]: {
+              vaga: {
                 include: {
                   especialidades: {
                     include: {
@@ -221,7 +215,7 @@ export class filterController {
             },
           });
 
-          dropdrown = help[vaga].especialidades.map((especialidade: any) => {
+          dropdrown = help.vaga.especialidades.map((especialidade: any) => {
             return {
               id: especialidade.especialidade.id,
               nome: especialidade.especialidade.nome,

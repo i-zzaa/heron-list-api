@@ -273,6 +273,7 @@ export const getFilterFinancialPaciente = async ({
       end: true,
       diasFrequencia: true,
       exdate: true,
+      km: true,
 
       ciclo: true,
       observacao: true,
