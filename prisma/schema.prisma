@@ -44,7 +44,7 @@ model Paciente {
 
   createdAt         DateTime            @default(now())
   updateAt          DateTime            @default(now())
-  Pacientehistorico PacienteHistorico[]
+  pacienteHistorico PacienteHistorico[]
 }
 
 model StatusPaciente {
