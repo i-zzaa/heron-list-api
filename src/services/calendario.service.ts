@@ -1116,6 +1116,9 @@ export const formatEvents = async (eventos: any, login: string) => {
 
           break;
         case evento.frequencia.id !== 1 && evento.intervalo.id !== 1: // com dias selecionados e intervalos
+          const dtstart = moment(evento.dataInicio)
+            .subtract(1, 'days')
+            .format('YYYY-MM-DD');
           formated = {
             ...evento,
             data: {
@@ -1132,7 +1135,7 @@ export const formatEvents = async (eventos: any, login: string) => {
               freq: 'weekly',
               interval: evento.intervalo.id,
               byweekday: diasFrequencia,
-              dtstart: `${evento.dataInicio}T${evento.start}:00Z`,
+              dtstart: `${dtstart}T${evento.start}:00Z`,
             },
           };
 
