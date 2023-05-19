@@ -5,7 +5,7 @@ import {
   getPatientsActived,
   getPatientsEspcialidades,
   updateDisabled,
-  updatePatient,
+  update,
 } from '../services/patient.service';
 import {
   messageDelete,
@@ -25,7 +25,7 @@ export class patientController {
   };
   static update = async (req: any, res: any, next: any) => {
     try {
-      const data = await updatePatient(req.body);
+      const data = await update(req.body);
       res.status(200).json(messageUpdate(data));
     } catch (error: any) {
       res.status(401).json(error);

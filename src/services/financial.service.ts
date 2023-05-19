@@ -57,6 +57,7 @@ export const getFinancialPaciente = async (body: FinancialProps) => {
         data: [],
         valorTotal: 0,
         paciente: '',
+        valorKm: 0,
       };
 
     const eventos: any = [];
@@ -81,6 +82,7 @@ export const getFinancialPaciente = async (body: FinancialProps) => {
         data: [],
         valorTotal: 0,
         paciente: '',
+        valorKm: 0,
       };
 
     const relatorio: FinancialPacienteProps[] = [];
@@ -106,28 +108,13 @@ export const getFinancialPaciente = async (body: FinancialProps) => {
 
         // console.log(evento);
 
-        let sessao = [];
-        switch (evento.modalidade.nome) {
-          case 'Avaliação':
-          case 'Devolutiva':
-            sessao = evento.paciente.vaga.especialidades.filter(
-              (especialidadePaciente: any) =>
-                especialidadePaciente.especialidadeId ===
-                evento.especialidade.id
-            )[0];
-            break;
+        const sessao = evento.paciente?.vaga.especialidades.filter(
+          (especialidadePaciente: any) =>
+            especialidadePaciente.especialidadeId === evento.especialidade.id
+        )[0];
 
-          default:
-            const especialidades = evento.paciente?.vagaTerapia
-              ? evento.paciente?.vagaTerapia.especialidades
-              : evento.paciente?.vaga.especialidades;
-
-            sessao = especialidades.filter(
-              (especialidadePaciente: any) =>
-                especialidadePaciente.especialidadeId ===
-                evento.especialidade.id
-            )[0];
-            break;
+        if (!sessao) {
+          return;
         }
 
         paciente = evento.paciente.nome;
@@ -150,12 +137,14 @@ export const getFinancialPaciente = async (body: FinancialProps) => {
           evento.statusEventos.cobrar &&
           formaTime(duracaoEspecialidadeSessaoTotal);
 
+        console.log(evento.km);
+
         const financeiro = new FinancialPaciente({
           paciente: evento.paciente.nome,
           terapeuta: evento.terapeuta.usuario.nome,
           data: moment(evento.dataInicio).format('DD/MM/YYYY'),
           sessao: evento.statusEventos.cobrar ? parseFloat(sessao.valor) : 0,
-          km: sessao.km,
+          km: !!evento.km ? parseFloat(evento.km) : 0,
           status: evento.statusEventos.nome,
           valorSessao: evento.statusEventos.cobrar
             ? parseFloat(sessao.valor)
@@ -179,6 +168,7 @@ export const getFinancialPaciente = async (body: FinancialProps) => {
 
         valorTotal += financeiro.valorTotal;
         horas = horas.add(financeiro.horas);
+        valorKm += financeiro.km;
 
         return;
       })
@@ -246,8 +236,6 @@ export const getFinancial = async (body: FinancialProps) => {
       })
     );
 
-    // console.log(eventos);
-
     if (!eventos.length)
       return {
         data: [],
@@ -273,30 +261,14 @@ export const getFinancial = async (body: FinancialProps) => {
           return;
         }
 
-        let sessao = [];
-        switch (evento.modalidade.nome) {
-          case 'Avaliação':
-          case 'Devolutiva':
-            sessao = evento.paciente.vaga.especialidades.filter(
-              (especialidadePaciente: any) =>
-                especialidadePaciente.especialidadeId ===
-                evento.especialidade.id
-            )[0];
-            break;
+        const sessao = evento.paciente?.vaga.especialidades.filter(
+          (especialidadePaciente: any) =>
+            especialidadePaciente.especialidadeId === evento.especialidade.id
+        )[0];
 
-          default:
-            const especialidades = evento.paciente?.vagaTerapia
-              ? evento.paciente?.vagaTerapia.especialidades
-              : evento.paciente?.vaga.especialidades;
-
-            sessao = especialidades.filter(
-              (especialidadePaciente: any) =>
-                especialidadePaciente.especialidadeId ===
-                evento.especialidade.id
-            )[0];
-            break;
+        if (!sessao) {
+          return;
         }
-
         const comissao = evento.terapeuta.funcoes.filter(
           (funcao: any) => funcao.funcaoId === evento.funcao.id
         )[0];

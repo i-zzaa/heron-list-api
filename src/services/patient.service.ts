@@ -115,9 +115,7 @@ export const getPatientsQueue = async (
       statusPacienteCod: {
         in: statusPacienteCod,
       },
-      vaga: {
-        naFila: naFila,
-      },
+
       disabled: false,
       OR: [
         {
@@ -125,7 +123,7 @@ export const getPatientsQueue = async (
         },
         {
           vaga: {
-            naFila: true,
+            naFila: naFila,
           },
         },
       ],
@@ -326,7 +324,7 @@ export const createPatient = async (body: PatientQueueAvaliationPropsProps) => {
   return paciente;
 };
 
-const updatePatientAvaliation = async (body: any) => {
+const updatePatient = async (body: any) => {
   try {
     const [, , especialidades] = await prisma.$transaction([
       prisma.paciente.update({
@@ -416,65 +414,13 @@ const updatePatientAvaliation = async (body: any) => {
   }
 };
 
-const updatePatientDevolutiva = async (body: any) => {
-  try {
-    // const especialidadeIds = await Promise.all(
-    //   body.especialidades.map((especialidadeId: any) => {
-    //     return {
-    //       especialidadeId: especialidadeId,
-    //     };
-    //   })
-    // );
-
-    const [updatepaciente] = await prisma.$transaction([
-      prisma.paciente.update({
-        select: {
-          vaga: true,
-        },
-        data: {
-          nome: body.nome.toUpperCase(),
-          telefone: body.telefone,
-          responsavel: body.responsavel.toUpperCase(),
-          convenioId: body.convenioId,
-          dataNascimento: body.dataNascimento,
-          tipoSessaoId: body.tipoSessaoId,
-          statusPacienteCod: STATUS_PACIENT_COD.queue_therapy,
-          statusId: body.statusId,
-          carteirinha: body.carteirinha,
-          // vaga: {
-          //   create: {
-          //     periodoId: body.periodoId,
-          //     dataVoltouAba: body.dataContato,
-          //     observacao: body.observacao,
-          //     naFila: true,
-          //     especialidades: {
-          //       create: especialidadeIds.map(
-          //         (especialidadeId: number) => especialidadeId
-          //       ),
-          //     },
-          //   },
-          // },
-        },
-        where: {
-          id: body.id,
-        },
-      }),
-    ]);
-
-    return updatepaciente;
-  } catch (error) {
-    console.log(error);
-  }
-};
-
-export const updatePatient = async (body: any) => {
+export const update = async (body: any) => {
   switch (body.statusPacienteCod) {
     case STATUS_PACIENT_COD.queue_avaliation:
     case STATUS_PACIENT_COD.queue_therapy:
     case STATUS_PACIENT_COD.crud_therapy:
-      return updatePatientAvaliation(body);
+      return updatePatient(body);
     case STATUS_PACIENT_COD.devolutiva:
-      return updatePatientDevolutiva(body);
     default:
       break;
   }

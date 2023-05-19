@@ -42,8 +42,9 @@ model Paciente {
   tipoSessao     TipoSessao?    @relation(fields: [tipoSessaoId], references: [id])
   status         Status?        @relation(fields: [statusId], references: [id])
 
-  createdAt DateTime @default(now())
-  updateAt  DateTime @default(now())
+  createdAt         DateTime            @default(now())
+  updateAt          DateTime            @default(now())
+  Pacientehistorico PacienteHistorico[]
 }
 
 model StatusPaciente {
@@ -282,4 +283,15 @@ model UsuarioOnPermissao {
   usuario   Usuario?   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 
   @@id([permissaoId, usuarioId])
+}
+
+model PacienteHistorico {
+  id         Int  @id @default(autoincrement())
+  pacienteId Int
+  historico  Json
+
+  paciente Paciente @relation(fields: [pacienteId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 }
