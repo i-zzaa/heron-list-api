@@ -247,7 +247,7 @@ export function getDatesWhiteEvents(
     if (diasDaSemana.length) {
       let diasPercorridos = 0;
       diasDaSemana.map((day: string) => {
-        if (parseInt(day) + 1 == dataAtual.day()) {
+        if (parseInt(day) == dataAtual.day()) {
           arrEvents.push(newEvents);
           dataAtual.nextBusinessDay();
           diasPercorridos++;

@@ -333,7 +333,7 @@ export async function getAvailableTimes(
                     sessao.time = `${sessao.data.start} - ${sessao.data.end}`;
                     sessao.disabled =
                       isInPast ||
-                      sessao.statusEventos.nome.includes('Cancelado') ||
+                      sessao.statusEventos.nome.includes('permanente') ||
                       sessao.statusEventos.nome == 'Atendido';
 
                     if (Boolean(mobileArray[day])) {

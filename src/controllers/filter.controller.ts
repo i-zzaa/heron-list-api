@@ -272,6 +272,9 @@ export class filterController {
               especialidade: {
                 nome: query.especialidade,
               },
+              usuario: {
+                ativo: true,
+              },
             },
             orderBy: {
               usuario: {

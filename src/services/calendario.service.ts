@@ -737,7 +737,7 @@ const updateEventoRecorrentes = async (event: any, login: string) => {
 
   const statusEventos = event.statusEventos.nome.toLowerCase();
   const isCanceled =
-    statusEventos.includes('cancelado') ||
+    statusEventos.includes('permanente') ||
     statusEventos.includes('cancelamento');
   if (isCanceled && !event?.dataFim) {
     event.dataFim = dataFim;
@@ -853,7 +853,7 @@ const updateEventoRecorrentesAllChange = async (
 
 export const updateCalendario_ = async (body: any, login: string) => {
   let dataFim = moment(body.dataAtual).subtract(2, 'days').format('YYYY-MM-DD');
-  const isCanceled = body.statusEventos.nome.includes('Cancelado');
+  const isCanceled = body.statusEventos.nome.includes('permanente');
   if (isCanceled && !body?.dataFim) {
     body.dataFim = dataFim;
   }
