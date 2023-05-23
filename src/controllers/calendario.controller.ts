@@ -5,6 +5,7 @@ import {
   getFilter,
   getRange,
   updateCalendario,
+  updateCalendarioAtestado,
   updateCalendarioMobile,
 } from '../services/calendario.service';
 import { getAvailableTimes } from '../services/terapeuta.service';
@@ -43,6 +44,18 @@ export class calendarioController {
   static check = async (req: any, res: any, next: any) => {
     try {
       await updateCalendarioMobile(req.body, req.headers.login);
+      res.status(200).json({
+        status: true,
+        message: 'Atualizado com sucesso!',
+      });
+    } catch (error: any) {
+      res.status(401).json(error);
+      next();
+    }
+  };
+  static atestado = async (req: any, res: any, next: any) => {
+    try {
+      await updateCalendarioAtestado(req.body, req.headers.login);
       res.status(200).json({
         status: true,
         message: 'Atualizado com sucesso!',

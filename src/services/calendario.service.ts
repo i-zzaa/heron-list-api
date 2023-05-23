@@ -971,6 +971,17 @@ export const updateCalendarioMobile = async (body: any, login: string) => {
 
   updateCalendario(body, login);
 };
+export const updateCalendarioAtestado = async (body: any, login: string) => {
+  const statusEventos = await prisma.statusEventos.findFirst({
+    where: {
+      nome: 'Atestado',
+    },
+  });
+
+  body.statusEventos = statusEventos;
+
+  updateCalendario(body, login);
+};
 
 export const deleteCalendario = async (eventId: number, login: string) => {
   try {
@@ -1097,7 +1108,7 @@ export const formatEvents = async (eventos: any, login: string) => {
               freq: 'weekly',
               interval: evento.intervalo.id,
               byweekday: diasFrequencia,
-              dtstart: `${dtstart}T${evento.start}:00Z`,
+              dtstart: `${evento.dataInicio}T${evento.start}:00Z`,
             },
           };
 
