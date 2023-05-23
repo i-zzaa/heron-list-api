@@ -377,6 +377,13 @@ export const updateVaga = async (body: VagaEspecialidadeProps) => {
         return isQueueTherapy;
     }
   }
+
+  await prisma.pacienteHistorico.create({
+    data: {
+      historico: JSON.stringify(body),
+      pacienteId: body.pacienteId,
+    },
+  });
 };
 
 export const tipoSessoesVaga = async () => {
