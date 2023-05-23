@@ -117,20 +117,10 @@ export const getPatientsQueue = async (
       statusPacienteCod: {
         in: statusPacienteCod,
       },
-      // vaga: {
-      //   naFila: naFila,
-      // },
       disabled: false,
-      OR: [
-        {
-          vaga: null,
-        },
-        {
-          vaga: {
-            naFila: naFila,
-          },
-        },
-      ],
+      vaga: {
+        naFila: naFila,
+      },
     },
   });
 
@@ -205,11 +195,14 @@ export const getPatients = async (query: any) => {
     case STATUS_PACIENT_COD.queue_therapy:
       return getPatientsQueue([STATUS_PACIENT_COD.queue_therapy]);
     case STATUS_PACIENT_COD.crud_therapy:
-      return getPatientsQueue([
-        // STATUS_PACIENT_COD.therapy,
-        // STATUS_PACIENT_COD.devolutiva,
-        STATUS_PACIENT_COD.crud_therapy,
-      ]);
+      return getPatientsQueue(
+        [
+          // STATUS_PACIENT_COD.therapy,
+          // STATUS_PACIENT_COD.devolutiva,
+          STATUS_PACIENT_COD.crud_therapy,
+        ],
+        false
+      );
     default:
       break;
   }
