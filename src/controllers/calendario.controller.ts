@@ -40,6 +40,18 @@ export class calendarioController {
       next();
     }
   };
+  static check = async (req: any, res: any, next: any) => {
+    try {
+      await updateCalendarioMobile(req.body, req.headers.login);
+      res.status(200).json({
+        status: true,
+        message: 'Atualizado com sucesso!',
+      });
+    } catch (error: any) {
+      res.status(401).json(error);
+      next();
+    }
+  };
   static delete = async (req: any, res: any, next: any) => {
     try {
       const data = await deleteCalendario(req.query.id, req.headers.login);

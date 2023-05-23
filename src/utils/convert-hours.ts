@@ -173,8 +173,8 @@ export function getDates(
 
   // console.log(startDate, endDate);
   // Defina a data de início e a data final como objetos moment
-  const start = momentBusinessDays(startDate);
-  const end = momentBusinessDays(endDate).nextBusinessDay();
+  const start = momentBusinessDays(startDate).subtract(1);
+  const end = momentBusinessDays(endDate).add(1);
 
   // Defina um objeto moment para a próxima ocorrência do dia da semana especificado após a data de início
   let dataAtual = start;

@@ -118,7 +118,7 @@ export async function getAvailableTimes(
     prisma.calendario.findMany({
       select: {
         id: true,
-        // groupId: true,
+        groupId: true,
         dataInicio: true,
         dataFim: true,
         start: true,
@@ -206,7 +206,7 @@ export async function getAvailableTimes(
   const eventosFormat = await formatEvents(events, login);
 
   const eventosFormatados: any = {};
-  eventosFormat.flatMap((ev: any) => {
+  await eventosFormat.flatMap(async (ev: any) => {
     if (ev.frequencia.id === 1) {
       if (Boolean(eventosFormatados[ev.dataInicio])) {
         eventosFormatados[ev.dataInicio].push(ev);
@@ -218,24 +218,28 @@ export async function getAvailableTimes(
     }
 
     const dataFim = ev.dataFim || endDate;
-    const datasRecorrentes = getDates(
+    const datasRecorrentes = await getDates(
       ev.diasFrequencia,
       ev.dataInicio,
       dataFim,
       ev.intervalo.id
     );
 
-    datasRecorrentes.map((dataRecorrentes: string) => {
-      ev.date = moment(dataRecorrentes).format('YYYY-MM-DD');
-      if (Boolean(eventosFormatados[dataRecorrentes])) {
-        eventosFormatados[dataRecorrentes].push(ev);
-      } else {
-        eventosFormatados[dataRecorrentes] = [ev];
-      }
-    });
+    // console.log(datasRecorrentes);
+
+    await Promise.all(
+      datasRecorrentes.map((dataRecorrentes: string) => {
+        ev.date = moment(dataRecorrentes).format('YYYY-MM-DD');
+        if (Boolean(eventosFormatados[dataRecorrentes])) {
+          eventosFormatados[dataRecorrentes].push(ev);
+        } else {
+          eventosFormatados[dataRecorrentes] = [ev];
+        }
+      })
+    );
   });
 
-  // console.log(eventosFormatados);
+  // console.log('aqi', eventosFormat);
 
   let cargaHoraria: any =
     terapeuta?.cargaHoraria && typeof terapeuta.cargaHoraria === 'string'
@@ -245,110 +249,117 @@ export async function getAvailableTimes(
   const mobileArray: any = {};
   const webArray: any = [];
 
-  datas.map((day: any) => {
-    const dateEvent = new Date(day);
-    const dayOfWeek = weekDay[dateEvent.getDay()];
-    const horariosTerapeuta = cargaHoraria[dayOfWeek];
+  await Promise.all(
+    datas.map(async (day: any) => {
+      const dateEvent = new Date(day);
+      const dayOfWeek = weekDay[dateEvent.getDay()];
+      const horariosTerapeuta = cargaHoraria[dayOfWeek];
 
-    HOURS.map((h) => {
-      const date = moment(`${day}T${h}:00`);
+      await Promise.all(
+        HOURS.map(async (h) => {
+          const date = moment(`${day}T${h}:00`);
 
-      const hoursFinal = moment(`${day}T${h}:00`).add(1, 'hours');
-      const hoursFinalFormat = hoursFinal.format('HH:mm');
+          const hoursFinal = moment(`${day}T${h}:00`).add(1, 'hours');
+          const hoursFinalFormat = hoursFinal.format('HH:mm');
 
-      const eventoAdd = {
-        ...eventFree,
-        dataInicio: day,
-        dataFim: day,
-        start: h,
-        startTime: h,
-        time: `${h} - ${hoursFinalFormat}`,
-        end: hoursFinalFormat,
-        endTime: hoursFinalFormat,
-        date: day,
-        terapeuta: {
-          nome: terapeuta?.usuario?.nome || '',
-          id: terapeuta?.usuario?.id || '',
-        },
-        localidade: { nome: 'Sem Localizacao', id: 0 },
-        statusEventos: { nome: 'Não criado', id: 0 },
-        disabled: true,
-        isDevolutiva: false,
-        rrule: {
-          dtstart: date.format('YYYY-MM-DD HH:mm'),
-          until: hoursFinal.format('YYYY-MM-DD HH:mm'),
-          freq: 'weekly',
-        },
-      };
+          const eventoAdd = {
+            ...eventFree,
+            dataInicio: day,
+            dataFim: day,
+            start: h,
+            startTime: h,
+            time: `${h} - ${hoursFinalFormat}`,
+            end: hoursFinalFormat,
+            endTime: hoursFinalFormat,
+            date: day,
+            terapeuta: {
+              nome: terapeuta?.usuario?.nome || '',
+              id: terapeuta?.usuario?.id || '',
+            },
+            localidade: { nome: 'Sem Localizacao', id: 0 },
+            statusEventos: { nome: 'Não criado', id: 0 },
+            disabled: true,
+            isDevolutiva: false,
+            rrule: {
+              dtstart: date.format('YYYY-MM-DD HH:mm'),
+              until: hoursFinal.format('YYYY-MM-DD HH:mm'),
+              freq: 'weekly',
+            },
+          };
 
-      const eventosDoDia = eventosFormatados[day] || [];
+          const eventosDoDia = eventosFormatados[day] || [];
 
-      if (
-        date.isAfter(new Date()) &&
-        horariosTerapeuta[h] &&
-        !eventosDoDia.length
-      ) {
-        if (Boolean(mobileArray[day])) {
-          mobileArray[day].push(eventoAdd);
-        } else {
-          mobileArray[day] = [eventoAdd];
-        }
-
-        webArray.push(eventoAdd);
-      }
-
-      if (eventosDoDia.length) {
-        const sessoes = eventosDoDia.filter((e: any) =>
-          horaEstaEntre(h, e.data.start)
-        );
-
-        if (sessoes.length) {
-          sessoes.map((sessao: any) => {
-            const verificaSeJaFoiIncluido = webArray.filter((e: any) => {
-              if (
-                e.id === sessao.id &&
-                e.paciente.nome === sessao.paciente.nome &&
-                day === sessao.date &&
-                e.data.start === sessao.data.start
-              ) {
-                return e;
-              }
-            });
-
-            if (!verificaSeJaFoiIncluido.length) {
-              const sessaoDataHoraFim = moment(
-                `${day}T${sessao.data.dataFim}:00`
-              );
-              const isInPast = sessaoDataHoraFim.isBefore(new Date());
-
-              sessao.isDevolutiva = sessao.modalidade.nome === 'Devolutiva';
-              sessao.time = `${sessao.data.start} - ${sessao.data.end}`;
-              sessao.disabled =
-                isInPast ||
-                sessao.statusEventos.nome.includes('Cancelado') ||
-                sessao.statusEventos.nome == 'Atendido';
-
-              if (Boolean(mobileArray[day])) {
-                mobileArray[day].push(sessao);
-              } else {
-                mobileArray[day] = [sessao];
-              }
-
-              webArray.push(sessao);
+          if (
+            date.isAfter(new Date()) &&
+            horariosTerapeuta[h] &&
+            !eventosDoDia.length
+          ) {
+            if (Boolean(mobileArray[day])) {
+              mobileArray[day].push(eventoAdd);
+            } else {
+              mobileArray[day] = [eventoAdd];
             }
-          });
-        } else if (horariosTerapeuta[h] && date.isAfter(new Date())) {
-          if (Boolean(mobileArray[day])) {
-            mobileArray[day].push(eventoAdd);
-          } else {
-            mobileArray[day] = [eventoAdd];
+
+            webArray.push(eventoAdd);
           }
 
-          webArray.push(eventoAdd);
-        }
-      }
-    });
-  });
+          if (eventosDoDia.length) {
+            const sessoes = await Promise.all(
+              eventosDoDia.filter((e: any) => horaEstaEntre(h, e.data.start))
+            );
+
+            if (sessoes.length) {
+              await Promise.all(
+                sessoes.map((sessao: any) => {
+                  const verificaSeJaFoiIncluido = webArray.filter((e: any) => {
+                    if (
+                      e.id === sessao.id &&
+                      e.paciente.nome === sessao.paciente.nome &&
+                      day === sessao.date &&
+                      e.data.start === sessao.data.start
+                    ) {
+                      return e;
+                    }
+                  });
+
+                  if (!verificaSeJaFoiIncluido.length) {
+                    const sessaoDataHoraFim = moment(
+                      `${day}T${sessao.data.end}:00`
+                    );
+                    const isInPast = sessaoDataHoraFim.isBefore(new Date());
+
+                    sessao.isDevolutiva =
+                      sessao.modalidade.nome === 'Devolutiva';
+                    sessao.time = `${sessao.data.start} - ${sessao.data.end}`;
+                    sessao.disabled =
+                      isInPast ||
+                      sessao.statusEventos.nome.includes('Cancelado') ||
+                      sessao.statusEventos.nome == 'Atendido';
+
+                    if (Boolean(mobileArray[day])) {
+                      mobileArray[day].push(sessao);
+                    } else {
+                      mobileArray[day] = [sessao];
+                    }
+
+                    webArray.push(sessao);
+                  }
+                })
+              );
+            } else if (horariosTerapeuta[h] && date.isAfter(new Date())) {
+              if (Boolean(mobileArray[day])) {
+                mobileArray[day].push(eventoAdd);
+              } else {
+                mobileArray[day] = [eventoAdd];
+              }
+
+              webArray.push(eventoAdd);
+            }
+          }
+        })
+      );
+    })
+  );
 
   return device === 'mobile' ? mobileArray : webArray;
 }

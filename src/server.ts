@@ -166,6 +166,7 @@ app.get('/evento/:start/:end', auth, calendarioController.getRange);
 app.post('/evento', auth, calendarioController.create);
 app.put('/evento', auth, calendarioController.update);
 app.delete('/evento', auth, calendarioController.delete);
+app.put('/evento/check', auth, calendarioController.check);
 
 app.post('/filtro/financeiro/terapeuta', auth, fiancialController.getTerapeuta);
 app.post('/filtro/financeiro/paciente', auth, fiancialController.getPaciente);
