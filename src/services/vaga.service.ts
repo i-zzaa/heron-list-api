@@ -296,8 +296,8 @@ export const updateVaga = async (body: VagaEspecialidadeProps) => {
           setQueueStatus(
             body.vagaId,
             body.pacienteId,
-            STATUS_PACIENT_COD.queue_devolutiva,
-            STATUS_PACIENT_COD.devolutiva
+            STATUS_PACIENT_COD.queue_avaliation,
+            STATUS_PACIENT_COD.avaliation
           ),
         ]);
 

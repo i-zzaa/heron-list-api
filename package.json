@@ -1,6 +1,6 @@
 {
   "name": "@heron-list/api",
-  "version": "0.8.0-beta.13",
+  "version": "0.9.0-beta.0",
   "description": "",
   "main": "src/server.js",
   "scripts": {
