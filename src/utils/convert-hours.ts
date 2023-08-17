@@ -166,14 +166,15 @@ export function getDates(
   diasDaSemana: string[],
   startDate: string,
   endDate: string,
-  intervaloSemana: number = 1
+  intervaloSemana: number = 1,
+  deleteDates: string[]
 ) {
   // Crie uma matriz para armazenar as datas
   let datas: string[] = [];
 
   // console.log(startDate, endDate);
   // Defina a data de início e a data final como objetos moment
-  const start = momentBusinessDays(startDate).subtract(1);
+  const start = momentBusinessDays(startDate); //.subtract(1);
   const end = momentBusinessDays(endDate).add(1);
 
   // Defina um objeto moment para a próxima ocorrência do dia da semana especificado após a data de início
@@ -182,9 +183,8 @@ export function getDates(
   // Itere enquanto a data atual for menor ou igual à data final
   while (dataAtual.isSameOrBefore(end)) {
     // Adicione a data atual à matriz de datas
-
     if (diasDaSemana.length) {
-      let diasPercorridos = 0;
+      let diasPercorridos = 1;
       diasDaSemana.map((day: string) => {
         if (parseInt(day) == dataAtual.day()) {
           datas.push(dataAtual.format('YYYY-MM-DD'));

@@ -206,6 +206,7 @@ export async function getAvailableTimes(
   const eventosFormat = await formatEvents(events, login);
 
   const eventosFormatados: any = {};
+
   await eventosFormat.flatMap(async (ev: any) => {
     if (ev.frequencia.id === 1) {
       if (Boolean(eventosFormatados[ev.dataInicio])) {
@@ -213,7 +214,6 @@ export async function getAvailableTimes(
       } else {
         eventosFormatados[ev.dataInicio] = [ev];
       }
-
       return;
     }
 
@@ -222,10 +222,11 @@ export async function getAvailableTimes(
       ev.diasFrequencia,
       ev.dataInicio,
       dataFim,
-      ev.intervalo.id
+      ev.intervalo.id,
+      ev.exdate
     );
 
-    // console.log(datasRecorrentes);
+    // console.log(ev.dataInicio, dataFim, datasRecorrentes);
 
     await Promise.all(
       datasRecorrentes.map((dataRecorrentes: string) => {
@@ -286,6 +287,8 @@ export async function getAvailableTimes(
               freq: 'weekly',
             },
           };
+
+          console.log(eventosFormatados[day], day);
 
           const eventosDoDia = eventosFormatados[day] || [];
 
