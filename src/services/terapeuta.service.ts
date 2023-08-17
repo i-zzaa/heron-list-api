@@ -258,9 +258,10 @@ export async function getAvailableTimes(
 
       await Promise.all(
         HOURS.map(async (h) => {
-          const date = moment(`${day}T${h}:00`);
+          const strDate = `${day}T${h}:00`;
+          const date = moment(strDate);
 
-          const hoursFinal = moment(`${day}T${h}:00`).add(1, 'hours');
+          const hoursFinal = moment(strDate).add(1, 'hours');
           const hoursFinalFormat = hoursFinal.format('HH:mm');
 
           const eventoAdd = {
@@ -288,8 +289,6 @@ export async function getAvailableTimes(
             },
           };
 
-          console.log(eventosFormatados[day], day);
-
           const eventosDoDia = eventosFormatados[day] || [];
 
           if (
@@ -308,8 +307,15 @@ export async function getAvailableTimes(
 
           if (eventosDoDia.length) {
             const sessoes = await Promise.all(
-              eventosDoDia.filter((e: any) => horaEstaEntre(h, e.data.start))
+              eventosDoDia.filter(
+                (e: any) =>
+                  horaEstaEntre(h, e.data.start) &&
+                  !e.exdate.includes(`${day} ${h}`)
+              )
             );
+
+            // console.log(`${day} ${h}`);
+            // console.log(sessoes);
 
             if (sessoes.length) {
               await Promise.all(
@@ -363,6 +369,8 @@ export async function getAvailableTimes(
       );
     })
   );
+
+  // console.log();
 
   return device === 'mobile' ? mobileArray : webArray;
 }
