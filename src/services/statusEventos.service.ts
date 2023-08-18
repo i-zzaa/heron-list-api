@@ -9,21 +9,37 @@ export interface StatusEventosProps {
   cobrar: boolean;
 }
 
-export const getStatusEventos = async () => {
-  return await prisma.statusEventos.findMany({
-    select: {
-      id: true,
-      nome: true,
-      cobrar: true,
-      ativo: true,
-    },
-    orderBy: {
-      nome: 'asc',
-    },
-    where: {
-      ativo: true,
-    },
-  });
+export const getStatusEventos = async (page: number, pageSize: number) => {
+  const skip = (page - 1) * pageSize;
+
+  const [data, totalItems] = await Promise.all([
+    prisma.statusEventos.findMany({
+      select: {
+        id: true,
+        nome: true,
+        cobrar: true,
+        ativo: true,
+      },
+      orderBy: {
+        nome: 'asc',
+      },
+      where: {
+        ativo: true,
+      },
+      skip,
+      take: pageSize,
+    }),
+    prisma.statusEventos.count(),
+  ]);
+  const totalPages = Math.ceil(totalItems / pageSize); // Calcula o total de páginas
+
+  const pagination = {
+    currentPage: page,
+    pageSize,
+    totalPages,
+  };
+
+  return { data, pagination };
 };
 
 export const searchStatusEventos = async (word: string) => {

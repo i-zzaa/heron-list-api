@@ -9,21 +9,37 @@ export interface FuncaoProps {
   especialidadeId: number;
 }
 
-export const getFuncao = async () => {
-  return await prisma.funcao.findMany({
-    select: {
-      id: true,
-      nome: true,
-      especialidade: true,
-      ativo: true,
-    },
-    orderBy: {
-      nome: 'asc',
-    },
-    where: {
-      ativo: true,
-    },
-  });
+export const getFuncao = async (page: number, pageSize: number) => {
+  const skip = (page - 1) * pageSize;
+
+  const [data, totalItems] = await Promise.all([
+    prisma.funcao.findMany({
+      select: {
+        id: true,
+        nome: true,
+        especialidade: true,
+        ativo: true,
+      },
+      orderBy: {
+        nome: 'asc',
+      },
+      where: {
+        ativo: true,
+      },
+      skip,
+      take: pageSize,
+    }),
+    prisma.statusEventos.count(),
+  ]);
+  const totalPages = Math.ceil(totalItems / pageSize); // Calcula o total de páginas
+
+  const pagination = {
+    currentPage: page,
+    pageSize,
+    totalPages,
+  };
+
+  return { data, pagination };
 };
 
 export const searchFuncao = async (word: string) => {

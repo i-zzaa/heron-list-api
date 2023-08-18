@@ -12,21 +12,37 @@ export interface LocalidadeProps {
 export const formatLocalidade = (item: any) => {
   return `${item.casa} - ${item.sala}`;
 };
-export const getLocalidade = async () => {
-  return await prisma.localidade.findMany({
-    select: {
-      id: true,
-      casa: true,
-      sala: true,
-      ativo: true,
-    },
-    orderBy: {
-      casa: 'asc',
-    },
-    where: {
-      ativo: true,
-    },
-  });
+export const getLocalidade = async (page: number, pageSize: number) => {
+  const skip = (page - 1) * pageSize;
+
+  const [data, totalItems] = await Promise.all([
+    prisma.localidade.findMany({
+      select: {
+        id: true,
+        casa: true,
+        sala: true,
+        ativo: true,
+      },
+      orderBy: {
+        casa: 'asc',
+      },
+      where: {
+        ativo: true,
+      },
+      skip,
+      take: pageSize,
+    }),
+    prisma.statusEventos.count(),
+  ]);
+  const totalPages = Math.ceil(totalItems / pageSize); // Calcula o total de páginas
+
+  const pagination = {
+    currentPage: page,
+    pageSize,
+    totalPages,
+  };
+
+  return { data, pagination };
 };
 
 export const searchLocalidade = async (word: string) => {
