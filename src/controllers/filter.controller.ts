@@ -58,7 +58,13 @@ export class filterController {
       let data: any = [];
       switch (req.params.type) {
         case 'pacientes':
-          data = await filterSinglePatients(req.body);
+          const page = Number(req.query.page) || 1;
+          const pageSize = Number(req.query.pageSize) || 10;
+
+          delete req.query.page;
+          delete req.query.pageSize;
+
+          data = await filterSinglePatients(req.body, page, pageSize);
           break;
       }
 

@@ -86,50 +86,59 @@ export const getPatientId = async (id: number) => {
 };
 
 export const getPatientsQueue = async (
+  page: number,
+  pageSize: number,
   statusPacienteCod: string[],
   naFila?: boolean
 ) => {
-  const patients = await prisma.paciente.findMany({
-    select: {
-      id: true,
-      nome: true,
-      telefone: true,
-      responsavel: true,
-      dataNascimento: true,
-      convenio: true,
-      disabled: true,
-      tipoSessao: true,
-      status: true,
-      statusPacienteCod: true,
-      carteirinha: true,
-      vaga: {
-        include: {
-          periodo: true,
-          especialidades: {
-            include: {
-              especialidade: true,
+  const [data, totalItems] = await Promise.all([
+    prisma.paciente.findMany({
+      select: {
+        id: true,
+        nome: true,
+        telefone: true,
+        responsavel: true,
+        dataNascimento: true,
+        convenio: true,
+        disabled: true,
+        tipoSessao: true,
+        status: true,
+        statusPacienteCod: true,
+        carteirinha: true,
+        vaga: {
+          include: {
+            periodo: true,
+            especialidades: {
+              include: {
+                especialidade: true,
+              },
             },
           },
         },
       },
-    },
-    where: {
-      statusPacienteCod: {
-        in: statusPacienteCod,
+      where: {
+        statusPacienteCod: {
+          in: statusPacienteCod,
+        },
+        disabled: false,
+        vaga: {
+          naFila: naFila,
+        },
       },
-      disabled: false,
-      vaga: {
-        naFila: naFila,
-      },
-    },
-  });
+    }),
+    prisma.paciente.count(),
+  ]);
+  const totalPages = Math.ceil(totalItems / pageSize); // Calcula o total de páginas
 
-  if (patients) {
-    const pacientes: any = await formatPatients(patients);
-    return pacientes;
-  }
+  const pacientes: any = data ? await formatPatients(data) : [];
 
-  return [];
+  const pagination = {
+    currentPage: page,
+    pageSize,
+    totalPages,
+  };
+
+  return { data: pacientes || [], pagination };
 };
 
 export const setStatusPaciente = async (
@@ -182,20 +191,35 @@ export const getPatientsActived = async () => {
   });
 };
 
-export const getPatients = async (query: any) => {
+export const getPatients = async (
+  query: any,
+  page: number,
+  pageSize: number
+) => {
   const statusPacienteCod = query.statusPacienteCod;
   switch (statusPacienteCod) {
     case STATUS_PACIENT_COD.queue_avaliation:
       return getPatientsQueue(
+        page,
+        pageSize,
         [STATUS_PACIENT_COD.queue_avaliation, STATUS_PACIENT_COD.avaliation],
         true
       );
     case STATUS_PACIENT_COD.queue_devolutiva:
-      return getPatientsQueue([STATUS_PACIENT_COD.queue_devolutiva], false);
+      return getPatientsQueue(
+        page,
+        pageSize,
+        [STATUS_PACIENT_COD.queue_devolutiva],
+        false
+      );
     case STATUS_PACIENT_COD.queue_therapy:
-      return getPatientsQueue([STATUS_PACIENT_COD.queue_therapy]);
+      return getPatientsQueue(page, pageSize, [
+        STATUS_PACIENT_COD.queue_therapy,
+      ]);
     case STATUS_PACIENT_COD.crud_therapy:
       return getPatientsQueue(
+        page,
+        pageSize,
         [
           // STATUS_PACIENT_COD.therapy,
           // STATUS_PACIENT_COD.devolutiva,
@@ -258,23 +282,49 @@ export const getPatientsEspcialidades = async (query: any) => {
   return especialidades;
 };
 
-export const filterSinglePatients = async (body: any) => {
+export const filterSinglePatients = async (
+  body: any,
+  page: number,
+  pageSize: number
+) => {
   switch (body.statusPacienteCod) {
     case STATUS_PACIENT_COD.queue_avaliation:
       return filterPatients(
+        page,
+        pageSize,
         [STATUS_PACIENT_COD.queue_avaliation, STATUS_PACIENT_COD.avaliation],
         body
       );
     case STATUS_PACIENT_COD.queue_devolutiva:
     case STATUS_PACIENT_COD.devolutiva:
       if (body?.isDevolutiva) {
-        return filterPatients([STATUS_PACIENT_COD.devolutiva], body);
+        return filterPatients(
+          page,
+          pageSize,
+          [STATUS_PACIENT_COD.devolutiva],
+          body
+        );
       }
-      return filterPatients([STATUS_PACIENT_COD.queue_devolutiva], body);
+      return filterPatients(
+        page,
+        pageSize,
+        [STATUS_PACIENT_COD.queue_devolutiva],
+        body
+      );
     case STATUS_PACIENT_COD.queue_therapy:
-      return filterPatients([STATUS_PACIENT_COD.queue_therapy], body);
+      return filterPatients(
+        page,
+        pageSize,
+        [STATUS_PACIENT_COD.queue_therapy],
+        body
+      );
     case STATUS_PACIENT_COD.crud_therapy:
-      return filterPatients([STATUS_PACIENT_COD.crud_therapy], body);
+      return filterPatients(
+        page,
+        pageSize,
+        [STATUS_PACIENT_COD.crud_therapy],
+        body
+      );
     default:
       break;
   }
@@ -448,62 +498,75 @@ export const setPacienteEmAtendimento = async (
 };
 
 export const filterPatients = async (
+  page: number,
+  pageSize: number,
   statusPacienteCod: string[],
   body: any
 ) => {
-  const filter = await prisma.paciente.findMany({
-    select: {
-      id: true,
-      nome: true,
-      telefone: true,
-      responsavel: true,
-      dataNascimento: true,
-      convenio: true,
-      disabled: true,
-      statusPacienteCod: true,
-      carteirinha: true,
-      tipoSessao: true,
-      status: true,
-      vaga: {
-        include: {
-          periodo: true,
-          especialidades: {
-            include: {
-              especialidade: true,
+  const [data, totalItems] = await Promise.all([
+    prisma.paciente.findMany({
+      select: {
+        id: true,
+        nome: true,
+        telefone: true,
+        responsavel: true,
+        dataNascimento: true,
+        convenio: true,
+        disabled: true,
+        statusPacienteCod: true,
+        carteirinha: true,
+        tipoSessao: true,
+        status: true,
+        vaga: {
+          include: {
+            periodo: true,
+            especialidades: {
+              include: {
+                especialidade: true,
+              },
             },
           },
         },
       },
-    },
-    where: {
-      statusPacienteCod: {
-        in: statusPacienteCod,
-      },
-      disabled: body.disabled,
-      convenioId: body.convenios,
-      tipoSessaoId: body.tipoSessoes,
-      statusId: body.status,
-      vaga: {
-        pacienteId: body.pacientes,
-        periodoId: body.periodos,
-        // naFila: body.naFila,
-        devolutiva: body.devolutiva,
-        especialidades: {
-          some: {
-            especialidadeId: body.especialidades,
+      where: {
+        statusPacienteCod: {
+          in: statusPacienteCod,
+        },
+        disabled: body.disabled,
+        convenioId: body.convenios,
+        tipoSessaoId: body.tipoSessoes,
+        statusId: body.status,
+        vaga: {
+          pacienteId: body.pacientes,
+          periodoId: body.periodos,
+          // naFila: body.naFila,
+          devolutiva: body.devolutiva,
+          especialidades: {
+            some: {
+              especialidadeId: body.especialidades,
+            },
           },
         },
       },
-    },
-    orderBy: {
-      vaga: {
-        dataContato: 'asc',
+      orderBy: {
+        vaga: {
+          dataContato: 'asc',
+        },
       },
-    },
-  });
+    }),
+    prisma.paciente.count(),
+  ]);
+  const totalPages = Math.ceil(totalItems / pageSize); // Calcula o total de páginas
 
-  const pacientes: any = filter.length ? formatPatients(filter) : filter;
-  return pacientes;
+  const pacientes: any = data.length ? formatPatients(data) : [];
+
+  const pagination = {
+    currentPage: page,
+    pageSize,
+    totalPages,
+  };
+
+  return { data: pacientes || [], pagination };
 };
 
 export const deletePatient = async (id: number) => {
