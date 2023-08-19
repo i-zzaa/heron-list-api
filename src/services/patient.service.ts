@@ -556,9 +556,10 @@ export const filterPatients = async (
     }),
     prisma.paciente.count(),
   ]);
+
   const totalPages = Math.ceil(totalItems / pageSize); // Calcula o total de páginas
 
-  const pacientes: any = data.length ? formatPatients(data) : [];
+  const pacientes: any = data.length ? await formatPatients(data) : [];
 
   const pagination = {
     currentPage: page,
@@ -566,7 +567,7 @@ export const filterPatients = async (
     totalPages,
   };
 
-  return { data: pacientes || [], pagination };
+  return { data: pacientes, pagination };
 };
 
 export const deletePatient = async (id: number) => {

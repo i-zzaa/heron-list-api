@@ -138,7 +138,6 @@ export const updateVaga = async (body: VagaEspecialidadeProps) => {
   if (body.agendar.length) {
     switch (body.statusPacienteCod) {
       case STATUS_PACIENT_COD.queue_avaliation:
-      case STATUS_PACIENT_COD.avaliation:
         await Promise.all([
           prisma.vagaOnEspecialidade.updateMany({
             data: {
@@ -157,6 +156,27 @@ export const updateVaga = async (body: VagaEspecialidadeProps) => {
             body.pacienteId,
             STATUS_PACIENT_COD.queue_avaliation,
             STATUS_PACIENT_COD.avaliation
+          ),
+        ]);
+      case STATUS_PACIENT_COD.avaliation:
+        await Promise.all([
+          prisma.vagaOnEspecialidade.updateMany({
+            data: {
+              agendado: true,
+              dataAgendado: dataAgendado,
+            },
+            where: {
+              vagaId: body.vagaId,
+              especialidadeId: {
+                in: body.agendar,
+              },
+            },
+          }),
+          setQueueStatus(
+            body.vagaId,
+            body.pacienteId,
+            STATUS_PACIENT_COD.avaliation,
+            STATUS_PACIENT_COD.queue_devolutiva
           ),
         ]);
         break;
