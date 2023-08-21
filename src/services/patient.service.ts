@@ -477,7 +477,11 @@ export const update = async (body: any) => {
     case STATUS_PACIENT_COD.queue_therapy:
     case STATUS_PACIENT_COD.crud_therapy:
       return updatePatient(body);
-    case STATUS_PACIENT_COD.devolutiva:
+    case STATUS_PACIENT_COD.queue_devolutiva:
+      return updatePatient({
+        ...body,
+        setStatusPaciente: STATUS_PACIENT_COD.crud_therapy,
+      });
     default:
       break;
   }
