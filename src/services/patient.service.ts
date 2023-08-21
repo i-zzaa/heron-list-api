@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { STATUS_PACIENT_COD } from '../constants/patient';
-import { calculaIdade } from '../utils/convert-hours';
+import { calculaIdade, formatadataPadraoBD } from '../utils/convert-hours';
 import { moneyFormat } from '../utils/util';
 import { getTerapeutaEspecialidade } from './user.service';
 import moment from 'moment';
@@ -157,7 +157,7 @@ export const setStatusPaciente = async (
   return paciente;
 };
 
-export const setTipoSessaoTeprapia = async (pacienteId: number) => {
+export const setTipoSessaoTerapia = async (pacienteId: number) => {
   const paciente: any = await prisma.paciente.update({
     data: {
       tipoSessaoId: 3,
@@ -311,22 +311,8 @@ export const filterSinglePatients = async (
         [STATUS_PACIENT_COD.queue_devolutiva],
         body
       );
-    case STATUS_PACIENT_COD.queue_therapy:
-      return filterPatients(
-        page,
-        pageSize,
-        [STATUS_PACIENT_COD.queue_therapy],
-        body
-      );
-    case STATUS_PACIENT_COD.crud_therapy:
-      return filterPatients(
-        page,
-        pageSize,
-        [STATUS_PACIENT_COD.crud_therapy],
-        body
-      );
     default:
-      break;
+      return filterPatients(page, pageSize, [body.statusPacienteCod], body);
   }
 };
 
@@ -394,11 +380,13 @@ const updatePatient = async (body: any) => {
           tipoSessaoId: body.tipoSessaoId,
           statusId: body.statusId,
           carteirinha: body.carteirinha,
+          statusPacienteCod: body.statusPacienteCod,
           vaga: {
             update: {
               periodoId: body.periodoId,
               observacao: body.observacao,
               dataContato: body.dataContato ? body.dataContato : '',
+              dataVoltouAba: body.dataVoltouAba || '',
             },
           },
         },
@@ -477,10 +465,12 @@ export const update = async (body: any) => {
     case STATUS_PACIENT_COD.queue_therapy:
     case STATUS_PACIENT_COD.crud_therapy:
       return updatePatient(body);
-    case STATUS_PACIENT_COD.devolutiva:
+    case STATUS_PACIENT_COD.queue_devolutiva:
       return updatePatient({
         ...body,
-        setStatusPaciente: STATUS_PACIENT_COD.crud_therapy,
+        dataVoltouAba: formatadataPadraoBD(new Date()),
+        tipoSessaoId: 3,
+        statusPacienteCod: STATUS_PACIENT_COD.queue_therapy,
       });
     default:
       break;

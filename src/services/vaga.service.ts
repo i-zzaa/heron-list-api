@@ -9,7 +9,7 @@ import { removeEvents } from './calendario.service';
 import {
   getPatientId,
   setStatusPaciente,
-  setTipoSessaoTeprapia,
+  setTipoSessaoTerapia,
 } from './patient.service';
 
 const prisma = new PrismaClient();
@@ -126,7 +126,7 @@ const setQueueStatus = async (
     (isQueue && statusTwo !== STATUS_PACIENT_COD.avaliation) ||
     statusTwo !== STATUS_PACIENT_COD.queue_avaliation
   ) {
-    await setTipoSessaoTeprapia(pacienteId);
+    await setTipoSessaoTerapia(pacienteId);
   }
 
   return isQueue;
