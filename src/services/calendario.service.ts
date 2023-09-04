@@ -493,8 +493,6 @@ const createEventoDefault = async (
   frequencia: any,
   user: any
 ) => {
-  console.log('createEventoDefault');
-
   const hash: string = await getHashGroupId(
     body.paciente.id,
     body.modalidade.id,
@@ -1048,7 +1046,7 @@ export const formatEvents = async (eventos: any, login: string) => {
       evento.diasFrequencia =
         evento.diasFrequencia && evento.diasFrequencia.split(',');
 
-      evento.exdate = evento?.exdate ? evento.exdate.split(',') : [];
+      evento.exdate = evento.exdate ? evento.exdate.split(',') : [];
       evento.exdate = evento.exdate.map(
         (ex: string) => `${ex} ${evento.start}`
       );
@@ -1075,7 +1073,6 @@ export const formatEvents = async (eventos: any, login: string) => {
             endTime: evento.end,
             borderColor: cor,
             backgroundColor: cor,
-            exdate: evento.exdate,
             rrule: {
               freq: 'weekly',
               // byweekday: diasFrequencia,
@@ -1102,7 +1099,6 @@ export const formatEvents = async (eventos: any, login: string) => {
             groupId: evento.groupId,
             borderColor: cor,
             backgroundColor: cor,
-            exdate: evento.exdate,
             isChildren: evento.isChildren,
             rrule: {
               freq: 'weekly',
@@ -1136,7 +1132,7 @@ export const formatEvents = async (eventos: any, login: string) => {
             isChildren: evento.isChildren,
           };
 
-          delete formated.exdate;
+          // delete formated.exdate;
           delete formated.diasFrequencia;
           break;
       }
